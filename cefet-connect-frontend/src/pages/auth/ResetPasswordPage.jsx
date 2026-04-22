@@ -5,7 +5,7 @@ import ResetPasswordForm from "../../components/auth/ResetPasswordForm";
 export default function ResetPasswordPage() {
   return (
     <div className="bg-[#f4f4f4] text-black lg:h-screen lg:overflow-hidden">
-      <div className="mx-auto bg-[#f4f4f4] lg:h-screen lg:overflow-hidden lg:max-w-360 lg:grid lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="mx-auto bg-[#f4f4f4] lg:h-screen lg:overflow-hidden lg:max-w-400 lg:grid lg:grid-cols-[1fr_1fr] xl:grid-cols-[1.05fr_0.95fr]">
         <DesktopHero />
 
         <section className="flex min-h-screen items-center justify-center px-4 py-8 lg:px-10 xl:px-16">

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
+import PasswordInput from "./PasswordInput";
 
 export default function ResetPasswordForm() {
   const navigate = useNavigate();
@@ -94,7 +95,7 @@ export default function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <input
+        <PasswordInput
           type="password"
           name="password"
           value={formData.password}
@@ -108,13 +109,12 @@ export default function ResetPasswordForm() {
       </div>
 
       <div>
-        <input
-          type="password"
+        <PasswordInput
           name="confirmPassword"
           value={formData.confirmPassword}
           onChange={handleChange}
           placeholder="Confirme sua nova senha"
-          className="h-11 w-full rounded-md border border-[#bfbfbf] bg-white px-3 text-sm outline-none"
+          autoComplete="new-password"
         />
         {errors.confirmPassword && (
           <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../../services/authService";
+import PasswordInput from "./PasswordInput";
 
 export default function RegisterForm({ onGoToLogin }) {
   const navigate = useNavigate();
@@ -149,7 +150,7 @@ export default function RegisterForm({ onGoToLogin }) {
       </div>
 
       <div>
-        <input
+        <PasswordInput
           type="password"
           name="password"
           value={formData.password}

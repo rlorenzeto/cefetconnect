@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../../services/authService";
+import PasswordInput from "./PasswordInput";
 
 export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
   const navigate = useNavigate();
@@ -98,14 +99,12 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
       </div>
 
       <div>
-        <input
-          type="password"
+        <PasswordInput
           name="password"
           value={formData.password}
           onChange={handleChange}
           placeholder="Digite sua senha"
-          required
-          className="h-11 w-full rounded-md border border-[#bfbfbf] bg-white px-3 text-sm outline-none"
+          autoComplete="current-password"
         />
         {errors.password && (
           <p className="mt-1 text-sm text-red-500">{errors.password}</p>

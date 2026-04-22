@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="bg-[#f4f4f4] text-black lg:h-screen lg:overflow-hidden">
-      <div className="mx-auto bg-[#f4f4f4] lg:h-screen lg:overflow-hidden lg:max-w-360 lg:grid lg:grid-cols-[1.15fr_0.85fr]">
+      <div className="mx-auto bg-[#f4f4f4] lg:h-screen lg:overflow-hidden lg:max-w-400 lg:grid lg:grid-cols-[1fr_1fr] xl:grid-cols-[1.05fr_0.95fr]">
         <DesktopHero />
 
         <section className="hidden lg:flex lg:min-h-screen lg:items-center lg:justify-center lg:px-10 lg:py-8 xl:px-16">
