@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { registerUser } from "../../services/authService";
 
 export default function RegisterForm({ onGoToLogin }) {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -15,6 +19,9 @@ export default function RegisterForm({ onGoToLogin }) {
     password: "",
   });
 
+  const [apiError, setApiError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   function handleChange(event) {
     const { name, value } = event.target;
 
@@ -27,13 +34,15 @@ export default function RegisterForm({ onGoToLogin }) {
       ...prev,
       [name]: "",
     }));
+
+    setApiError("");
   }
 
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const newErrors = {
@@ -71,7 +80,25 @@ export default function RegisterForm({ onGoToLogin }) {
       return;
     }
 
-    console.log("Cadastro válido:", formData);
+    try {
+      setIsSubmitting(true);
+      setApiError("");
+
+      const response = await registerUser({
+        name: formData.name,
+        email: formData.email,
+        registration: formData.registration,
+        password: formData.password,
+      });
+
+      console.log("Resposta cadastro:", response);
+
+      navigate("/login");
+    } catch (error) {
+      setApiError(error.message || "Não foi possível criar a conta.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -136,11 +163,16 @@ export default function RegisterForm({ onGoToLogin }) {
         )}
       </div>
 
+      {apiError && (
+        <p className="text-sm text-red-500">{apiError}</p>
+      )}
+
       <button
         type="submit"
-        className="mt-8 h-11 w-full rounded-full border border-[#8ad142] bg-transparent text-sm font-medium text-[#8ad142]"
+        disabled={isSubmitting}
+        className="mt-8 h-11 w-full rounded-full border border-[#8ad142] bg-transparent text-sm font-medium text-[#8ad142] disabled:opacity-70"
       >
-        Criar nova conta
+        {isSubmitting ? "Criando conta..." : "Criar nova conta"}
       </button>
 
       <p className="mt-4 text-center text-sm text-[#777]">

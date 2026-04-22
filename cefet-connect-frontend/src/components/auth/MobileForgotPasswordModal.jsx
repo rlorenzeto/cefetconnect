@@ -1,11 +1,10 @@
 import BrandLogo from "./BrandLogo";
-import LoginForm from "./LoginForm";
+import ForgotPasswordForm from "./ForgotPasswordForm";
 
-export default function MobileLoginModal({
+export default function MobileForgotPasswordModal({
   isOpen,
   onClose,
-  onGoToRegister,
-  onGoToForgotPassword,
+  onGoToLogin,
 }) {
   if (!isOpen) return null;
 
@@ -13,8 +12,10 @@ export default function MobileLoginModal({
     <div className="fixed inset-0 z-50 bg-black/20 lg:hidden">
       <div className="min-h-screen w-full bg-[#f4f4f4] px-4 pt-6">
         <button
+          type="button"
           onClick={onClose}
           className="mb-6 text-3xl leading-none text-black/70"
+          aria-label="Voltar"
         >
           ‹
         </button>
@@ -24,15 +25,15 @@ export default function MobileLoginModal({
             <BrandLogo className="h-28 w-auto object-contain" />
           </div>
 
-          <p className="mb-8 text-center text-[18px] text-[#3b3b3b]">
-            Entrar no <span className="text-[#86cf4f]">Cefet</span>{" "}
-            <span className="text-[#2d67c5]">Connect</span>
+          <p className="mb-4 text-center text-[18px] text-[#3b3b3b]">
+            Recuperar <span className="text-[#86cf4f]">senha</span>
           </p>
 
-          <LoginForm
-            onGoToRegister={onGoToRegister}
-            onGoToForgotPassword={onGoToForgotPassword}
-          />
+          <p className="mx-auto mb-8 max-w-72.5 text-center text-sm leading-[1.45] text-[#666]">
+            Informe seu e-mail para receber o link de redefinição.
+          </p>
+
+          <ForgotPasswordForm onGoToLogin={onGoToLogin} />
         </div>
       </div>
     </div>

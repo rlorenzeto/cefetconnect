@@ -3,17 +3,17 @@ import { useNavigate } from "react-router-dom";
 import BrandLogo from "../../components/auth/BrandLogo";
 import DesktopHero from "../../components/auth/DesktopHero";
 import MobileHero from "../../components/auth/MobileHero";
-import RegisterForm from "../../components/auth/RegisterForm";
-import MobileRegisterModal from "../../components/auth/MobileRegisterModal";
 import MobileLoginModal from "../../components/auth/MobileLoginModal";
+import MobileForgotPasswordModal from "../../components/auth/MobileForgotPasswordModal";
+import ForgotPasswordForm from "../../components/auth/ForgotPasswordForm";
 
-export default function RegisterPage() {
-  const [isMobileRegisterOpen, setIsMobileRegisterOpen] = useState(true);
-  const [isMobileLoginOpen, setIsMobileLoginOpen] = useState(false);
+export default function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const [isMobileForgotOpen, setIsMobileForgotOpen] = useState(true);
+  const [isMobileLoginOpen, setIsMobileLoginOpen] = useState(false);
 
   function handleGoToMobileLogin() {
-    setIsMobileRegisterOpen(false);
+    setIsMobileForgotOpen(false);
     setIsMobileLoginOpen(true);
   }
 
@@ -29,26 +29,24 @@ export default function RegisterPage() {
             </div>
 
             <p className="mb-4 text-center text-[18px] text-[#3b3b3b]">
-              Comece a usar <span className="text-[#2d67c5]">CEFET</span>
-              <span className="text-[#86cf4f]">Connect</span> !
+              Recuperar <span className="text-[#86cf4f]">senha</span>
             </p>
 
             <p className="mx-auto mb-8 max-w-105 text-center text-sm leading-[1.45] text-[#666]">
-              Crie uma conta para se conectar com o seu campus e ficar por
-              dentro de todas as novidades, oportunidades e assuntos do momento.
+              Informe seu e-mail para receber as instruções de redefinição.
             </p>
 
-            <RegisterForm onGoToLogin={() => navigate("/login")} />
+            <ForgotPasswordForm onGoToLogin={() => navigate("/login")} />
           </div>
         </section>
 
         <MobileHero
           onOpenLogin={() => navigate("/login")}
-          onOpenRegister={() => setIsMobileRegisterOpen(true)}
+          onOpenRegister={() => navigate("/register")}
         />
 
-        <MobileRegisterModal
-          isOpen={isMobileRegisterOpen}
+        <MobileForgotPasswordModal
+          isOpen={isMobileForgotOpen}
           onClose={() => navigate("/login")}
           onGoToLogin={handleGoToMobileLogin}
         />
@@ -56,14 +54,7 @@ export default function RegisterPage() {
         <MobileLoginModal
           isOpen={isMobileLoginOpen}
           onClose={() => setIsMobileLoginOpen(false)}
-          onGoToRegister={() => {
-            setIsMobileLoginOpen(false);
-            setIsMobileRegisterOpen(true);
-          }}
-          onGoToForgotPassword={() => {
-            setIsMobileLoginOpen(false);
-            navigate("/forgot-password");
-          }}
+          onGoToRegister={() => navigate("/register")}
         />
       </div>
     </div>

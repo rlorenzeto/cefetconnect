@@ -1,12 +1,21 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BrandLogo from "../../components/auth/BrandLogo";
 import DesktopHero from "../../components/auth/DesktopHero";
 import LoginForm from "../../components/auth/LoginForm";
 import MobileHero from "../../components/auth/MobileHero";
 import MobileLoginModal from "../../components/auth/MobileLoginModal";
+import MobileForgotPasswordModal from "../../components/auth/MobileForgotPasswordModal";
 
-export default function LoginPage({ onGoToRegister }) {
+export default function LoginPage() {
   const [isMobileLoginOpen, setIsMobileLoginOpen] = useState(false);
+  const [isMobileForgotOpen, setIsMobileForgotOpen] = useState(false);
+  const navigate = useNavigate();
+
+  function handleOpenForgotModal() {
+    setIsMobileLoginOpen(false);
+    setIsMobileForgotOpen(true);
+  }
 
   return (
     <div className="bg-[#f4f4f4] text-black lg:min-h-screen">
@@ -24,19 +33,32 @@ export default function LoginPage({ onGoToRegister }) {
               <span className="text-[#2d67c5]">Connect</span>
             </p>
 
-            <LoginForm onGoToRegister={onGoToRegister} />
+            <LoginForm
+              onGoToRegister={() => navigate("/register")}
+              onGoToForgotPassword={() => navigate("/forgot-password")}
+            />
           </div>
         </section>
 
         <MobileHero
           onOpenLogin={() => setIsMobileLoginOpen(true)}
-          onOpenRegister={onGoToRegister}
+          onOpenRegister={() => navigate("/register")}
         />
 
         <MobileLoginModal
           isOpen={isMobileLoginOpen}
           onClose={() => setIsMobileLoginOpen(false)}
-          onGoToRegister={onGoToRegister}
+          onGoToRegister={() => navigate("/register")}
+          onGoToForgotPassword={handleOpenForgotModal}
+        />
+
+        <MobileForgotPasswordModal
+          isOpen={isMobileForgotOpen}
+          onClose={() => setIsMobileForgotOpen(false)}
+          onGoToLogin={() => {
+            setIsMobileForgotOpen(false);
+            setIsMobileLoginOpen(true);
+          }}
         />
       </div>
     </div>

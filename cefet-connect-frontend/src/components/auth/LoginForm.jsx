@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../../services/authService";
 
-export default function LoginForm({ onGoToRegister }) {
+export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     login: "",
     password: "",
@@ -10,6 +14,9 @@ export default function LoginForm({ onGoToRegister }) {
     login: "",
     password: "",
   });
+
+  const [apiError, setApiError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -23,13 +30,15 @@ export default function LoginForm({ onGoToRegister }) {
       ...prev,
       [name]: "",
     }));
+
+    setApiError("");
   }
 
   function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
     const newErrors = {
@@ -52,10 +61,24 @@ export default function LoginForm({ onGoToRegister }) {
       return;
     }
 
-    console.log("Login válido:", formData);
+    try {
+      setIsSubmitting(true);
+      setApiError("");
+
+      const response = await loginUser({
+        login: formData.login,
+        password: formData.password,
+      });
+
+      console.log("Resposta login:", response);
+
+      navigate("/home");
+    } catch (error) {
+      setApiError(error.message || "Não foi possível entrar.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
-
-
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -89,19 +112,25 @@ export default function LoginForm({ onGoToRegister }) {
         )}
       </div>
 
+      {apiError && (
+        <p className="text-sm text-red-500">{apiError}</p>
+      )}
+
       <button
         type="submit"
-        className="mt-3 h-12 w-full rounded-full bg-[#8ad142] text-sm font-semibold text-white"
+        disabled={isSubmitting}
+        className="mt-3 h-12 w-full rounded-full bg-[#8ad142] text-sm font-semibold text-white disabled:opacity-70"
       >
-        Entrar
+        {isSubmitting ? "Entrando..." : "Entrar"}
       </button>
+
       <button
         type="button"
-        onClick={() => console.log("Ir para recuperação de senha")}
+        onClick={onGoToForgotPassword}
         className="mt-6 block w-full text-center text-sm text-[#666]"
       >
         Esqueceu a senha ?
-      </button>
+     </button>
 
       <button
         type="button"
