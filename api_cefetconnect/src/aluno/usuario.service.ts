@@ -7,6 +7,7 @@ import { Usuario } from './entities/usuario.entity.js';
 import { CreateUsuarioDto } from './dto/create-usuario.dto.js';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto.js';
 
+//interage com o banco de dados através do Repository do TypeORM, e também por fazer coisas como criptografar a senha antes de salvar no banco, ou verificar se já existe um usuário com a mesma matrícula ou email.
 @Injectable()
 export class UsuarioService {
   constructor(
@@ -14,8 +15,12 @@ export class UsuarioService {
     private readonly usuarioRepository: Repository<Usuario>,
   ) {}
 
-  async create(createUsuarioDto: CreateUsuarioDto): Promise<Usuario> {
-    const usuarioExistente = await this.usuarioRepository.findOne({
+  async create(createUsuarioDto: CreateUsuarioDto): Promise<{
+    matricula: string;
+    nomeUsuario: string;
+    email: string;
+  }> { 
+    const usuarioExistente = await this.usuarioRepository.findOne({ 
       where: [
         { matricula: createUsuarioDto.matricula },
         { email: createUsuarioDto.email },
@@ -26,7 +31,7 @@ export class UsuarioService {
       throw new ConflictException('Matrícula ou Email já cadastrados no sistema.');
     }
 
-    const sequenciaAleatoria = await bcrypt.genSalt(10);
+    const sequenciaAleatoria = await bcrypt.genSalt(10); //Gera uma sequência aleatória para fortalecer a criptografia da senha. O número 10 é o custo, ou seja, o número de vezes que a senha será processada para gerar o hash. 
     const senhaCriptografada = await bcrypt.hash(createUsuarioDto.senha, sequenciaAleatoria);
 
     const novoUsuario = this.usuarioRepository.create({
@@ -34,7 +39,15 @@ export class UsuarioService {
       senha: senhaCriptografada,
     });
 
-    return await this.usuarioRepository.save(novoUsuario);
+    const usuarioSalvo = await this.usuarioRepository.save(novoUsuario); //salva no banco
+    
+    // Remove a senha antes de retornar no response
+    
+    return {
+      matricula: usuarioSalvo.matricula,
+      nomeUsuario: usuarioSalvo.nomeUsuario,
+      email: usuarioSalvo.email,
+    } 
   }
 
   // p/ o login 
@@ -68,8 +81,8 @@ export class UsuarioService {
 
     // Se a pessoa estiver tentando mudar a senha, precisamos criptografar a nova também
     if (updateUsuarioDto.senha) {
-      const salt = await bcrypt.genSalt(10);
-      updateUsuarioDto.senha = await bcrypt.hash(updateUsuarioDto.senha, salt);
+      const sequenciaAleatoria = await bcrypt.genSalt(10);
+      updateUsuarioDto.senha = await bcrypt.hash(updateUsuarioDto.senha, sequenciaAleatoria);
     }
 
     // Mescla os dados antigos com os novos e salva

@@ -18,7 +18,4 @@ describe('UsuarioController', () => {
     expect(controller).toBeDefined();
   });
 });
-function expect(controller: UsuarioController) {
-  throw new Error('Function not implemented.');
-}
 

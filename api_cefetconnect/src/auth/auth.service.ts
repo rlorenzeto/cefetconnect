@@ -12,7 +12,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async login(loginDto: LoginUsuarioDto) {
+  async login(loginDto: LoginUsuarioDto) { //Recebe os dados do login do aluno
     const usuario = await this.usuarioService.findByEmail(loginDto.email);
     
     if (!usuario) {
