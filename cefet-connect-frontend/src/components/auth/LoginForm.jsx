@@ -8,12 +8,12 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
 
   const [formData, setFormData] = useState({
     login: "",
-    password: "",
+    senha: "",
   });
 
   const [errors, setErrors] = useState({
     login: "",
-    password: "",
+    senha: "",
   });
 
   const [apiError, setApiError] = useState("");
@@ -35,8 +35,12 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
     setApiError("");
   }
 
-  function validateEmail(email) {
+  /*function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }*/
+
+  function validateEmail(email) {
+    return /^[^\s@]+@aluno\.cefetmg\.br$/i.test(email.trim());
   }
 
   async function handleSubmit(event) {
@@ -44,20 +48,20 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
 
     const newErrors = {
       login: "",
-      password: "",
+      senha: "",
     };
 
     if (!formData.login.trim()) {
       newErrors.login = "O e-mail é obrigatório.";
     } else if (!validateEmail(formData.login)) {
-      newErrors.login = "Digite um e-mail válido.";
+      newErrors.login = "Use seu e-mail institucional @aluno.cefetmg.br.";
     }
 
-    if (!formData.password.trim()) {
-      newErrors.password = "A senha é obrigatória.";
+    if (!formData.senha.trim()) {
+      newErrors.senha = "A senha é obrigatória.";
     }
 
-    if (newErrors.login || newErrors.password) {
+    if (newErrors.login || newErrors.senha) {
       setErrors(newErrors);
       return;
     }
@@ -67,8 +71,8 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
       setApiError("");
 
       const response = await loginUser({
-        login: formData.login,
-        password: formData.password,
+        email: formData.login,
+        senha: formData.senha,
       });
 
       console.log("Resposta login:", response);
@@ -100,14 +104,14 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
 
       <div>
         <PasswordInput
-          name="password"
-          value={formData.password}
+           name="senha"
+          value={formData.senha}
           onChange={handleChange}
           placeholder="Digite sua senha"
           autoComplete="current-password"
         />
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+        {errors.senha && (
+          <p className="mt-1 text-sm text-red-500">{errors.senha}</p>
         )}
       </div>
 

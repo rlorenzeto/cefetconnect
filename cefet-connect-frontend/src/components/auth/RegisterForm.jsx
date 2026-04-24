@@ -40,7 +40,8 @@ export default function RegisterForm({ onGoToLogin }) {
   }
 
   function validateEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    //return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    return /^[^\s@]+@aluno\.cefetmg\.br$/i.test(email.trim());
   }
 
   async function handleSubmit(event) {
@@ -57,18 +58,28 @@ export default function RegisterForm({ onGoToLogin }) {
       newErrors.name = "O nome é obrigatório.";
     }
 
-    if (!formData.email.trim()) {
+    /*if (!formData.email.trim()) {
       newErrors.email = "O e-mail é obrigatório.";
     } else if (!validateEmail(formData.email)) {
       newErrors.email = "Digite um e-mail válido.";
+    }*/
+
+    if (!formData.email.trim()) {
+      newErrors.email = "O e-mail é obrigatório.";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Use seu e-mail institucional @aluno.cefetmg.br.";
     }
 
     if (!formData.registration.trim()) {
       newErrors.registration = "A matrícula é obrigatória.";
+    } else if (!/^\d{11}$/.test(formData.registration)) {
+      newErrors.registration = "A matrícula deve ter exatamente 11 dígitos.";
     }
 
     if (!formData.password.trim()) {
       newErrors.password = "A senha é obrigatória.";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "A senha deve ter no mínimo 6 caracteres.";
     }
 
     if (
@@ -86,10 +97,10 @@ export default function RegisterForm({ onGoToLogin }) {
       setApiError("");
 
       const response = await registerUser({
-        name: formData.name,
+        matricula: formData.registration,
+        nomeUsuario: formData.name,
         email: formData.email,
-        registration: formData.registration,
-        password: formData.password,
+        senha: formData.password,
       });
 
       console.log("Resposta cadastro:", response);

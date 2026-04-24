@@ -1,16 +1,34 @@
 import { apiFetch } from "./api";
 
-export function loginUser(payload) {
-  return apiFetch("/auth/login", {
+export async function loginUser(payload) {
+  const data = await apiFetch("/auth/login", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      email: payload.email,
+      senha: payload.senha,
+    }),
   });
+
+  if (data?.access_token) {
+    localStorage.setItem("cefetconnect_token", data.access_token);
+  }
+
+  if (data?.usuario) {
+    localStorage.setItem("cefetconnect_user", JSON.stringify(data.usuario));
+  }
+
+  return data;
 }
 
 export function registerUser(payload) {
-  return apiFetch("/auth/register", {
+  return apiFetch("/usuario", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      matricula: payload.matricula,
+      nomeUsuario: payload.nomeUsuario,
+      email: payload.email,
+      senha: payload.senha,
+    }),
   });
 }
 
@@ -29,11 +47,11 @@ export function resetPassword(payload) {
 }
 
 export function getCurrentUser() {
-  return apiFetch("/auth/me");
+  const user = localStorage.getItem("cefetconnect_user");
+  return user ? JSON.parse(user) : null;
 }
 
 export function logoutUser() {
-  return apiFetch("/auth/logout", {
-    method: "POST",
-  });
+  localStorage.removeItem("cefetconnect_token");
+  localStorage.removeItem("cefetconnect_user");
 }
