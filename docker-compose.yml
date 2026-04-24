@@ -1,11 +1,24 @@
 version: '3.8'
 
 services:
+  db:
+    image: mysql:8.0
+    container_name: cefet_db
+    environment:
+      MYSQL_ROOT_PASSWORD: SenhaRootForte2026! # A senha do Root (Guarde isso)
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql # Salva os dados para não perder se o container reiniciar
+    restart: always
+
   backend:
     build: ./api_cefetconnect
     container_name: cefet_backend
     ports:
       - "3000:3000"
+    depends_on:
+      - db # Diz pro backend só ligar depois que o banco existir
     restart: always
 
   frontend:
@@ -14,3 +27,6 @@ services:
     ports:
       - "5173:5173"
     restart: always
+
+volumes:
+  db_data:
