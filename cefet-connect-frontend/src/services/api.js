@@ -1,6 +1,6 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") ||
-  "https://api.mintconnect.linceonline.com.br ";
+  "https://api.mintconnect.linceonline.com.br";
 
 export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem("cefetconnect_token");
