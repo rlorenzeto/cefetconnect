@@ -28,6 +28,20 @@ O projeto utiliza uma stack moderna focada em escalabilidade e performance:
 4. **Eventos:** Organização e divulgação de atividades promovidas pelas comunidades.
 5. **Tela de Contatos:** Facilitador de networking e busca de membros da comunidade.
 
+## 💻 Como Executar o Projeto Localmente
+
+Para rodar a aplicação na sua máquina, você precisará subir o Frontend e o Backend simultaneamente. Abra **dois terminais** no seu editor de código e rode:
+
+```bash
+# NO TERMINAL 1 (Iniciando o Frontend):
+cd cefet-connect-frontend
+npm run dev
+
+# NO TERMINAL 2 (Iniciando o Backend):
+cd api_cefetconnect
+npm run start:dev
+```
+
 ## 👥 Equipe
 
 * **Victor Hugo** - Product Manager
