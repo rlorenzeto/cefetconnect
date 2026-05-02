@@ -1,9 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 import { UsuarioService } from '../aluno/usuario.service.js';
 import { LoginUsuarioDto } from '../aluno/dto/login-usuario.dto.js';
+import { ErrorMessages } from '../common/constants/messages.errors.js';
 
 @Injectable()
 export class AuthService {
@@ -16,14 +17,18 @@ export class AuthService {
     const usuario = await this.usuarioService.findByEmail(loginDto.email);
     
     if (!usuario) {
-      throw new UnauthorizedException('Email ou senha incorretos.');
+      throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
     }
 
     //Compara a senha que o aluno digitou com o salvo no banco
     const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
 
     if (!senhaValida) {
-      throw new UnauthorizedException('Email ou senha incorretos.');
+      throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
+    }
+
+    if (!usuario.emailVerificado) {
+      throw new ForbiddenException(ErrorMessages.EAUT00002.mensagem);
     }
 
     // Se o usuário e a senha estiverem corretos, gera o token JWT
@@ -35,7 +40,8 @@ export class AuthService {
       usuario: {
         matricula: usuario.matricula,
         nomeUsuario: usuario.nomeUsuario,
-        email: usuario.email
+        email: usuario.email,
+        fotoUrl: usuario.fotoUrl,
       }
     };
   }

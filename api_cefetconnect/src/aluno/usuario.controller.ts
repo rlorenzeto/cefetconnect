@@ -1,35 +1,147 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UsuarioService } from './usuario.service';
-import { CreateUsuarioDto } from './dto/create-usuario.dto';
-import { UpdateUsuarioDto } from './dto/update-usuario.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { UsuarioService } from './usuario.service.js';
+import { CreateUsuarioDto } from './dto/create-usuario.dto.js';
+import { UpdateUsuarioDto } from './dto/update-usuario.dto.js';
+import { VerificarEmailDto } from './dto/verificar-email.dto.js';
+import { multerPerfilConfig } from '../uploads/multer.config.js';
+import { SuccessMessages } from '../common/constants/messages.success.js';
+import { Public } from '../common/decorators/public.decorator.js';
 
-//Recebe requisições HTTP e repassa para o Service processar
+@ApiTags('Usuários')
 @Controller('usuario')
 export class UsuarioController {
   constructor(private readonly usuarioService: UsuarioService) {}
 
   @Post()
-  create(@Body() createUsuarioDto: CreateUsuarioDto) {
-    return this.usuarioService.create(createUsuarioDto);
+  @Public()
+  @ApiOperation({ summary: 'Cadastrar usuário', description: 'Cria um novo usuário no sistema e envia um código de verificação por e-mail.' })
+  @ApiResponse({ status: 201, description: '[SUSR00001] Usuário cadastrado com sucesso.' })
+  @ApiResponse({ status: 400, description: '[EUSR00001] Campos incorretos enviados.' })
+  @ApiResponse({ status: 409, description: '[EUSR00002] Matrícula ou Email já cadastrados no sistema.' })
+  async create(@Body() createUsuarioDto: CreateUsuarioDto) {
+    const dados = await this.usuarioService.create(createUsuarioDto);
+    return {
+      codigo: 'SUSR00001',
+      mensagem: SuccessMessages.SUSR00001.mensagem,
+      dados,
+    };
+  }
+
+  @Post(':id/verificar-email')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verificar e-mail', description: 'Confirma o e-mail do usuário a partir do código recebido.' })
+  @ApiParam({ name: 'id', description: 'Matrícula do usuário' })
+  @ApiResponse({ status: 200, description: '[SUSR00006] E-mail verificado com sucesso.' })
+  @ApiResponse({ status: 400, description: '[EUSR00004] E-mail já verificado. | [EUSR00005] Código de verificação inválido.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  verificarEmail(@Param('id') id: string, @Body() body: VerificarEmailDto) {
+    return this.usuarioService.verificarEmail(id, body.codigo);
+  }
+
+  @Post(':id/reenviar-codigo')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reenviar código de verificação', description: 'Gera e envia um novo código de verificação para o e-mail do usuário.' })
+  @ApiParam({ name: 'id', description: 'Matrícula do usuário' })
+  @ApiResponse({ status: 200, description: '[SUSR00007] Novo código de verificação enviado para o e-mail cadastrado.' })
+  @ApiResponse({ status: 400, description: '[EUSR00004] E-mail já verificado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  reenviarCodigo(@Param('id') id: string) {
+    return this.usuarioService.reenviarCodigo(id);
   }
 
   @Get()
-  findAll() {
-    return this.usuarioService.findAll();
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Listar todos os usuários', description: 'Retorna a lista de todos os usuários cadastrados. Requer autenticação.' })
+  @ApiResponse({ status: 200, description: '[SUSR00005] Lista de usuários retornada com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  async findAll() {
+    const dados = await this.usuarioService.findAll();
+    return {
+      codigo: 'SUSR00005',
+      mensagem: SuccessMessages.SUSR00005.mensagem,
+      dados,
+    };
   }
 
-  @Get(':id') 
-  findOne(@Param('id') id: string) {
-    return this.usuarioService.findOne(id);
+  @Get(':id')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Buscar usuário por matrícula', description: 'Retorna os dados de um usuário pelo número de matrícula. Requer autenticação.' })
+  @ApiParam({ name: 'id', description: 'Matrícula do usuário' })
+  @ApiResponse({ status: 200, description: '[SUSR00004] Usuário localizado com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  async findOne(@Param('id') id: string) {
+    const dados = await this.usuarioService.findOne(id);
+    return {
+      codigo: 'SUSR00004',
+      mensagem: SuccessMessages.SUSR00004.mensagem,
+      dados,
+    };
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUsuarioDto: UpdateUsuarioDto) {
-    return this.usuarioService.update(id, updateUsuarioDto);
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('fotoUrl', multerPerfilConfig))
+  @ApiOperation({ summary: 'Atualizar usuário', description: 'Atualiza os dados de um usuário. Permite envio de foto de perfil (multipart/form-data). Requer autenticação.' })
+  @ApiParam({ name: 'id', description: 'Matrícula do usuário' })
+  @ApiResponse({ status: 200, description: '[SUSR00002] Usuário atualizado com sucesso.' })
+  @ApiResponse({ status: 400, description: '[EUSR00001] Campos incorretos enviados.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  @ApiResponse({ status: 413, description: '[EUSR00009] Tamanho máximo de arquivo excedido (5MB).' })
+  async update(
+    @Param('id') id: string,
+    @Body() updateUsuarioDto: UpdateUsuarioDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 })],
+        fileIsRequired: false,
+      }),
+    )
+    fotoUrl?: Express.Multer.File,
+  ) {
+    const dados = await this.usuarioService.update(
+      id,
+      updateUsuarioDto,
+      fotoUrl,
+    );
+    return {
+      codigo: 'SUSR00002',
+      mensagem: SuccessMessages.SUSR00002.mensagem,
+      dados,
+    };
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usuarioService.remove(id);
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Excluir usuário', description: 'Remove permanentemente um usuário do sistema. Requer autenticação.' })
+  @ApiParam({ name: 'id', description: 'Matrícula do usuário' })
+  @ApiResponse({ status: 200, description: '[SUSR00003] Usuário excluído com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  async remove(@Param('id') id: string) {
+    await this.usuarioService.remove(id);
+    return {
+      codigo: 'SUSR00003',
+      mensagem: SuccessMessages.SUSR00003.mensagem,
+    };
   }
 }
