@@ -12,6 +12,8 @@ export const ErrorMessages = {
   EUSR00007: { mensagem: 'Erro ao excluir usuário.', status: 400 },
   EUSR00008: { mensagem: 'Formato de imagem inválido.', status: 400 },
   EUSR00009: { mensagem: 'Tamanho máximo de arquivo excedido.', status: 413 },
+  EUSR00010: { mensagem: 'Senha atual incorreta.', status: 401 },
+  EUSR00011: { mensagem: 'Este e-mail já está em uso por outro usuário.', status: 409 },
 
   // ── Autenticação ──────────────────────────────────────────────────────────
   EAUT00001: { mensagem: 'Email ou senha incorretos.', status: 401 },

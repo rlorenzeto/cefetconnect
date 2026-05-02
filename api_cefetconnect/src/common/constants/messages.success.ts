@@ -10,7 +10,8 @@ export const SuccessMessages = {
   SUSR00005: { mensagem: 'Lista de usuários retornada com sucesso.', status: 200 },
   SUSR00006: { mensagem: 'E-mail verificado com sucesso.', status: 200 },
   SUSR00007: { mensagem: 'Novo código de verificação enviado para o e-mail cadastrado.', status: 200 },
-
+  SUSR00008: { mensagem: 'Senha alterada com sucesso.', status: 200 },
+  SUSR00009: { mensagem: 'E-mail alterado com sucesso. Verifique seu novo e-mail para ativar a conta.', status: 200 },
   // ── Autenticação ──────────────────────────────────────────────────────────
   SAUT00001: { mensagem: 'Login realizado com sucesso.', status: 200 },
   SAUT00002: { mensagem: 'Logout realizado com sucesso.', status: 200 },

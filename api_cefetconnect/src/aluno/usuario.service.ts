@@ -17,6 +17,8 @@ import { UpdateUsuarioDto } from './dto/update-usuario.dto.js';
 import { EmailService } from '../email/email.service.js';
 import { ErrorMessages } from '../common/constants/messages.errors.js';
 import { SuccessMessages } from '../common/constants/messages.success.js';
+import { AlterarEmailDto } from './dto/alterar-email.dto.js';
+import { AlterarSenhaDto } from './dto/alterar-senha.dto.js';
 
 //interage com o banco de dados através do Repository do TypeORM, e também por fazer coisas como criptografar a senha antes de salvar no banco, ou verificar se já existe um usuário com a mesma matrícula ou email.
 @Injectable()
@@ -210,5 +212,52 @@ export class UsuarioService {
   async remove(matricula: string): Promise<void> {
     const usuario = await this.findOne(matricula);
     await this.usuarioRepository.remove(usuario);
+  }
+
+  async alterarSenha(matricula: string, dto: AlterarSenhaDto): Promise<{ codigo: string; mensagem: string }> {
+    const usuario = await this.usuarioRepository.findOne({ where: { matricula } });
+
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    const senhaCorreta = await bcrypt.compare(dto.senhaAtual, usuario.senha);
+    if (!senhaCorreta) {
+      throw new BadRequestException(ErrorMessages.EUSR00010.mensagem);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    usuario.senha = await bcrypt.hash(dto.novaSenha, salt);
+    await this.usuarioRepository.save(usuario);
+
+    return { codigo: 'SUSR00008', mensagem: SuccessMessages.SUSR00008.mensagem };
+  }
+
+  async alterarEmail(matricula: string, dto: AlterarEmailDto): Promise<{ codigo: string; mensagem: string }> {
+    const usuario = await this.usuarioRepository.findOne({ where: { matricula } });
+
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    const senhaCorreta = await bcrypt.compare(dto.senha, usuario.senha);
+    if (!senhaCorreta) {
+      throw new BadRequestException(ErrorMessages.EUSR00010.mensagem);
+    }
+
+    const emailEmUso = await this.usuarioRepository.findOne({ where: { email: dto.novoEmail } });
+    if (emailEmUso) {
+      throw new ConflictException(ErrorMessages.EUSR00011.mensagem);
+    }
+
+    const codigo = this.gerarCodigoVerificacao();
+    usuario.email = dto.novoEmail;
+    usuario.emailVerificado = false;
+    usuario.codigoVerificacao = codigo;
+    await this.usuarioRepository.save(usuario);
+
+    await this.emailService.enviarCodigoVerificacao(usuario.email, usuario.nomeUsuario, codigo);
+
+    return { codigo: 'SUSR00009', mensagem: SuccessMessages.SUSR00009.mensagem };
   }
 }

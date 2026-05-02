@@ -22,6 +22,8 @@ import { VerificarEmailDto } from './dto/verificar-email.dto.js';
 import { multerPerfilConfig } from '../uploads/multer.config.js';
 import { SuccessMessages } from '../common/constants/messages.success.js';
 import { Public } from '../common/decorators/public.decorator.js';
+import { AlterarEmailDto } from './dto/alterar-email.dto.js';
+import { AlterarSenhaDto } from './dto/alterar-senha.dto.js';
 
 @ApiTags('Usuários')
 @Controller('usuario')
@@ -143,5 +145,32 @@ export class UsuarioController {
       codigo: 'SUSR00003',
       mensagem: SuccessMessages.SUSR00003.mensagem,
     };
+  }
+
+  @Patch(':id/alterar-senha')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Alterar senha', description: 'Altera a senha do usuário. Exige a senha atual para confirmar a operação.' })
+  @ApiParam({ name: 'id', description: 'Matrícula do usuário' })
+  @ApiResponse({ status: 200, description: '[SUSR00008] Senha alterada com sucesso.' })
+  @ApiResponse({ status: 400, description: '[EUSR00010] Senha atual incorreta.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  async alterarSenha(@Param('id') id: string, @Body() dto: AlterarSenhaDto) {
+    return this.usuarioService.alterarSenha(id, dto);
+  }
+
+  @Patch(':id/alterar-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Alterar e-mail', description: 'Altera o e-mail do usuário. Exige a senha atual para confirmar. O novo e-mail deverá ser verificado antes do próximo login.' })
+  @ApiParam({ name: 'id', description: 'Matrícula do usuário' })
+  @ApiResponse({ status: 200, description: '[SUSR00009] E-mail alterado com sucesso. Verifique seu novo e-mail para ativar a conta.' })
+  @ApiResponse({ status: 400, description: '[EUSR00010] Senha atual incorreta.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  @ApiResponse({ status: 409, description: '[EUSR00011] E-mail já está em uso por outro usuário.' })
+  async alterarEmail(@Param('id') id: string, @Body() dto: AlterarEmailDto) {
+    return this.usuarioService.alterarEmail(id, dto);
   }
 }
