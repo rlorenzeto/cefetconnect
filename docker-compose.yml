@@ -4,12 +4,14 @@ services:
   db:
     image: mysql:8.0
     container_name: cefet_db
+    # O comando abaixo força o MySQL a ignorar maiúsculas/minúsculas em nomes de tabelas
+    command: --lower-case-table-names=1 
     environment:
-      MYSQL_ROOT_PASSWORD: SenhaRootForte2026! # A senha do Root (Guarde isso)
+      MYSQL_ROOT_PASSWORD: SenhaRootForte2026!
     ports:
       - "3306:3306"
     volumes:
-      - db_data:/var/lib/mysql # Salva os dados para não perder se o container reiniciar
+      - db_data:/var/lib/mysql
     restart: always
 
   backend:
@@ -18,7 +20,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - db # Diz pro backend só ligar depois que o banco existir
+      - db
     restart: always
 
   frontend:
