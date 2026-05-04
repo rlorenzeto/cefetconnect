@@ -57,7 +57,7 @@ export default function MobileProfile({
           <div className="mt-7 grid grid-cols-2 gap-3 text-center">
             <div className="rounded-2xl bg-[#f1f1f1] px-3 py-4">
               <p className="text-2xl font-bold text-[#089464]">0</p>
-              <p className="text-xs text-[#343434]">Amigos</p>
+              <p className="text-xs text-[#343434]">Posts</p>
             </div>
 
             <div className="rounded-2xl bg-[#f1f1f1] px-3 py-4">
