@@ -2,13 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import nodemailer = require('nodemailer');
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
-// SMTP MOCKADO — tem que substituir pelas variáveis de ambiente em produção
-
-const SMTP_HOST =  process.env.SMTP_HOST ??  'smtp.ethereal.email';
-const SMTP_PORT = Number(process.env.SMTP_PORT ?? 587);
-const SMTP_USER =  process.env.SMTP_USER ??  'brett.mckenzie@ethereal.email';
-const SMTP_PASS =   process.env.SMTP_PASS ??  'MP4uATpksFufkgFxv1';
-const EMAIL_FROM =
+ const EMAIL_FROM =
   process.env.EMAIL_FROM ?? '"Cefet Connect" <noreply@cefetconnect.com>';
 
 @Injectable()
@@ -17,12 +11,12 @@ export class EmailService {
 
   private transporter: nodemailer.Transporter<SMTPTransport.SentMessageInfo> =
     nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
+      host: process.env.SMTP_HOST ?? 'smtp.ethereal.email',
+      port: Number(process.env.SMTP_PORT ?? 587),
       secure: false,
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
+        user: process.env.SMTP_USER ?? 'brett.mckenzie@ethereal.email',
+        pass: process.env.SMTP_PASS ?? 'MP4uATpksFufkgFxv1',
       },
     });
 
