@@ -1,5 +1,6 @@
 import BrandLogo from "./BrandLogo";
 import FeatureCard from "./FeatureCard";
+import AuthButton from "./AuthButton";
 
 export default function MobileHero({ onOpenLogin, onOpenRegister }) {
   return (
@@ -7,7 +8,7 @@ export default function MobileHero({ onOpenLogin, onOpenRegister }) {
       <div className="min-h-screen w-full bg-[#f4f4f4]">
         <div className="h-55 w-full overflow-hidden">
           <img
-            src="../../../public/images/campus-login.png"
+            src="/images/campus-cefet.png"
             alt="Estudantes no campus"
             className="h-full w-full object-cover"
           />
@@ -30,36 +31,38 @@ export default function MobileHero({ onOpenLogin, onOpenRegister }) {
             <FeatureCard
               title="Comunidades"
               description="Faça parte de comunidades ativas !"
-              image="../../../public/images/comunidades.png"
+              image="/images/comunidades.png"
             />
 
             <FeatureCard
               title="Dúvidas"
               description="Fique informado sobre qualquer assunto"
-              image="../../../public/images/duvidas.png"
+              image="/images/duvidas.png"
             />
 
             <FeatureCard
               title="Eventos"
               description="Esteja por dentro de todos os eventos que vão acontecer"
-              image="../../../public/images/eventos.png"
+              image="/images/eventos.png"
             />
           </div>
 
-          <button
+          <AuthButton
+            type="button"
             onClick={onOpenLogin}
-            className="mt-6 h-11 w-full rounded-full bg-[#8ad142] text-sm font-medium text-white"
+            className="mt-6 h-11 text-sm"
           >
             Entrar
-          </button>
+          </AuthButton>
 
-          <button
+          <AuthButton
             type="button"
+            variant="outline"
             onClick={onOpenRegister}
-            className="mt-3 h-11 w-full rounded-full border border-[#8ad142] bg-transparent text-sm font-medium text-[#8ad142]"
+            className="mt-3 h-11 text-sm"
           >
             Criar nova conta
-          </button>
+          </AuthButton>
         </div>
       </div>
     </section>

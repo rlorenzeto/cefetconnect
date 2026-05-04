@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { forgotPassword } from "../../services/authService";
+import AuthButton from "./AuthButton";
 
 export default function ForgotPasswordForm({ onGoToLogin }) {
   const [email, setEmail] = useState("");
@@ -74,21 +75,21 @@ export default function ForgotPasswordForm({ onGoToLogin }) {
         <p className="text-sm text-[#2d67c5]">{successMessage}</p>
       )}
 
-      <button
+      <AuthButton
         type="submit"
         disabled={isSubmitting}
-        className="mt-3 h-12 w-full rounded-full bg-[#8ad142] text-sm font-semibold text-white disabled:opacity-70"
+        className="mt-7"
       >
-        {isSubmitting ? "Enviando..." : "Enviar link de recuperação"}
-      </button>
+        {isSubmitting ? "Enviando..." : "Enviar instruções"}
+      </AuthButton>
 
-      <button
-        type="button"
-        onClick={onGoToLogin}
-        className="mt-8 h-11 w-full rounded-full border border-[#8ad142] bg-transparent text-sm font-medium text-[#8ad142]"
-      >
-        Voltar para entrar
-      </button>
+      <AuthButton
+      type="button"
+      onClick={onGoToLogin}
+      className="mt-4"
+    >
+      Voltar para login
+</AuthButton>
     </form>
   );
 }

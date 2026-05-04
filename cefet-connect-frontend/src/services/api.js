@@ -1,12 +1,14 @@
-const API_BASE_URL =
+export const API_BASE_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "http://localhost:3000";
 
 export async function apiFetch(path, options = {}) {
   const token = localStorage.getItem("cefetconnect_token");
+  const isFormData = options.body instanceof FormData;
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: options.method || "GET",
     headers: {
-      "Content-Type": "application/json",
+      ...(!isFormData ? { "Content-Type": "application/json" } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
@@ -21,8 +23,11 @@ export async function apiFetch(path, options = {}) {
   if (!response.ok) {
     const message =
       typeof data === "object" && data?.message
-        ? data.message
+        ? Array.isArray(data.message)
+          ? data.message.join(" ")
+          : data.message
         : "Erro ao comunicar com o servidor.";
+
     throw new Error(message);
   }
 

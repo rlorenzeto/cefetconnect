@@ -13,7 +13,7 @@ export default function DesktopHero() {
           <FeatureCard
             title="Comunidades"
             description="Faça parte de comunidades ativas !"
-            image="../../../public/images/comunidades.png"
+            image="/images/comunidades.png"
           />
         </div>
 
@@ -21,7 +21,7 @@ export default function DesktopHero() {
           <FeatureCard
             title="Dúvidas"
             description="Fique informado sobre qualquer assunto"
-            image="../../../public/images/duvidas.png"
+            image="/images/duvidas.png"
           />
         </div>
 
@@ -29,7 +29,7 @@ export default function DesktopHero() {
           <FeatureCard
             title="Eventos"
             description="Esteja por dentro de todos os eventos que vão acontecer"
-            image="../../../public/images/eventos.png"
+            image="/images/eventos.png"
           />
         </div>
       </div>

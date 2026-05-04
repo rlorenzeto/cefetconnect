@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { registerUser } from "../../services/authService";
 import PasswordInput from "./PasswordInput";
+import AuthButton from "./AuthButton";
 
 export default function RegisterForm({ onGoToLogin }) {
   const navigate = useNavigate();
@@ -40,8 +41,8 @@ export default function RegisterForm({ onGoToLogin }) {
   }
 
   function validateEmail(email) {
-    //return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    return /^[^\s@]+@aluno\.cefetmg\.br$/i.test(email.trim());
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    //return /^[^\s@]+@aluno\.cefetmg\.br$/i.test(email.trim());
   }
 
   async function handleSubmit(event) {
@@ -67,7 +68,7 @@ export default function RegisterForm({ onGoToLogin }) {
     if (!formData.email.trim()) {
       newErrors.email = "O e-mail é obrigatório.";
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Use seu e-mail institucional @aluno.cefetmg.br.";
+      newErrors.email = "Digite um e-mail válido.";
     }
 
     if (!formData.registration.trim()) {
@@ -105,7 +106,19 @@ export default function RegisterForm({ onGoToLogin }) {
 
       console.log("Resposta cadastro:", response);
 
-      navigate("/login");
+      const pendingVerification = {
+        matricula: response?.dados?.matricula || formData.registration,
+        email: response?.dados?.email || formData.email,
+      };
+
+      localStorage.setItem(
+        "cefetconnect_pending_verification",
+        JSON.stringify(pendingVerification)
+      );
+
+      navigate("/confirm-email", {
+        state: pendingVerification,
+      });
     } catch (error) {
       setApiError(error.message || "Não foi possível criar a conta.");
     } finally {
@@ -179,23 +192,23 @@ export default function RegisterForm({ onGoToLogin }) {
         <p className="text-sm text-red-500">{apiError}</p>
       )}
 
-      <button
+      <AuthButton
         type="submit"
         disabled={isSubmitting}
-        className="mt-8 h-11 w-full rounded-full border border-[#8ad142] bg-transparent text-sm font-medium text-[#8ad142] disabled:opacity-70"
+        className="mt-7"
       >
-        {isSubmitting ? "Criando conta..." : "Criar nova conta"}
-      </button>
+        {isSubmitting ? "Cadastrando..." : "Cadastrar"}
+      </AuthButton>
 
       <p className="mt-4 text-center text-sm text-[#777]">
         Já possui conta?{" "}
-        <button
+       <AuthButton
           type="button"
           onClick={onGoToLogin}
-          className="font-medium text-[#8ad142]"
+          className="mt-4"
         >
-          Entrar
-        </button>
+          Já tenho uma conta
+        </AuthButton>
       </p>
     </form>
   );

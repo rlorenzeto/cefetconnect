@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
 import PasswordInput from "./PasswordInput";
+import AuthButton from "./AuthButton";
 
 export default function ResetPasswordForm() {
   const navigate = useNavigate();
@@ -126,13 +127,13 @@ export default function ResetPasswordForm() {
         <p className="text-sm text-[#2d67c5]">{successMessage}</p>
       )}
 
-      <button
+      <AuthButton
         type="submit"
         disabled={isSubmitting}
-        className="mt-3 h-12 w-full rounded-full bg-[#8ad142] text-sm font-semibold text-white disabled:opacity-70"
+        className="mt-7"
       >
         {isSubmitting ? "Salvando..." : "Redefinir senha"}
-      </button>
+      </AuthButton>
     </form>
   );
 }

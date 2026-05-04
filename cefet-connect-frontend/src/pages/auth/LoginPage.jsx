@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import BrandLogo from "../../components/auth/BrandLogo";
 import DesktopHero from "../../components/auth/DesktopHero";
 import LoginForm from "../../components/auth/LoginForm";
@@ -12,6 +12,15 @@ export default function LoginPage() {
   const [isMobileForgotOpen, setIsMobileForgotOpen] = useState(false);
   const navigate = useNavigate();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("openMobileLogin") === "true") {
+      setIsMobileLoginOpen(true);
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams]);
+
   function handleOpenForgotModal() {
     setIsMobileLoginOpen(false);
     setIsMobileForgotOpen(true);
@@ -23,13 +32,13 @@ export default function LoginPage() {
         <DesktopHero />
 
         <section className="hidden lg:flex lg:min-h-screen lg:items-center lg:justify-center lg:px-10 lg:py-8 xl:px-16">
-          <div className="w-full max-w-107.5">
-            <div className="mb-8 flex justify-center">
-              <BrandLogo className="h-32 w-auto object-contain" />
+          <div className="w-full max-w-[560px]">
+            <div className="mb-24 flex justify-center">
+              <BrandLogo variant="large" />
             </div>
 
-            <p className="mb-8 text-center text-[18px] text-[#3b3b3b]">
-              Entrar no <span className="text-[#86cf4f]">Cefet</span>{" "}
+            <p className="mb-10 text-center text-[22px] font-normal text-[#111111]">
+              Entrar no <span className="text-[#65c64d]">Cefet</span>{" "}
               <span className="text-[#2d67c5]">Connect</span>
             </p>
 
