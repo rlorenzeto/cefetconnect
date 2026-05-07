@@ -5,7 +5,7 @@ services:
     image: mysql:8.0
     container_name: cefet_db
     # O comando abaixo força o MySQL a ignorar maiúsculas/minúsculas em nomes de tabelas
-    command: --lower-case-table-names=1 
+    command: --lower-case-table-names=1
     environment:
       MYSQL_ROOT_PASSWORD: SenhaRootForte2026!
     ports:
@@ -19,14 +19,10 @@ services:
     container_name: cefet_backend
     ports:
       - "3000:3000"
+    env_file:
+      - ./api_cefetconnect/.env
     depends_on:
       - db # Diz pro backend só ligar depois que o banco existir
-    environment:
-      NODE_ENV: production
-      MAIL_HOST: smtp.gmail.com
-      MAIL_PORT: 587
-      MAIL_USER: cefetconnect@gmail.com
-      MAIL_PASS: eaafagjmmscmohy
     restart: always
 
   frontend:
