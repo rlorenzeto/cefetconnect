@@ -1,15 +1,15 @@
-FROM node:20
+FROM node:20 AS builder
 
 WORKDIR /app
-
 COPY package*.json ./
-
 RUN npm install
-
 COPY . .
+RUN npm run build
 
-# Expõe a porta do Vite
+FROM node:20-slim
+WORKDIR /app
+RUN npm install -g serve
+COPY --from=builder /app/dist ./dist
+
 EXPOSE 5173
-
-# O host 0.0.0.0 é necessário para o Docker conseguir acessar o Vite
-CMD ["npm", "run", "dev", "--", "--host"]
+CMD ["serve", "-s", "dist", "-l", "5173"]
