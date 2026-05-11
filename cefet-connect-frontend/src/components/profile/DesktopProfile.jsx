@@ -30,7 +30,7 @@ export default function DesktopProfile({
           <section className="w-full overflow-hidden rounded-[32px] bg-white shadow-sm">
             <div className="h-52 w-full">
               <img
-                src="../../../public/images/campus-cefet.png"
+                src="/images/campus-cefet.png"
                 alt="Campus CEFET"
                 className="h-full w-full object-cover"
               />
