@@ -7,16 +7,10 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd ~/cefetconnect
-            git pull
-            docker compose up -d --build
+      - name: Atualizar e Fazer o Build
+        run: |
+          cd ~/cefetconnect
+          git pull
+          docker compose up -d --build
