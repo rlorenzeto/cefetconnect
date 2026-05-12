@@ -5,6 +5,6 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    allowedHosts: ["mintconnect.linceonline.com.br"],
+    allowedHosts: ["cefetconnect.linceonline.com.br"],
   },
 });
