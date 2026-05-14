@@ -1,19 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { Usuario } from './usuario.entity';
 import { Comunidade } from './comunidade.entity';
 import { Evento } from './evento.entity.js';
 import { Comentario } from './comentario.entity';
+import { FotoPost } from './foto-post.entity';
 
 @Entity('Post')
 export class Post {
   @PrimaryGeneratedColumn('uuid')
   idPost!: string;
 
-  @CreateDateColumn({ type: 'datetime' }) 
+  @Column({ type: 'datetime' })
   dataHoraPublicacao!: Date;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  arquivo!: string;
+  @Column({ type: 'varchar', length: 1000, nullable: true })
+  conteudo?: string;
 
   // FK Comunidade -> ON DELETE SET NULL
   @ManyToOne(() => Comunidade, (comunidade) => comunidade.posts, { onDelete: 'SET NULL', nullable: true })
@@ -31,5 +32,8 @@ export class Post {
   evento!: Evento;
 
   @OneToMany(() => Comentario, (comentario) => comentario.post)
-  comentarios!: Comentario[];
+  comentarios?: Comentario[];
+
+  @OneToMany(() => FotoPost, (foto) => foto.post)
+  fotosPost?: FotoPost[];
 }

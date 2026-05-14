@@ -52,7 +52,10 @@ CREATE TABLE `comunidade` (
   `idComunidade` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `nomeComunidade` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `descricaoComunidade` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`idComunidade`)
+  `fk_Usuario_matricula` varchar(11) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`idComunidade`),
+  KEY `FK_comunidade_usuario` (`fk_Usuario_matricula`),
+  CONSTRAINT `FK_comunidade_usuario` FOREIGN KEY (`fk_Usuario_matricula`) REFERENCES `usuario` (`matricula`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -187,6 +190,7 @@ DROP TABLE IF EXISTS `post`;
 CREATE TABLE `post` (
   `idPost` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `dataHoraPublicacao` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `conteudo` varchar(1000) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `arquivo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `fk_Comunidade_idComunidade` varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `fk_Usuario_matricula` varchar(11) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -208,6 +212,34 @@ CREATE TABLE `post` (
 LOCK TABLES `post` WRITE;
 /*!40000 ALTER TABLE `post` DISABLE KEYS */;
 /*!40000 ALTER TABLE `post` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `post_fotos`
+--
+
+DROP TABLE IF EXISTS `post_fotos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `post_fotos` (
+  `id_foto` varchar(255) NOT NULL,
+  `idPost` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ordem` int DEFAULT '0',
+  `criada_em` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_foto`),
+  KEY `idPost` (`idPost`),
+  CONSTRAINT `post_fotos_ibfk_1` FOREIGN KEY (`idPost`) REFERENCES `post` (`idPost`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `post_fotos`
+--
+
+LOCK TABLES `post_fotos` WRITE;
+/*!40000 ALTER TABLE `post_fotos` DISABLE KEYS */;
+/*!40000 ALTER TABLE `post_fotos` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

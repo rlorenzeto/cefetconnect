@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsStrongPassword } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsStrongPassword, MaxLength } from 'class-validator';
 
 export class LoginUsuarioDto {
   @ApiProperty({
@@ -14,6 +14,7 @@ export class LoginUsuarioDto {
   @IsString({ message: 'A senha deve ser um texto' })
   @IsNotEmpty({ message: 'A senha é obrigatória' })
   @MinLength(8, { message: 'A nova senha deve ter no mínimo 8 caracteres.' })
+  @MaxLength(25, { message: 'A senha deve ter no máximo 25 caracteres.' })
   @IsStrongPassword({
     minLength: 8,
     minNumbers: 1,      

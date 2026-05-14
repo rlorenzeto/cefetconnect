@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsNotEmpty, MaxLength, MinLength, IsStrongPassword } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MaxLength, MinLength, IsStrongPassword, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUsuarioDto {
@@ -11,9 +11,12 @@ export class CreateUsuarioDto {
   @ApiProperty({ example: 'Rafaela Braga', description: 'Nome completo do aluno' })
   @IsString({ message: 'O nome de usuário deve ser um texto' })
   @IsNotEmpty({ message: 'O nome de usuário é obrigatório' })
+  @Matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, {
+    message: 'O nome deve conter apenas letras e espaços.',
+  })
   nomeUsuario!: string;
 
-  @ApiProperty({ example: 'rafaela.braga@aluno.cefetmg.br', description: 'Endereço de email do aluno' })
+  @ApiProperty({ example: 'rafaela.braga@gmail.com', description: 'Endereço de email do aluno' })
   @IsEmail({}, { message: 'Endereço de email inválido' })
   @IsNotEmpty({ message: 'O email é obrigatório' })
   email!: string;
@@ -22,6 +25,7 @@ export class CreateUsuarioDto {
   @IsNotEmpty({ message: 'A senha é obrigatória' })
   @IsString({ message: 'A senha deve ser enviada em formato de texto.' })
   @MinLength(8, { message: 'A nova senha deve ter no mínimo 8 caracteres.' })
+  @MaxLength(25, { message: 'A senha deve ter no máximo 25 caracteres.' })
   @IsStrongPassword({
     minLength: 8,
     minNumbers: 1,      
