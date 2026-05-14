@@ -2,13 +2,13 @@ import { IsString, IsEmail, IsNotEmpty, MaxLength, MinLength, IsStrongPassword, 
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUsuarioDto {
-  @ApiProperty({ example: '12345678910', description: 'Matrícula do aluno (possui 11 dígitos)' })
+  @ApiProperty({ example: '12345678910 ou 1234567', description: 'Matrícula do usuário: 11 dígitos para aluno ou 7 dígitos para professor' })
   @IsString({ message: 'A matrícula deve ser um texto' })
   @IsNotEmpty({ message: 'A matrícula é obrigatória' })
-  @MaxLength(11, { message: 'A matrícula possui 11 caracteres' })
+  @Matches(/^\d{7}$|^\d{11}$/, { message: 'A matrícula deve ter 7 dígitos (caso seja professor) ou 11 dígitos (caso seja aluno)' })
   matricula!: string;
 
-  @ApiProperty({ example: 'Rafaela Braga', description: 'Nome completo do aluno' })
+  @ApiProperty({ example: 'Maria da Silva', description: 'Nome completo do aluno/professor' })
   @IsString({ message: 'O nome de usuário deve ser um texto' })
   @IsNotEmpty({ message: 'O nome de usuário é obrigatório' })
   @Matches(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/, {
@@ -16,12 +16,12 @@ export class CreateUsuarioDto {
   })
   nomeUsuario!: string;
 
-  @ApiProperty({ example: 'rafaela.braga@gmail.com', description: 'Endereço de email do aluno' })
+  @ApiProperty({ example: 'maria.silva@gmail.com', description: 'Endereço de email do aluno/professor' })
   @IsEmail({}, { message: 'Endereço de email inválido' })
   @IsNotEmpty({ message: 'O email é obrigatório' })
   email!: string;
 
-  @ApiProperty({ example: 'senhaSegura123@', description: 'A senha do aluno precisa ter no mínimo 8 caracteres, contendo pelo menos um número, um caractere especial e uma letra maiúscula.' })
+  @ApiProperty({ example: 'senhaSegura123@', description: 'A senha do usuário precisa ter no mínimo 8 caracteres, contendo pelo menos um número, um caractere especial e uma letra maiúscula.' })
   @IsNotEmpty({ message: 'A senha é obrigatória' })
   @IsString({ message: 'A senha deve ser enviada em formato de texto.' })
   @MinLength(8, { message: 'A nova senha deve ter no mínimo 8 caracteres.' })

@@ -6,17 +6,18 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { RemoverFotosDto } from './dto/remover-fotos.dto';
 import { SuccessMessages } from '../common/constants/messages.success';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { multerPostFotosConfig } from '../uploads/multer.config';
 
+@ApiTags('Posts')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FilesInterceptor('fotos', 10, multerPostFotosConfig))
+  @UseInterceptors(FilesInterceptor('fotos', 10, multerPostFotosConfig))  
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Criar post', description: 'Usuário autenticado cria um novo post. Pode enviar 0, 1 ou várias fotos (multipart/form-data).' })

@@ -3,9 +3,10 @@ import { ComentarioService } from './comentario.service';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
+@ApiTags('Comentários')
 @Controller('comentario')
 export class ComentarioController {
   constructor(private readonly comentarioService: ComentarioService) {}
