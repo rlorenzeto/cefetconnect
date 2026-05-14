@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Post } from './post.entity';
 import { Evento } from './evento.entity';
+import { Usuario } from './usuario.entity.js';
 
 @Entity('Comunidade')
 export class Comunidade {
@@ -12,6 +13,11 @@ export class Comunidade {
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   descricaoComunidade!: string;
+
+  // FK Usuario (criador da comunidade) -> ON DELETE CASCADE
+  @ManyToOne(() => Usuario, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'fk_Usuario_matricula' })
+  criador?: Usuario;
 
   @OneToMany(() => Post, (post) => post.comunidade)
   posts!: Post[];

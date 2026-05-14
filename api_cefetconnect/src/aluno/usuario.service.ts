@@ -11,7 +11,7 @@ import * as bcrypt from 'bcrypt'; //criptografar senhas
 import { unlink } from 'fs/promises';
 import { join } from 'path';
 
-import { Usuario } from './entities/usuario.entity.js';
+import { Usuario } from '../entities/usuario.entity.js';
 import { CreateUsuarioDto } from './dto/create-usuario.dto.js';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto.js';
 import { EmailService } from '../email/email.service.js';
@@ -27,7 +27,7 @@ export class UsuarioService {
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
     private readonly emailService: EmailService,
-  ) { }
+  ) {}
 
   private gerarCodigoVerificacao(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -45,7 +45,7 @@ export class UsuarioService {
       ],
     });
 
-    if (usuarioExistente) {
+    if (usuarioExistente) { 
       throw new ConflictException(ErrorMessages.EUSR00002.mensagem);
     }
 
@@ -150,21 +150,26 @@ export class UsuarioService {
 
   async findAll() {
     return await this.usuarioRepository.find({
-      select: ['matricula', 'nomeUsuario', 'email', 'emailVerificado', 'biografia'],
+      select: ['nomeUsuario', 'biografia', 'fotoUrl'],
     });
   }
 
   async findOne(matricula: string): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
       where: { matricula },
-      select: [
-        'matricula',
-        'nomeUsuario',
-        'email',
-        'emailVerificado',
-        'fotoUrl',
-        'biografia',
-      ],
+    });
+
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    return usuario;
+  }
+
+  async findPerfil(matricula: string): Promise<Pick<Usuario, 'nomeUsuario' | 'fotoUrl' | 'biografia'>> {
+    const usuario = await this.usuarioRepository.findOne({
+      where: { matricula },
+      select: ['nomeUsuario', 'fotoUrl', 'biografia'],
     });
 
     if (!usuario) {
@@ -178,7 +183,7 @@ export class UsuarioService {
     matricula: string,
     updateUsuarioDto: UpdateUsuarioDto,
     fotoUrl?: Express.Multer.File,
-  ): Promise<Usuario> {
+  ): Promise<Pick<Usuario, 'nomeUsuario' | 'biografia' | 'fotoUrl'>> {
     const usuario = await this.findOne(matricula); // Garante que o usuário existe
 
     // Se a pessoa estiver tentando mudar a senha, precisamos criptografar a nova também
@@ -206,7 +211,13 @@ export class UsuarioService {
 
     // Mescla os dados antigos com os novos e salva
     this.usuarioRepository.merge(usuario, updateUsuarioDto);
-    return await this.usuarioRepository.save(usuario);
+    const atualizado = await this.usuarioRepository.save(usuario);
+
+    return {
+      nomeUsuario: atualizado.nomeUsuario,
+      biografia: atualizado.biografia,
+      fotoUrl: atualizado.fotoUrl,
+    };
   }
 
   async remove(matricula: string): Promise<void> {
@@ -259,5 +270,58 @@ export class UsuarioService {
     await this.emailService.enviarCodigoVerificacao(usuario.email, usuario.nomeUsuario, codigo);
 
     return { codigo: 'SUSR00009', mensagem: SuccessMessages.SUSR00009.mensagem };
+  }
+
+  async esqueceuSenha(email: string) {
+    const usuario = await this.usuarioRepository.findOne({ where: { email } });
+
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    const codigoRecuperacao = this.gerarCodigoVerificacao();
+    usuario.codigoVerificacao = codigoRecuperacao;
+    await this.usuarioRepository.save(usuario);
+
+    await this.emailService.enviarCodigoRecuperacao(
+      usuario.email,
+      usuario.nomeUsuario,
+      codigoRecuperacao,
+    );
+
+    return {
+      codigo: 'SUSR00010',
+      mensagem: SuccessMessages.SUSR00010.mensagem,
+    };
+  }
+
+  async resetarSenha(
+    email: string,
+    codigo: string,
+    novaSenha: string,
+  ): Promise<{ codigo: string; mensagem: string }> {
+
+    const usuario = await this.usuarioRepository.findOne({ where: { email } });
+
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    if (!usuario.codigoVerificacao || usuario.codigoVerificacao !== codigo) {
+      throw new BadRequestException(ErrorMessages.EUSR00005.mensagem);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const senhaCriptografada = await bcrypt.hash(novaSenha, salt);
+
+    usuario.senha = senhaCriptografada;
+    usuario.codigoVerificacao = null;
+
+    await this.usuarioRepository.save(usuario);
+
+    return {
+      codigo: 'SUSR00011',
+      mensagem: SuccessMessages.SUSR00011.mensagem,
+    };
   }
 }

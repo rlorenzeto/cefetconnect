@@ -8,6 +8,8 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EmailModule } from './email/email.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { PostModule } from './post/post.module';
+import { ComentarioModule } from './comentario/comentario.module';
 
 @Module({
   imports: [
@@ -30,6 +32,8 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
     EmailModule,
     UsuarioModule,
     AuthModule,
+    PostModule,
+    ComentarioModule,
   ],
   controllers: [AppController],
   providers: [

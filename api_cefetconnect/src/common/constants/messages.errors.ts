@@ -14,6 +14,17 @@ export const ErrorMessages = {
   EUSR00009: { mensagem: 'Tamanho máximo de arquivo excedido.', status: 413 },
   EUSR00010: { mensagem: 'Senha atual incorreta.', status: 401 },
   EUSR00011: { mensagem: 'Este e-mail já está em uso por outro usuário.', status: 409 },
+  EUSR00012: { mensagem: 'Post não encontrado.', status: 404 },
+  EUSR00013: { mensagem: 'Você não tem permissão para acessar este recurso.', status: 403 },
+  EUSR00014: { mensagem: 'Post não encontrado.', status: 404 },
+  EUSR00015: { mensagem: 'Foto não encontrada.', status: 404 },
+  EUSR00016: { mensagem: 'Apenas quem enviou a foto pode deletá-la.', status: 403 },
+  EUSR00017: { mensagem: 'Esta foto não pertence a este post.', status: 403 },
+  EUSR00018: { mensagem: 'Você já curtiu este post.', status: 409 },
+  EUSR00019: { mensagem: 'Curtida não encontrada.', status: 404 },
+  EUSR00020: { mensagem: 'Comentário não encontrado.', status: 404 },
+  EUSR00021: { mensagem: 'Você já curtiu este comentário.', status: 409 },
+  EUSR00022: { mensagem: 'Curtida de comentário não encontrada.', status: 404 },
 
   // ── Autenticação ──────────────────────────────────────────────────────────
   EAUT00001: { mensagem: 'Email ou senha incorretos.', status: 401 },

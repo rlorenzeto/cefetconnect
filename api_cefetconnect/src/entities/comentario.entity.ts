@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Usuario } from './usuario.entity';
 import { Post } from './post.entity';
 
@@ -10,7 +10,7 @@ export class Comentario {
   @Column({ type: 'varchar', length: 255 })
   texto!: string;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @Column({ type: 'datetime' })
   dataHora!: Date;
 
   // FK Usuario -> ON DELETE CASCADE

@@ -47,16 +47,31 @@ export class Usuario {
   @OneToMany(() => Comentario, (comentario) => comentario.usuario)
   comentarios!: Comentario[];
 
+  @OneToMany(() => Comunidade, (comunidade) => comunidade.criador)
+  comunidadesCriadas!: Comunidade[];
+
   // Relacionamentos N:M
   @ManyToMany(() => Comunidade)
-  @JoinTable({ name: 'participa' }) // Gera a tabela "participa"
+  @JoinTable({
+    name: 'participa',
+    joinColumn: { name: 'fk_Usuario_matricula', referencedColumnName: 'matricula' },
+    inverseJoinColumn: { name: 'fk_Comunidade_idComunidade', referencedColumnName: 'idComunidade' },
+  })
   comunidades!: Comunidade[];
 
   @ManyToMany(() => Post)
-  @JoinTable({ name: 'likePost' }) // Gera a tabela "likePost"
+  @JoinTable({
+    name: 'likePost',
+    joinColumn: { name: 'fk_Usuario_matricula', referencedColumnName: 'matricula' },
+    inverseJoinColumn: { name: 'fk_Post_idPost', referencedColumnName: 'idPost' },
+  })
   postsCurtidos!: Post[];
 
   @ManyToMany(() => Comentario)
-  @JoinTable({ name: 'likeComentario' }) // Gera a tabela "likeComentario"
+  @JoinTable({
+    name: 'likeComentario',
+    joinColumn: { name: 'fk_Usuario_matricula', referencedColumnName: 'matricula' },
+    inverseJoinColumn: { name: 'fk_Comentario_idComentario', referencedColumnName: 'idComentario' },
+  })
   comentariosCurtidos!: Comentario[];
 }
