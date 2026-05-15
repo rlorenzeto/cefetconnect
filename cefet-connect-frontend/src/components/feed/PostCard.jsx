@@ -5,9 +5,12 @@ import PostImages from "./PostImages";
 import CommentSection from "./CommentSection";
 import EditPostModal from "./EditPostModal";
 import {
+  addPostPhotos,
   deletePost,
+  getPostById,
   getPostLikes,
   likePost,
+  removePostPhotos,
   unlikePost,
   updatePost,
 } from "../../services/postService";
@@ -190,17 +193,30 @@ const isOwner =
       setIsSavingEdit(true);
       setError("");
 
-      const response = await updatePost(post.idPost, {
+      await updatePost(post.idPost, {
         conteudo: payload.conteudo,
+        destino: payload.destino,
       });
 
+      if (payload.idsFotosRemover?.length > 0) {
+        await removePostPhotos(post.idPost, payload.idsFotosRemover);
+      }
+
+      if (payload.novasFotos?.length > 0) {
+        await addPostPhotos(post.idPost, payload.novasFotos);
+      }
+
+      const response = await getPostById(post.idPost);
       const updatedPost = response?.dados || response;
 
       onPostUpdated({
         ...post,
         ...updatedPost,
         usuario: updatedPost.usuario || post.usuario,
-        fotosPost: updatedPost.fotosPost || post.fotosPost,
+        fotosPost:
+          updatedPost.fotosPost !== undefined
+            ? updatedPost.fotosPost
+            : post.fotosPost,
       });
 
       setIsEditModalOpen(false);
