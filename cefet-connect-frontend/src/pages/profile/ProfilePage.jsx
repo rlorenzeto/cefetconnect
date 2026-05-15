@@ -8,6 +8,7 @@ import {
   getUserProfile,
   logoutUser,
 } from "../../services/authService";
+import { listPosts } from "../../services/postService";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function ProfilePage() {
 
   const [user, setUser] = useState(savedUser);
   const [isLoading, setIsLoading] = useState(true);
+  const [userPosts, setUserPosts] = useState([]);
 
   const matricula = savedUser?.matricula || user?.matricula;
 
@@ -28,6 +30,16 @@ export default function ProfilePage() {
       try {
         const response = await getUserProfile(matricula);
         setUser(response?.dados || response);
+        const postsResponse = await listPosts();
+        const postsData = postsResponse?.dados || postsResponse;
+
+        const filteredPosts = Array.isArray(postsData)
+          ? postsData.filter(
+              (post) => post?.usuario?.matricula === matricula
+            )
+          : [];
+
+        setUserPosts(filteredPosts);
       } catch (error) {
         console.error("Erro ao carregar perfil:", error);
       } finally {
@@ -58,6 +70,7 @@ export default function ProfilePage() {
       <DesktopProfile
         user={user}
         imageUrl={imageUrl}
+        userPosts={userPosts}
         onEditProfile={() => navigate("/profile/edit")}
         onLogout={handleLogout}
       />
@@ -65,6 +78,7 @@ export default function ProfilePage() {
       <MobileProfile
         user={user}
         imageUrl={imageUrl}
+        userPosts={userPosts}
         onEditProfile={() => navigate("/profile/edit")}
         onLogout={handleLogout}
       />

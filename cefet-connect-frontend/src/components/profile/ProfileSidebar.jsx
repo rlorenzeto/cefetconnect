@@ -76,19 +76,23 @@ function NavButton({ children, active = false, onClick, label }) {
   );
 }
 
-export default function ProfileSidebar() {
+export default function ProfileSidebar({ activePage = "profile" }) {
   const navigate = useNavigate();
 
   return (
-    <aside className="hidden min-h-screen w-[132px] shrink-0 flex-col items-center border-r border-[#e3e3e3] bg-white py-10 lg:flex">
+    <aside className="sticky top-0 hidden h-screen w-[132px] shrink-0 flex-col items-center border-r border-[#e3e3e3] bg-white py-10 lg:flex">
       <BrandLogo
         variant="icon"
         className="mb-20 h-16 w-16 object-contain"
       />
 
       <nav className="flex flex-1 flex-col items-center gap-7">
-        <NavButton label="Início" onClick={() => navigate("/home")}>
-          <HomeIcon />
+        <NavButton
+          label="Início"
+          active={activePage === "home"}
+          onClick={() => navigate("/home")}
+        >
+          <HomeIcon active={activePage === "home"} />
         </NavButton>
 
         <NavButton label="Pesquisar">
@@ -99,8 +103,12 @@ export default function ProfileSidebar() {
           <BellIcon />
         </NavButton>
 
-        <NavButton label="Perfil" active onClick={() => navigate("/profile")}>
-          <UserIcon active />
+        <NavButton
+          label="Perfil"
+          active={activePage === "profile"}
+          onClick={() => navigate("/profile")}
+        >
+          <UserIcon active={activePage === "profile"} />
         </NavButton>
       </nav>
     </aside>

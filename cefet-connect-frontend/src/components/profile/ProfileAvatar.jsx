@@ -15,9 +15,15 @@ function UserIcon() {
 
 export default function ProfileAvatar({ src, name, size = "large" }) {
   const sizeClass =
-    size === "small"
-      ? "h-32 w-32"
-      : "h-40 w-40 lg:h-52 lg:w-52";
+  size === "composer"
+    ? "h-14 w-14"
+    : size === "post"
+      ? "h-12 w-12"
+      : size === "feed"
+        ? "h-28 w-28"
+        : size === "small"
+          ? "h-32 w-32"
+          : "h-40 w-40 lg:h-52 lg:w-52";
 
   return (
     <div

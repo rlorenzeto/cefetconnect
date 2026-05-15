@@ -6,6 +6,7 @@ import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import ConfirmEmailPage from "./pages/auth/ConfirmEmailPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import EditProfilePage from "./pages/profile/EditProfilePage";
+import FeedPage from "./pages/feed/FeedPage";
 
 export default function App() {
   return (
@@ -20,7 +21,8 @@ export default function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/profile/edit" element={<EditProfilePage />} />
 
-      <Route path="/home" element={<Navigate to="/profile" replace />} />
+      <Route path="/home" element={<FeedPage />} />
+      <Route path="/feed" element={<FeedPage />} />
 
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
