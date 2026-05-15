@@ -213,6 +213,23 @@ export class PostController {
     };
   }
 
+  @Get('usuario/:matricula')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiParam({ name: 'matricula', description: 'Matrícula do usuário cujos posts serão listados' })
+  @ApiOperation({ summary: 'Listar posts de um usuário', description: 'Retorna todos os posts de um usuário específico, incluindo fotos. Usado na tela de perfil.' })
+  @ApiResponse({ status: 200, description: '[SUSR00015] Posts do usuário retornados com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  async findByUsuario(@Param('matricula') matricula: string) {
+    const dados = await this.postService.findByUsuario(matricula);
+    return {
+      codigo: 'SUSR00015',
+      mensagem: SuccessMessages.SUSR00015.mensagem,
+      dados,
+    };
+  }
+
   @Get('usuario/:matricula/likes')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

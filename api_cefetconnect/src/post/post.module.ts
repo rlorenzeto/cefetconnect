@@ -11,5 +11,6 @@ import { Comentario } from '../entities/comentario.entity';
   imports: [TypeOrmModule.forFeature([Post, Usuario, FotoPost, Comentario])],
   controllers: [PostController],
   providers: [PostService],
+  exports: [PostService],
 })
 export class PostModule {}
