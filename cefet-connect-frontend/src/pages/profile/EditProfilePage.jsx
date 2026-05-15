@@ -155,10 +155,16 @@ export default function EditProfilePage() {
         fotoUrl: photoFile,
       });
 
-      const updatedUser = response?.dados || response;
+      const updatedProfile = response?.dados || response;
 
-      setUser(updatedUser);
-      saveCurrentUser(updatedUser);
+      const normalizedUser = {
+        ...user,
+        ...updatedProfile,
+        matricula: updatedProfile?.matricula || user?.matricula || matricula,
+      };
+
+      setUser(normalizedUser);
+      saveCurrentUser(normalizedUser);
       setPhotoFile(null);
       setProfileMessage("Perfil atualizado com sucesso.");
     } catch (error) {
@@ -216,6 +222,33 @@ async function handleSaveEmail(event) {
     }
 }
 
+  function validatePassword(password) {
+    if (!password) {
+      return "Digite a nova senha.";
+    }
+
+    if (password.length < 8) {
+      return "A nova senha deve ter no mínimo 8 caracteres.";
+    }
+
+    if (password.length > 25) {
+      return "A nova senha deve ter no máximo 25 caracteres.";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return "A nova senha deve conter pelo menos uma letra maiúscula.";
+    }
+
+    if (!/\d/.test(password)) {
+      return "A nova senha deve conter pelo menos um número.";
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=/\\[\];'`~]/.test(password)) {
+      return "A nova senha deve conter pelo menos um caractere especial.";
+    }
+
+    return "";
+  }
   async function handleSavePassword(event) {
     event.preventDefault();
 
@@ -229,12 +262,16 @@ async function handleSaveEmail(event) {
       return;
     }
 
-    if (passwordForm.novaSenha.length < 8) {
-      setPasswordError("A nova senha deve ter no mínimo 8 caracteres.");
+    const novaSenha = passwordForm.novaSenha.trim();
+
+    const passwordValidationError = validatePassword(novaSenha);
+
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
       return;
     }
 
-    if (passwordForm.novaSenha !== passwordForm.confirmarNovaSenha) {
+    if (novaSenha !== passwordForm.confirmarNovaSenha.trim()) {
       setPasswordError("As senhas não coincidem.");
       return;
     }
@@ -245,7 +282,7 @@ async function handleSaveEmail(event) {
 
       await changeUserPassword(matricula, {
         senhaAtual: passwordForm.senhaAtual,
-        novaSenha: passwordForm.novaSenha,
+        novaSenha,
       });
 
       setPasswordForm({

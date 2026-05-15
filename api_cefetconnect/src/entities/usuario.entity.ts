@@ -54,24 +54,24 @@ export class Usuario {
   @ManyToMany(() => Comunidade)
   @JoinTable({
     name: 'participa',
-    joinColumn: { name: 'fk_Usuario_matricula', referencedColumnName: 'matricula' },
-    inverseJoinColumn: { name: 'fk_Comunidade_idComunidade', referencedColumnName: 'idComunidade' },
+    joinColumn: { name: 'usuarioMatricula', referencedColumnName: 'matricula' },
+    inverseJoinColumn: { name: 'comunidadeIdComunidade', referencedColumnName: 'idComunidade' },
   })
   comunidades!: Comunidade[];
 
   @ManyToMany(() => Post)
   @JoinTable({
     name: 'likePost',
-    joinColumn: { name: 'fk_Usuario_matricula', referencedColumnName: 'matricula' },
-    inverseJoinColumn: { name: 'fk_Post_idPost', referencedColumnName: 'idPost' },
+    joinColumn: { name: 'usuarioMatricula', referencedColumnName: 'matricula' },
+    inverseJoinColumn: { name: 'postIdPost', referencedColumnName: 'idPost' },
   })
   postsCurtidos!: Post[];
 
   @ManyToMany(() => Comentario)
   @JoinTable({
     name: 'likeComentario',
-    joinColumn: { name: 'fk_Usuario_matricula', referencedColumnName: 'matricula' },
-    inverseJoinColumn: { name: 'fk_Comentario_idComentario', referencedColumnName: 'idComentario' },
+    joinColumn: { name: 'usuarioMatricula', referencedColumnName: 'matricula' },
+    inverseJoinColumn: { name: 'comentarioIdComentario', referencedColumnName: 'idComentario' },
   })
   comentariosCurtidos!: Comentario[];
 }

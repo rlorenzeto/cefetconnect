@@ -85,7 +85,7 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
 
       console.log("Resposta login:", response);
 
-      navigate("/profile");
+      navigate("/home");
     } catch (error) {
       const message = error.message || "Não foi possível entrar.";
       const normalizedMessage = message.toLowerCase();

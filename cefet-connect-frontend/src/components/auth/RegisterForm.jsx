@@ -24,6 +24,34 @@ export default function RegisterForm({ onGoToLogin }) {
   const [apiError, setApiError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function validatePassword(password) {
+    if (!password) {
+      return "A senha é obrigatória.";
+    }
+
+    if (password.length < 8) {
+      return "A senha deve ter no mínimo 8 caracteres.";
+    }
+
+    if (password.length > 25) {
+      return "A senha deve ter no máximo 25 caracteres.";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return "A senha deve conter pelo menos uma letra maiúscula.";
+    }
+
+    if (!/\d/.test(password)) {
+      return "A senha deve conter pelo menos um número.";
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=/\\[\];'`~]/.test(password)) {
+      return "A senha deve conter pelo menos um caractere especial.";
+    }
+
+    return "";
+  }
+
   function handleChange(event) {
     const { name, value } = event.target;
 
@@ -71,17 +99,19 @@ export default function RegisterForm({ onGoToLogin }) {
       newErrors.email = "Digite um e-mail válido.";
     }
 
-    if (!formData.registration.trim()) {
+    const registration = formData.registration.trim();
+    const password = formData.password.trim();
+
+
+    if (!registration) {
       newErrors.registration = "A matrícula é obrigatória.";
-    } else if (!/^\d{11}$/.test(formData.registration)) {
-      newErrors.registration = "A matrícula deve ter exatamente 11 dígitos.";
+    } else if (!/^\d+$/.test(registration)) {
+      newErrors.registration = "A matrícula deve conter apenas números.";
+    } else if (!/^\d{7}$|^\d{11}$/.test(registration)) {
+      newErrors.registration = "A matrícula deve ter exatamente 7 ou 11 dígitos.";
     }
 
-    if (!formData.password.trim()) {
-      newErrors.password = "A senha é obrigatória.";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "A senha deve ter no mínimo 6 caracteres.";
-    }
+    newErrors.password = validatePassword(password);
 
     if (
       newErrors.name ||
@@ -101,7 +131,7 @@ export default function RegisterForm({ onGoToLogin }) {
         matricula: formData.registration,
         nomeUsuario: formData.name,
         email: formData.email,
-        senha: formData.password,
+        senha: password,
       });
 
       console.log("Resposta cadastro:", response);
@@ -149,7 +179,7 @@ export default function RegisterForm({ onGoToLogin }) {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          placeholder="Digite seu email"
+          placeholder="Digite seu e-mail"
           required
           className="h-11 w-full rounded-md border border-[#bfbfbf] bg-white px-3 text-sm outline-none"
         />
@@ -201,14 +231,14 @@ export default function RegisterForm({ onGoToLogin }) {
       </AuthButton>
 
       <p className="mt-4 text-center text-sm text-[#777]">
-        Já possui conta?{" "}
-       <AuthButton
+        Já possui uma conta?{" "}
+        <button
           type="button"
           onClick={onGoToLogin}
-          className="mt-4"
+          className="font-semibold text-[#089464] underline-offset-2 hover:underline"
         >
-          Já tenho uma conta
-        </AuthButton>
+          Entrar
+        </button>
       </p>
     </form>
   );

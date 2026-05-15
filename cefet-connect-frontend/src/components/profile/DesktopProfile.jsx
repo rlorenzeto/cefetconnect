@@ -4,6 +4,7 @@ import ProfileSidebar from "./ProfileSidebar";
 export default function DesktopProfile({
   user,
   imageUrl,
+  userPosts = [],
   onEditProfile,
   onLogout,
 }) {
@@ -43,7 +44,7 @@ export default function DesktopProfile({
 
                 <div className="mt-7 grid grid-cols-2 gap-3 text-center">
                   <div className="rounded-2xl bg-[#f1f1f1] px-3 py-4">
-                    <p className="text-2xl font-bold text-[#089464]">0</p>
+                    <p className="text-2xl font-bold text-[#089464]">{userPosts.length}</p>
                     <p className="text-xs text-[#343434]">Posts</p>
                   </div>
 
@@ -84,6 +85,28 @@ export default function DesktopProfile({
                 </button>
               </div>
             </div>
+            </div>
+            <div className="mt-10 border-t border-[#eeeeee] pt-8">
+              <h3 className="mb-4 text-xl font-bold text-[#202020]">
+                Posts publicados
+              </h3>
+
+              {userPosts.length > 0 ? (
+                <div className="space-y-3">
+                  {userPosts.map((post) => (
+                    <div
+                      key={post.idPost}
+                      className="rounded-2xl bg-[#f1f1f1] px-5 py-4 text-sm text-[#343434]"
+                    >
+                      {post.conteudo || "Post com imagem"}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="rounded-2xl bg-[#f1f1f1] px-5 py-4 text-sm text-[#777]">
+                  Você ainda não publicou nenhum post.
+                </p>
+              )}
             </div>
           </section>
         </main>
