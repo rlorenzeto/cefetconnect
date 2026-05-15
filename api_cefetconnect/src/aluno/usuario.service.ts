@@ -12,6 +12,7 @@ import { unlink } from 'fs/promises';
 import { join } from 'path';
 
 import { Usuario } from '../entities/usuario.entity.js';
+import { Post } from '../entities/post.entity.js';
 import { CreateUsuarioDto } from './dto/create-usuario.dto.js';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto.js';
 import { EmailService } from '../email/email.service.js';
@@ -19,6 +20,7 @@ import { ErrorMessages } from '../common/constants/messages.errors.js';
 import { SuccessMessages } from '../common/constants/messages.success.js';
 import { AlterarEmailDto } from './dto/alterar-email.dto.js';
 import { AlterarSenhaDto } from './dto/alterar-senha.dto.js';
+import { PostService } from '../post/post.service.js';
 
 //interage com o banco de dados através do Repository do TypeORM, e também por fazer coisas como criptografar a senha antes de salvar no banco, ou verificar se já existe um usuário com a mesma matrícula ou email.
 @Injectable()
@@ -27,6 +29,7 @@ export class UsuarioService {
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
     private readonly emailService: EmailService,
+    private readonly postService: PostService,
   ) {}
 
   private gerarCodigoVerificacao(): string {
@@ -177,6 +180,32 @@ export class UsuarioService {
     }
 
     return usuario;
+  }
+
+  async findPerfilCompleto(matricula: string): Promise<{
+    nomeUsuario: string;
+    fotoUrl: string | null;
+    biografia: string | null;
+    posts: Post[];
+    totalPosts: number;
+  }> {
+    const usuario = await this.usuarioRepository.findOne({
+      where: { matricula },
+      select: ['matricula', 'nomeUsuario', 'fotoUrl', 'biografia'],
+      relations: ['posts'],
+    });
+
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    return {
+      nomeUsuario: usuario.nomeUsuario,
+      fotoUrl: usuario.fotoUrl ?? null,
+      biografia: usuario.biografia ?? null,
+      posts: usuario.posts,
+      totalPosts: usuario.posts.length,
+    };
   }
 
   async update(

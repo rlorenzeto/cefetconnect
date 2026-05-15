@@ -149,10 +149,11 @@ export class PostService {
     return await this.postRepository.save(post);
   }
 
+  // Função para remover post
   async remove(id: string, matricula: string) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
-      relations: ['usuario', 'fotosPost'],
+      relations: ['usuario', 'fotosPost', 'comentarios'], // Essa relações significam que o post vai buscar o usuário, as fotos e os comentários para deletar
     });
 
     if (!post) {
@@ -163,10 +164,31 @@ export class PostService {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
+    // Deleta os likes dos comentários antes de deletar os comentários
+    if (post.comentarios && post.comentarios.length > 0) {
+      // Coleta os IDs dos comentários
+      const commentIds = post.comentarios.map((c) => c.idComentario);
+      // Deleta os likes dos comentários fazendo uma query SQL
+      await this.dataSource.query(
+        `DELETE FROM likeComentario WHERE comentarioIdComentario IN (${commentIds.map(() => '?').join(',')})`,
+        commentIds,
+      );
+      // E, por fim, deleta os comentários para que não haja referências pendentes
+      await this.comentarioRepository.remove(post.comentarios);
+    }
+
+    // Deleta os likes do post
+    await this.dataSource.query(
+      'DELETE FROM likePost WHERE postIdPost = ?',
+      [id],
+    );
+
+    // Deleta as fotos do post
     if (post.fotosPost && post.fotosPost.length > 0) {
       await this.fotoPostRepository.remove(post.fotosPost);
     }
 
+    // Por fim, deleta o post
     return await this.postRepository.remove(post);
   }
 

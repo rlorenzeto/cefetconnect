@@ -61,9 +61,9 @@ export class UsuarioController {
     return this.usuarioService.verificarEmail(id, body.codigo);
   }
 
-  @Post(':id/reenviar-codigo')
+  @Post(':id/reenviar-codigo') 
   @Public()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.OK) 
   @ApiOperation({ summary: 'Reenviar código de verificação', description: 'Gera e envia um novo código de verificação para o e-mail do usuário.' })
   @ApiParam({ name: 'id', description: 'Matrícula do usuário que deseja reenviar o código de verificação.' })
   @ApiResponse({ status: 200, description: '[SUSR00007] Novo código de verificação enviado para o e-mail cadastrado.' })
@@ -95,7 +95,7 @@ export class UsuarioController {
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   async findOne(@Param('id') id: string) {
-    const dados = await this.usuarioService.findPerfil(id);
+    const dados = await this.usuarioService.findPerfilCompleto(id); //Verificar!
     return {
       codigo: 'SUSR00004',
       mensagem: SuccessMessages.SUSR00004.mensagem,

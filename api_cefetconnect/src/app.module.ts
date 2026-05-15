@@ -39,7 +39,7 @@ import { ComentarioModule } from './comentario/comentario.module';
   providers: [
     AppService,
     {
-      provide: APP_GUARD,
+      provide: APP_GUARD, // Garante que o JwtAuthGuard seja aplicado a todas as rotas
       useClass: JwtAuthGuard,
     },
   ],

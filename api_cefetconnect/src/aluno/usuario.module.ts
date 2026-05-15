@@ -4,9 +4,10 @@ import { UsuarioService } from './usuario.service';
 import { UsuarioController } from './usuario.controller';
 import { Usuario } from '../entities/usuario.entity';
 import { EmailModule } from '../email/email.module';
+import { PostModule } from '../post/post.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Usuario]), EmailModule],
+  imports: [TypeOrmModule.forFeature([Usuario]), EmailModule, PostModule],
   controllers: [UsuarioController],
   providers: [UsuarioService],
   exports: [UsuarioService],
