@@ -9,7 +9,7 @@ import { SuccessMessages } from '../common/constants/messages.success';
 @ApiTags('Comentários')
 @Controller('comentario')
 export class ComentarioController {
-  constructor(private readonly comentarioService: ComentarioService) {}
+  constructor(private readonly comentarioService: ComentarioService) {} 
 
   @Post('post/:idPost')
   @UseGuards(JwtAuthGuard)
@@ -20,7 +20,7 @@ export class ComentarioController {
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00012] Post não encontrado.' })
   async create(
-    @Param('idPost') idPost: string,
+    @Param('idPost') idPost: string, 
     @Body() createComentarioDto: CreateComentarioDto,
     @Request() req: any,
   ) {

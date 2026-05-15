@@ -152,7 +152,7 @@ export class PostService {
   async remove(id: string, matricula: string) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
-      relations: ['usuario'],
+      relations: ['usuario', 'fotosPost'],
     });
 
     if (!post) {
@@ -161,6 +161,10 @@ export class PostService {
 
     if (post.usuario.matricula !== matricula) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
+    }
+
+    if (post.fotosPost && post.fotosPost.length > 0) {
+      await this.fotoPostRepository.remove(post.fotosPost);
     }
 
     return await this.postRepository.remove(post);
@@ -254,8 +258,8 @@ export class PostService {
       await this.dataSource.query(
         `SELECT u.matricula, u.nomeUsuario
          FROM likePost lp
-         INNER JOIN Usuario u ON u.matricula = lp.fk_Usuario_matricula
-         WHERE lp.fk_Post_idPost = ?`,
+         INNER JOIN Usuario u ON u.matricula = lp.usuarioMatricula
+         WHERE lp.postIdPost = ?`,
         [idPost],
       );
 
@@ -269,7 +273,7 @@ export class PostService {
     }
 
     const existing: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM likePost WHERE fk_Usuario_matricula = ? AND fk_Post_idPost = ?',
+      'SELECT 1 FROM likePost WHERE usuarioMatricula = ? AND postIdPost = ?',
       [matricula, idPost],
     );
 
@@ -278,7 +282,7 @@ export class PostService {
     }
 
     await this.dataSource.query(
-      'INSERT INTO likePost (fk_Usuario_matricula, fk_Post_idPost) VALUES (?, ?)',
+      'INSERT INTO likePost (usuarioMatricula, postIdPost) VALUES (?, ?)',
       [matricula, idPost],
     );
 
@@ -292,7 +296,7 @@ export class PostService {
     }
 
     const existing: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM likePost WHERE fk_Usuario_matricula = ? AND fk_Post_idPost = ?',
+      'SELECT 1 FROM likePost WHERE usuarioMatricula = ? AND postIdPost = ?',
       [matricula, idPost],
     );
 
@@ -301,7 +305,7 @@ export class PostService {
     }
 
     await this.dataSource.query(
-      'DELETE FROM likePost WHERE fk_Usuario_matricula = ? AND fk_Post_idPost = ?',
+      'DELETE FROM likePost WHERE usuarioMatricula = ? AND postIdPost = ?',
       [matricula, idPost],
     );
 
@@ -320,8 +324,8 @@ export class PostService {
     const [totalRow]: [{ total: string }] = await this.dataSource.query(
       `SELECT COUNT(*) AS total
        FROM likePost lp
-       JOIN Post p ON lp.fk_Post_idPost = p.idPost
-       WHERE lp.fk_Usuario_matricula = ?
+       JOIN Post p ON lp.postIdPost = p.idPost
+       WHERE lp.usuarioMatricula = ?
          AND p.fk_Usuario_matricula != ?`,
       [matricula, matricula],
     );

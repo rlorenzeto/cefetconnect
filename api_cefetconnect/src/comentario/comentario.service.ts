@@ -140,7 +140,7 @@ export class ComentarioService {
     }
 
     const existing: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM likeComentario WHERE fk_Usuario_matricula = ? AND fk_Comentario_idComentario = ?',
+      'SELECT 1 FROM likeComentario WHERE usuarioMatricula = ? AND comentarioIdComentario = ?',
       [matricula, idComentario],
     );
 
@@ -149,7 +149,7 @@ export class ComentarioService {
     }
 
     await this.dataSource.query(
-      'INSERT INTO likeComentario (fk_Usuario_matricula, fk_Comentario_idComentario) VALUES (?, ?)',
+      'INSERT INTO likeComentario (usuarioMatricula, comentarioIdComentario) VALUES (?, ?)',
       [matricula, idComentario],
     );
 
@@ -165,7 +165,7 @@ export class ComentarioService {
     }
 
     const existing: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM likeComentario WHERE fk_Usuario_matricula = ? AND fk_Comentario_idComentario = ?',
+      'SELECT 1 FROM likeComentario WHERE usuarioMatricula = ? AND comentarioIdComentario = ?',
       [matricula, idComentario],
     );
 
@@ -174,7 +174,7 @@ export class ComentarioService {
     }
 
     await this.dataSource.query(
-      'DELETE FROM likeComentario WHERE fk_Usuario_matricula = ? AND fk_Comentario_idComentario = ?',
+      'DELETE FROM likeComentario WHERE usuarioMatricula = ? AND comentarioIdComentario = ?',
       [matricula, idComentario],
     );
 
@@ -190,7 +190,7 @@ export class ComentarioService {
     }
 
     const [row]: [{ total: string }] = await this.dataSource.query(
-      'SELECT COUNT(*) AS total FROM likeComentario WHERE fk_Comentario_idComentario = ?',
+      'SELECT COUNT(*) AS total FROM likeComentario WHERE comentarioIdComentario = ?',
       [idComentario],
     );
 
