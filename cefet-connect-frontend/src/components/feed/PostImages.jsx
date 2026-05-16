@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ProfileAvatar from "../profile/ProfileAvatar";
 import { getImageUrl } from "../../services/postService";
 import { getProfileImageUrl } from "../../services/authService";
@@ -8,6 +9,16 @@ import CommentSection from "./CommentSection";
 export default function PostImages({ fotos = [], post, currentUser }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+
+  function handleGoToUserProfile() {
+    const matriculaAutor = post?.usuario?.matricula;
+
+    if (!matriculaAutor) return;
+
+    setIsModalOpen(false);
+    navigate(`/profile/${matriculaAutor}`);
+  }
 
   const images = useMemo(() => {
     return fotos.map((foto) => ({
@@ -109,6 +120,7 @@ export default function PostImages({ fotos = [], post, currentUser }) {
         <div className="relative h-[280px] w-full sm:h-[340px] lg:h-[360px]">
           <button
             type="button"
+            data-post-image-button={post?.idPost}
             onClick={() => openModal(activeIndex)}
             className="h-full w-full cursor-pointer"
             aria-label="Abrir imagem"
@@ -236,16 +248,27 @@ export default function PostImages({ fotos = [], post, currentUser }) {
           <aside className="h-[46dvh] shrink-0 overflow-y-auto bg-white px-4 py-4 lg:h-auto lg:max-h-none lg:w-[360px] lg:max-w-[38vw] lg:px-5 lg:py-5">
             <div className="border-b border-[#eeeeee] pb-4">
               <div className="flex items-center gap-3">
-                <ProfileAvatar
-                  src={getProfileImageUrl(post?.usuario?.fotoUrl)}
-                  name={post?.usuario?.nomeUsuario}
-                  size="composer"
-                />
+                <button
+                  type="button"
+                  onClick={handleGoToUserProfile}
+                  className="shrink-0 rounded-full transition hover:opacity-85"
+                  aria-label={`Abrir perfil de ${post?.usuario?.nomeUsuario || "usuário"}`}
+                >
+                  <ProfileAvatar
+                    src={getProfileImageUrl(post?.usuario?.fotoUrl)}
+                    name={post?.usuario?.nomeUsuario}
+                    size="composer"
+                  />
+                </button>
 
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-[#202020]">
+                  <button
+                    type="button"
+                    onClick={handleGoToUserProfile}
+                    className="block max-w-[220px] truncate text-left text-sm font-bold text-[#202020] transition hover:underline"
+                  >
                     {post?.usuario?.nomeUsuario || "Usuário"}
-                  </p>
+                  </button>
 
                   <p className="text-xs text-[#777]">
                     Publicado em {getPostLocationLabel()}

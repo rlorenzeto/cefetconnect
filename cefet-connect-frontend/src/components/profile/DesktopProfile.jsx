@@ -1,12 +1,19 @@
+import { BackIcon } from "../icons/AppIcons";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileSidebar from "./ProfileSidebar";
+import PostCard from "../feed/PostCard";
 
 export default function DesktopProfile({
   user,
+  currentUser,
   imageUrl,
   userPosts = [],
+  isOwnProfile = false,
   onEditProfile,
   onLogout,
+  onPostDeleted,
+  onPostUpdated,
+  onGoBack,
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
@@ -15,17 +22,31 @@ export default function DesktopProfile({
 
         <main className="flex-1 px-16 py-12">
           <div className="mb-8 flex items-center justify-between">
-            <h1 className="text-[42px] font-bold text-[#202020]">
-              Perfil
-            </h1>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={onGoBack}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-[#343434] shadow-sm transition hover:bg-[#e8f7ef] hover:text-[#089464]"
+                aria-label="Voltar para o feed"
+                title="Voltar para o feed"
+              >
+                <BackIcon className="h-6 w-6" />
+              </button>
 
-            <button
-              type="button"
-              onClick={onLogout}
-              className="rounded-full border border-[#d9d9d9] px-5 py-2 text-sm text-[#343434]"
-            >
-              Sair
-            </button>
+              <h1 className="text-[42px] font-bold text-[#202020]">
+                Perfil
+              </h1>
+            </div>
+
+            {isOwnProfile && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="rounded-full border border-[#d9d9d9] px-5 py-2 text-sm text-[#343434]"
+              >
+                Sair
+              </button>
+            )}
           </div>
 
           <section className="w-full overflow-hidden rounded-[32px] bg-white shadow-sm">
@@ -76,37 +97,44 @@ export default function DesktopProfile({
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={onEditProfile}
-                  className="mt-8 h-11 w-56 rounded-full bg-[#089464] text-sm font-semibold text-white"
-                >
-                  Editar perfil
-                </button>
+                {isOwnProfile && (
+                  <button
+                    type="button"
+                    onClick={onEditProfile}
+                    className="mt-8 h-11 w-56 rounded-full bg-[#089464] text-sm font-semibold text-white"
+                  >
+                    Editar perfil
+                  </button>
+                )}
               </div>
             </div>
             </div>
-            <div className="mt-10 border-t border-[#eeeeee] pt-8">
-              <h3 className="mb-4 text-xl font-bold text-[#202020]">
-                Posts publicados
-              </h3>
+            <div className="mt-10 border-t border-[#eeeeee] px-12 pt-8">
+              <div className="mx-auto max-w-[680px]">
+                <h3 className="mb-4 text-xl font-bold text-[#202020]">
+                  Posts publicados
+                </h3>
 
-              {userPosts.length > 0 ? (
-                <div className="space-y-3">
-                  {userPosts.map((post) => (
-                    <div
-                      key={post.idPost}
-                      className="rounded-2xl bg-[#f1f1f1] px-5 py-4 text-sm text-[#343434]"
-                    >
-                      {post.conteudo || "Post com imagem"}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="rounded-2xl bg-[#f1f1f1] px-5 py-4 text-sm text-[#777]">
-                  Você ainda não publicou nenhum post.
-                </p>
-              )}
+                {userPosts.length > 0 ? (
+                  <div className="space-y-5">
+                    {userPosts.map((post) => (
+                      <PostCard
+                        key={post.idPost}
+                        post={post}
+                        currentUser={currentUser}
+                        onPostDeleted={onPostDeleted}
+                        onPostUpdated={onPostUpdated}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-2xl bg-[#f1f1f1] px-5 py-4 text-sm text-[#777]">
+                    {isOwnProfile
+                      ? "Você ainda não publicou nenhum post."
+                      : "Este usuário ainda não publicou nenhum post."}
+                  </p>
+                )}
+              </div>
             </div>
           </section>
         </main>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ProfileAvatar from "../profile/ProfileAvatar";
 import LikeButton from "./LikeButton";
 import PostImages from "./PostImages";
@@ -15,6 +16,7 @@ import {
   updatePost,
 } from "../../services/postService";
 import { getProfileImageUrl } from "../../services/authService";
+import { EditIcon, TrashIcon } from "../icons/AppIcons";
 
 function PostActionMenu({ onEdit, onDelete }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -55,7 +57,7 @@ function PostActionMenu({ onEdit, onDelete }) {
             }}
             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-[#343434] transition hover:bg-[#f7f7f7]"
           >
-            <span>✏️</span>
+            <EditIcon className="h-4 w-4" />
             Editar
           </button>
 
@@ -67,7 +69,7 @@ function PostActionMenu({ onEdit, onDelete }) {
             }}
             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-red-500 transition hover:bg-red-50"
           >
-            <span>🗑️</span>
+            <TrashIcon className="h-4 w-4" />
             Excluir
           </button>
         </div>
@@ -93,18 +95,23 @@ export default function PostCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
 
-  const postOwnerMatricula = String(post?.usuario?.matricula || "");
-const currentUserMatricula = String(currentUser?.matricula || "");
+  const navigate = useNavigate();
 
-const isOwner =
-  postOwnerMatricula &&
-  currentUserMatricula &&
-  postOwnerMatricula === currentUserMatricula;
-  console.log("POST:", post);
-  console.log("CURRENT USER:", currentUser);
-  console.log("POST MATRICULA:", post?.usuario?.matricula);
-  console.log("USER MATRICULA:", currentUser?.matricula);
-  console.log("IS OWNER:", isOwner);
+  function handleGoToUserProfile() {
+    const matriculaAutor = post?.usuario?.matricula;
+
+    if (!matriculaAutor) return;
+
+    navigate(`/profile/${matriculaAutor}`);
+  }
+
+  const postOwnerMatricula = String(post?.usuario?.matricula || "");
+  const currentUserMatricula = String(currentUser?.matricula || "");
+
+  const isOwner =
+    postOwnerMatricula &&
+    currentUserMatricula &&
+    postOwnerMatricula === currentUserMatricula;
 
   useEffect(() => {
     setConteudo(post.conteudo || "");
@@ -249,16 +256,27 @@ const isOwner =
       >
         <header className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleGoToUserProfile}
+            className="shrink-0 rounded-full transition hover:opacity-85"
+            aria-label={`Abrir perfil de ${post?.usuario?.nomeUsuario || "usuário"}`}
+          >
             <ProfileAvatar
               src={getProfileImageUrl(post?.usuario?.fotoUrl)}
               name={post?.usuario?.nomeUsuario}
               size="post"
             />
+          </button>
 
-            <div>
-              <p className="text-sm font-bold text-[#202020]">
-                {post?.usuario?.nomeUsuario || "Usuário"}
-              </p>
+          <div>
+            <button
+              type="button"
+              onClick={handleGoToUserProfile}
+              className="block max-w-[220px] truncate text-left text-sm font-bold text-[#202020] transition hover:underline"
+            >
+              {post?.usuario?.nomeUsuario || "Usuário"}
+            </button>
 
               <p className="text-xs text-[#777]">
                 Publicado em {getPostLocationLabel()}
@@ -309,6 +327,21 @@ const isOwner =
             >
               {showComments ? "Ocultar comentários" : "Mostrar comentários"}
             </button>
+            {(post.fotosPost || []).length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const firstImageButton = document.querySelector(
+                    `[data-post-image-button="${post.idPost}"]`
+                  );
+
+                  firstImageButton?.click();
+                }}
+                className="rounded-full bg-[#f1f1f1] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-[#e5e5e5]"
+              >
+                Ver publicação
+              </button>
+            )}
           </div>
           
 

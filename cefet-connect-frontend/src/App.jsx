@@ -20,6 +20,7 @@ export default function App() {
 
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/profile/edit" element={<EditProfilePage />} />
+      <Route path="/profile/:matriculaPerfil" element={<ProfilePage />} />
 
       <Route path="/home" element={<FeedPage />} />
       <Route path="/feed" element={<FeedPage />} />

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import ProfileAvatar from "../profile/ProfileAvatar";
+import { ImageIcon } from "../icons/AppIcons";
 
 export default function CreatePostCard({
   user,
@@ -293,11 +294,11 @@ export default function CreatePostCard({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-xl transition hover:bg-[#f1f1f1]"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-[#089464] transition hover:bg-[#e8f7ef]"
               aria-label="Adicionar fotos"
               title="Adicionar fotos"
             >
-              🖼️
+              <ImageIcon className="h-5 w-5" />
             </button>
 
             <input
