@@ -14,9 +14,10 @@ import {
   HttpStatus,
   Request,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsuarioService } from './usuario.service.js';
 import { CreateUsuarioDto } from './dto/create-usuario.dto.js';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto.js';
@@ -85,6 +86,19 @@ export class UsuarioController {
       mensagem: SuccessMessages.SUSR00005.mensagem,
       dados,
     };
+  }
+
+  // Buscar usuários por nome (lupa do feed)
+  @Get('buscar')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Buscar usuários por nome', description: 'Retorna lista de usuários cujo nome contenha o termo buscado. Requer autenticação.' })
+  @ApiQuery({ name: 'nome', description: 'Trecho do nome do usuário a ser buscado.' })
+  @ApiResponse({ status: 200, description: '[SUSR00004] Usuário localizado com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  async buscarPorNome(@Query('nome') nome: string) {
+    const dados = await this.usuarioService.buscarPorNome(nome ?? '');
+    return { dados };
   }
 
   @Get(':id')

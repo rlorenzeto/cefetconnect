@@ -6,7 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt'; //criptografar senhas
 import { unlink } from 'fs/promises';
 import { join } from 'path';
@@ -157,6 +157,14 @@ export class UsuarioService {
     });
   }
 
+  //Essa função é usada para buscar usuários por nome (lupa do sistema)
+  async buscarPorNome(nome: string): Promise<Pick<Usuario, 'matricula' | 'nomeUsuario' | 'fotoUrl'>[]> {
+    return await this.usuarioRepository.find({
+      where: { nomeUsuario: Like(`%${nome}%`) },
+      select: ['matricula', 'nomeUsuario', 'fotoUrl'],
+    });
+  }
+
   async findOne(matricula: string): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
       where: { matricula },
@@ -169,7 +177,7 @@ export class UsuarioService {
     return usuario;
   }
 
-  async findPerfil(matricula: string): Promise<Pick<Usuario, 'nomeUsuario' | 'fotoUrl' | 'biografia'>> {
+  /*async findPerfil(matricula: string): Promise<Pick<Usuario, 'nomeUsuario' | 'fotoUrl' | 'biografia'>> {
     const usuario = await this.usuarioRepository.findOne({
       where: { matricula },
       select: ['nomeUsuario', 'fotoUrl', 'biografia'],
@@ -180,7 +188,7 @@ export class UsuarioService {
     }
 
     return usuario;
-  }
+  }*/
 
   async findPerfilCompleto(matricula: string): Promise<{
     nomeUsuario: string;
