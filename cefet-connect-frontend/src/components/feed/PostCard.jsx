@@ -327,21 +327,7 @@ export default function PostCard({
             >
               {showComments ? "Ocultar comentários" : "Mostrar comentários"}
             </button>
-            {(post.fotosPost || []).length > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  const firstImageButton = document.querySelector(
-                    `[data-post-image-button="${post.idPost}"]`
-                  );
-
-                  firstImageButton?.click();
-                }}
-                className="rounded-full bg-[#f1f1f1] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-[#e5e5e5]"
-              >
-                Ver publicação
-              </button>
-            )}
+            
           </div>
           
 
