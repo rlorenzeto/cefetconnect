@@ -3,6 +3,8 @@ import { extname } from 'path';
 import { BadRequestException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
+// O código guarda o caminho relativo no banco, tipo uploads/posts/abc123.jpg.
+
 export const UPLOADS_DEST = 'uploads/perfil';
 export const UPLOADS_POSTS_DEST = 'uploads/posts';
 

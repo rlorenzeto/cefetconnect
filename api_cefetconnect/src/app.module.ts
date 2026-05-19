@@ -10,6 +10,8 @@ import { EmailModule } from './email/email.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { PostModule } from './post/post.module';
 import { ComentarioModule } from './comentario/comentario.module';
+import { ComunidadeModule } from './comunidade/comunidade.module';
+import { EventoModule } from './evento/evento.module';
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { ComentarioModule } from './comentario/comentario.module';
     AuthModule,
     PostModule,
     ComentarioModule,
+    ComunidadeModule,
+    EventoModule,
   ],
   controllers: [AppController],
   providers: [

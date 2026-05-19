@@ -27,14 +27,14 @@ export class ComentarioService {
   ) {}
 
   async create(idPost: string, matricula: string, createComentarioDto: CreateComentarioDto) {
-    const post = await this.postRepository.findOne({ where: { idPost } });
+    const post = await this.postRepository.findOne({ where: { idPost } }); // Vai no banco procurar o post onde o aluno quer comentar
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
     const usuario = await this.usuarioRepository.findOne({
       where: { matricula },
-      select: { matricula: true, nomeUsuario: true },
+      select: { matricula: true, nomeUsuario: true }, 
     });
     if (!usuario) {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
@@ -50,6 +50,7 @@ export class ComentarioService {
     return await this.comentarioRepository.save(comentario);
   }
 
+  // Função responsável por retornar os comentários quando estamos vendo um post.
   async findByPost(idPost: string) {
     const post = await this.postRepository.findOne({ where: { idPost } });
     if (!post) {
@@ -58,33 +59,34 @@ export class ComentarioService {
 
     return await this.comentarioRepository
       .createQueryBuilder('comentario')
-      .where('comentario.fk_Post_idPost = :idPost', { idPost })
-      .leftJoinAndSelect('comentario.usuario', 'usuario')
-      .select([
+      .where('comentario.fk_Post_idPost = :idPost', { idPost }) // traga apenas comentários desse post específico.
+      .leftJoinAndSelect('comentario.usuario', 'usuario') // junte as informações do usuário que fez o comentário
+      .select([ // me entrega apenas esses campos
         'comentario.idComentario',
         'comentario.texto',
         'comentario.dataHora',
         'usuario.matricula',
         'usuario.nomeUsuario',
       ])
-      .orderBy('comentario.dataHora', 'ASC')
+      .orderBy('comentario.dataHora', 'ASC') // ordene os comentários pela data de criação, do mais antigo ao mais novo.
       .getMany();
   }
 
+  // Busca um comentário específico pelo ID dele.
   async findOne(id: string) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario: id },
-      relations: ['usuario', 'post'],
-      select: {
+      relations: ['usuario', 'post'], // traz quem fez e o post ao qual o comentário pertence
+      select: { // me entrega apenas esses campos
         idComentario: true,
         texto: true,
         dataHora: true,
-        usuario: { matricula: true, nomeUsuario: true },
-        post: { idPost: true },
+        usuario: { matricula: true, nomeUsuario: true }, // entra apenas matrícula e nome do usuário
+        post: { idPost: true }, // entra apenas o ID do post
       },
     });
 
-    if (!comentario) {
+    if (!comentario) { // se não encontrou o comentário
       throw new NotFoundException(ErrorMessages.EUSR00020.mensagem);
     }
 
@@ -139,15 +141,18 @@ export class ComentarioService {
       throw new NotFoundException(ErrorMessages.EUSR00020.mensagem);
     }
 
-    const existing: unknown[] = await this.dataSource.query(
+    // Verifica se o usuário já curtiu o comentário, retorna 1 se existir
+    const existing: unknown[] = await this.dataSource.query( 
       'SELECT 1 FROM likeComentario WHERE usuarioMatricula = ? AND comentarioIdComentario = ?',
       [matricula, idComentario],
     );
 
+    // Se já curtiu, lança exceção
     if (existing.length > 0) {
       throw new ConflictException(ErrorMessages.EUSR00021.mensagem);
     }
 
+    // Insere a curtida
     await this.dataSource.query(
       'INSERT INTO likeComentario (usuarioMatricula, comentarioIdComentario) VALUES (?, ?)',
       [matricula, idComentario],

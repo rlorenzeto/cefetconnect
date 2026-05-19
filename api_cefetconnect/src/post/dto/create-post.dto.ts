@@ -1,4 +1,4 @@
-import { IsString, MaxLength, IsOptional } from 'class-validator';
+import { IsString, MaxLength, IsOptional, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreatePostDto {
@@ -8,4 +8,9 @@ export class CreatePostDto {
   @MaxLength(1000)
   @IsOptional()
   conteudo?: string;
+
+  @ApiProperty({ example: 'uuid-da-comunidade', required: false, description: 'ID da comunidade onde o post será publicado. O usuário deve ser membro da comunidade.' })
+  @IsUUID()
+  @IsOptional()
+  idComunidade?: string;
 }
