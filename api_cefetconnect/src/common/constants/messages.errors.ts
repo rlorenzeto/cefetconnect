@@ -26,6 +26,13 @@ export const ErrorMessages = {
   EUSR00021: { mensagem: 'Você já curtiu este comentário.', status: 409 },
   EUSR00022: { mensagem: 'Curtida de comentário não encontrada.', status: 404 },
 
+  // ── Comunidade ──────────────────────────────────────────────────────────────
+  ECOM00001: { mensagem: 'Comunidade não encontrada.', status: 404 },
+  ECOM00002: { mensagem: 'Você não tem permissão para modificar esta comunidade.', status: 403 },
+  ECOM00003: { mensagem: 'Você não é membro desta comunidade.', status: 403 },
+  ECOM00004: { mensagem: 'Você já é membro desta comunidade.', status: 409 },
+  ECOM00005: { mensagem: 'Você não é membro desta comunidade.', status: 404 },
+
   // ── Autenticação ──────────────────────────────────────────────────────────
   EAUT00001: { mensagem: 'Email ou senha incorretos.', status: 401 },
   EAUT00002: { mensagem: 'E-mail não verificado. Verifique seu e-mail antes de fazer login.', status: 403 },

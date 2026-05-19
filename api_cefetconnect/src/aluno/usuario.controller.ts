@@ -96,6 +96,9 @@ export class UsuarioController {
   @ApiResponse({ status: 200, description: '[SUSR00004] Usuário localizado com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  // O Front-end envia: requisição para a URL .../buscar?nome=rafa. 
+  // NestJS recebe a URL inteira, corta a parte do nome=algumnome e guarda isso.
+  // O decorador @Query('nome') vai direto onde foi guardado e pega o nome.
   async buscarPorNome(@Query('nome') nome: string) {
     const dados = await this.usuarioService.buscarPorNome(nome ?? '');
     return { dados };
@@ -140,7 +143,7 @@ export class UsuarioController {
 
   @Patch(':id')
   @ApiBearerAuth()
-  @UseInterceptors(FileInterceptor('fotoUrl', multerPerfilConfig))
+  @UseInterceptors(FileInterceptor('fotoUrl', multerPerfilConfig)) 
   @ApiOperation({ summary: 'Atualizar usuário', description: 'Atualiza os dados de um usuário. Permite envio de foto de perfil (multipart/form-data). Requer autenticação.' })
   @ApiParam({ name: 'id', description: 'Matrícula do usuário que terá a foto atualizada.' })
   @ApiResponse({ status: 200, description: '[SUSR00002] Usuário atualizado com sucesso.' })

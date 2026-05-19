@@ -12,6 +12,7 @@ import { Post } from '../entities/post.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { FotoPost } from '../entities/foto-post.entity';
 import { Comentario } from '../entities/comentario.entity';
+import { Comunidade } from '../entities/comunidade.entity';
 import { ErrorMessages } from '../common/constants/messages.errors';
 
 @Injectable()
@@ -22,9 +23,11 @@ export class PostService {
     @InjectRepository(Usuario)
     private usuarioRepository: Repository<Usuario>,
     @InjectRepository(FotoPost)
-    private fotoPostRepository: Repository<FotoPost>,
+    private fotoPostRepository: Repository<FotoPost>, // Fornece comandos diretos, como: save, remove, create.
     @InjectRepository(Comentario)
     private comentarioRepository: Repository<Comentario>,
+    @InjectRepository(Comunidade)
+    private comunidadeRepository: Repository<Comunidade>,
     @InjectDataSource() //executar queries SQL manuais
     private dataSource: DataSource,
   ) {}
@@ -39,16 +42,41 @@ export class PostService {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
     }
 
+    let comunidade: Comunidade | undefined;
+
+    if (createPostDto.idComunidade) {
+      const comunidadeEncontrada = await this.comunidadeRepository.findOne({
+        where: { idComunidade: createPostDto.idComunidade },
+      });
+
+      if (!comunidadeEncontrada) {
+        throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+      }
+
+      const membro: unknown[] = await this.dataSource.query(
+        'SELECT 1 FROM participa WHERE usuarioMatricula = ? AND comunidadeIdComunidade = ?',
+        [matricula, createPostDto.idComunidade],
+      );
+
+      if (membro.length === 0) {
+        throw new ForbiddenException(ErrorMessages.ECOM00003.mensagem);
+      }
+
+      comunidade = comunidadeEncontrada;
+    }
+
     const criarPost = this.postRepository.create({
       conteudo: createPostDto.conteudo,
       usuario: autor,
       dataHoraPublicacao: new Date(),
+      ...(comunidade && { comunidade }),
     });
 
     const postCriado = await this.postRepository.save(criarPost);
 
     if (files && files.length > 0) {
-      const fotos = files.map((file, index) =>
+      // mapeia os arquivos para criar os registros de fotos, preservando a ordem e associando ao post criado
+      const fotos = files.map((file, index) => 
         this.fotoPostRepository.create({ url: file.path.replace(/\\/g, '/'), ordem: index, post: postCriado }),
       );
       const fotosSalvas = await this.fotoPostRepository.save(fotos);
@@ -58,8 +86,9 @@ export class PostService {
     return postCriado;
   }
 
-  // Leitura 
+  // Parte de Leitura 
 
+  // Essa função que retorna todos os posts com suas respectivas fotos e usuários, possibilitando o feed funcionar
   async findAll() {
     return await this.postRepository.find({
       relations: ['usuario', 'fotosPost'],
@@ -93,6 +122,7 @@ export class PostService {
     return post;
   }
 
+  // Essa função que retorna todos os posts de um usuário específico, possibilitando a visualização do perfil.
   async findByUsuario(matricula: string) {
     const usuario = await this.usuarioRepository.findOne({
       where: { matricula },
@@ -104,10 +134,10 @@ export class PostService {
 
     return this.postRepository
       .createQueryBuilder('post')
-      .where('post.fk_Usuario_matricula = :matricula', { matricula })
+      .where('post.fk_Usuario_matricula = :matricula', { matricula }) 
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
-      .select([
+      .select([ 
         'post.idPost',
         'post.conteudo',
         'post.dataHoraPublicacao',
@@ -216,12 +246,15 @@ export class PostService {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
+    // pega a quantidade de fotos que já existem no post e soma com o índice do arquivo atual
     const ordemBase = (post.fotosPost ?? []).length;
+    // cria um array de fotos com a url do arquivo e a ordem baseada na quantidade de fotos já existentes
     const novasFotos = files.map((file, index) =>
       this.fotoPostRepository.create({ url: file.path.replace(/\\/g, '/'), ordem: ordemBase + index, post }),
     );
 
     const fotosAdicionadas = await this.fotoPostRepository.save(novasFotos);
+    // Adiciona as fotos novas ao array de fotos do post
     post.fotosPost = [...(post.fotosPost ?? []), ...fotosAdicionadas];
 
     return post;
@@ -230,7 +263,7 @@ export class PostService {
   async removerFotos(idPost: string, matricula: string, ids?: string[]) {
     const post = await this.postRepository.findOne({
       where: { idPost },
-      relations: ['usuario', 'fotosPost'],
+      relations: ['usuario', 'fotosPost'], 
     });
 
     if (!post) {
@@ -241,8 +274,10 @@ export class PostService {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
+    // Pega todas as fotos do post
     const todasFotos = post.fotosPost ?? [];
 
+    // Se ids foram fornecidos, remove apenas as fotos com os ids especificados, caso contrário remove todas
     const fotosParaRemover =
       ids && ids.length > 0
         ? todasFotos.filter((f) => ids.includes(f.idFoto))
@@ -271,6 +306,7 @@ export class PostService {
 
   // Curtidas 
 
+  // Entrega quantas curtidas tem o post e quais usuarios curtiram
   async obterCurtidasPost(idPost: string) {
     const post = await this.postRepository.findOne({ where: { idPost } });
     if (!post) {
@@ -295,15 +331,19 @@ export class PostService {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
+    // Verifica se o usuário já curtiu o post. 
+    // Faz uma busca na tabela likePost procurando registro daquela matrícula conectada a esse determinado post.
     const existing: unknown[] = await this.dataSource.query(
       'SELECT 1 FROM likePost WHERE usuarioMatricula = ? AND postIdPost = ?',
       [matricula, idPost],
     );
 
+    // Se já existe, lança exceção de conflito
     if (existing.length > 0) {
       throw new ConflictException(ErrorMessages.EUSR00018.mensagem);
     }
 
+    // Insere a curtida na tabela likePost
     await this.dataSource.query(
       'INSERT INTO likePost (usuarioMatricula, postIdPost) VALUES (?, ?)',
       [matricula, idPost],

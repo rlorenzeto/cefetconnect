@@ -36,6 +36,13 @@ export const SuccessMessages = {
   SUSR00031: { mensagem: 'Curtidas do comentário retornadas com sucesso.', status: 200 },
   SUSR00032: { mensagem: 'Comentário atualizado com sucesso.', status: 200 },
   SUSR00033: { mensagem: 'Curtidas do post retornadas com sucesso.', status: 200 },
+
+  // ── Comunidade ────────────────────────────────────────────────────────────
+  SCOM00001: { mensagem: 'Comunidade criada com sucesso.', status: 201 },
+  SCOM00002: { mensagem: 'Comunidade retornada com sucesso', status: 200},
+  SCOM00003: { mensagem: 'Você entrou na comunidade com sucesso.', status: 200 },
+  SCOM00004: { mensagem: 'Você saiu da comunidade com sucesso.', status: 200 },
+  
   // ── Autenticação ──────────────────────────────────────────────────────────
   SAUT00001: { mensagem: 'Login realizado com sucesso.', status: 200 },
   SAUT00002: { mensagem: 'Logout realizado com sucesso.', status: 200 },

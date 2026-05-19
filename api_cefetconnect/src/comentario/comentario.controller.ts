@@ -52,7 +52,7 @@ export class ComentarioController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiParam({ name: 'id', description: 'ID do comentário' })
-  @ApiOperation({ summary: 'Buscar comentário', description: 'Retorna um comentário pelo ID.' })
+  @ApiOperation({ summary: 'Buscar comentário', description: 'Retorna um comentário pelo ID.' }) 
   @ApiResponse({ status: 200, description: '[SUSR00030] Comentário retornado com sucesso.' })
   @ApiResponse({ status: 404, description: '[EUSR00020] Comentário não encontrado.' })
   async findOne(@Param('id') id: string) {
