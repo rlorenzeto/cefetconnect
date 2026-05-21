@@ -33,16 +33,22 @@ export function registerUser(payload) {
 }
 
 export function forgotPassword(payload) {
-  return apiFetch("/auth/forgot-password", {
+  return apiFetch("/usuario/esqueceu-senha", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      email: payload.email,
+    }),
   });
 }
 
 export function resetPassword(payload) {
-  return apiFetch("/auth/reset-password", {
-    method: "POST",
-    body: JSON.stringify(payload),
+  return apiFetch("/usuario/resetar-senha", {
+    method: "PATCH",
+    body: JSON.stringify({
+      email: payload.email,
+      codigo: payload.codigo,
+      novaSenha: payload.novaSenha,
+    }),
   });
 }
 

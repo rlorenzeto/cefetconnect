@@ -19,7 +19,7 @@ export default function ResetPasswordPage() {
             </p>
 
             <p className="mx-auto mb-8 max-w-105 text-center text-sm leading-[1.45] text-[#666]">
-              Digite sua nova senha para voltar a acessar sua conta.
+              Digite o código enviado para seu e-mail e escolha uma nova senha.
             </p>
 
             <ResetPasswordForm />

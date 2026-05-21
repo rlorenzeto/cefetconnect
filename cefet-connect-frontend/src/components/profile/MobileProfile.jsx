@@ -59,7 +59,7 @@ export default function MobileProfile({
         <section className="overflow-hidden rounded-[32px] bg-white pb-8 shadow-sm">
           <div className="h-36 w-full">
             <img
-              src="../../../public/images/campus-cefet.png"
+              src="/images/campus-cefet.png"
               alt="Campus CEFET"
               className="h-full w-full object-cover"
             />

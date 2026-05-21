@@ -58,7 +58,7 @@ export default function MobileEditProfile({
 
         <div className="mb-6 overflow-hidden rounded-[28px] bg-white shadow-sm">
           <img
-            src="../../../public/images/campus-cefet.png"
+            src="/images/campus-cefet.png"
             alt="Campus CEFET"
             className="h-36 w-full object-cover"
           />

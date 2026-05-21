@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { forgotPassword } from "../../services/authService";
 import AuthButton from "./AuthButton";
 
@@ -8,6 +9,7 @@ export default function ForgotPasswordForm({ onGoToLogin }) {
   const [apiError, setApiError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
 
   function validateEmail(value) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -36,11 +38,13 @@ export default function ForgotPasswordForm({ onGoToLogin }) {
       const response = await forgotPassword({ email });
 
       setSuccessMessage(
-        response?.message ||
-          "Se o e-mail estiver cadastrado, enviaremos as instruções de recuperação."
+        response?.mensagem ||
+          "Se o e-mail estiver cadastrado, enviaremos um código de recuperação."
       );
 
-      setEmail("");
+      setTimeout(() => {
+        navigate("/reset-password");
+      }, 1200);
     } catch (err) {
       setApiError(
         err.message || "Não foi possível solicitar a recuperação de senha."
