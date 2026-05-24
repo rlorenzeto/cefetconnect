@@ -37,7 +37,6 @@ export class UsuarioService {
   }
 
   async create(createUsuarioDto: CreateUsuarioDto): Promise<{
-    matricula: string;
     nomeUsuario: string;
     email: string;
   }> {
@@ -76,7 +75,6 @@ export class UsuarioService {
     );
 
     return {
-      matricula: usuarioSalvo.matricula,
       nomeUsuario: usuarioSalvo.nomeUsuario,
       email: usuarioSalvo.email,
     };
@@ -90,14 +88,14 @@ export class UsuarioService {
   }
 
   async verificarEmail(
-    matricula: string,
+    idUsuario: number,
     codigo: string,
   ): Promise<{
     mensagem: string,
     codigo: string
   }> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
+      where: { idUsuario },
     });
 
     if (!usuario) {
@@ -122,9 +120,9 @@ export class UsuarioService {
     };
   }
 
-  async reenviarCodigo(matricula: string): Promise<{ mensagem: string, codigo: string }> {
+  async reenviarCodigo(idUsuario: number): Promise<{ mensagem: string, codigo: string }> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
+      where: { idUsuario },
     });
 
     if (!usuario) {
@@ -158,16 +156,16 @@ export class UsuarioService {
   }
 
   //Essa função é usada para buscar usuários por nome (lupa do sistema)
-  async buscarPorNome(nome: string): Promise<Pick<Usuario, 'matricula' | 'nomeUsuario' | 'fotoUrl'>[]> {
+  async buscarPorNome(nome: string): Promise<Pick<Usuario, 'nomeUsuario' | 'fotoUrl'>[]> {
     return await this.usuarioRepository.find({
       where: { nomeUsuario: Like(`%${nome}%`) },
-      select: ['matricula', 'nomeUsuario', 'fotoUrl'],
+      select: ['nomeUsuario', 'fotoUrl'],
     });
   }
 
-  async findOne(matricula: string): Promise<Usuario> {
+  async findOne(idUsuario: number): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
+      where: { idUsuario },
     });
 
     if (!usuario) {
@@ -190,7 +188,7 @@ export class UsuarioService {
     return usuario;
   }*/
 
-  async findPerfilCompleto(matricula: string): Promise<{
+  async findPerfilCompleto(idUsuario: number): Promise<{
     nomeUsuario: string;
     fotoUrl: string | null;
     biografia: string | null;
@@ -198,8 +196,8 @@ export class UsuarioService {
     totalPosts: number;
   }> {
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
-      select: ['matricula', 'nomeUsuario', 'fotoUrl', 'biografia'],
+      where: { idUsuario },
+      select: ['idUsuario', 'nomeUsuario', 'fotoUrl', 'biografia'],
       relations: ['posts'],
     });
 
@@ -217,11 +215,16 @@ export class UsuarioService {
   }
 
   async update(
-    matricula: string,
+    idUsuario: number,
     updateUsuarioDto: UpdateUsuarioDto,
     fotoUrl?: Express.Multer.File,
-  ): Promise<Pick<Usuario, 'nomeUsuario' | 'biografia' | 'fotoUrl'>> {
-    const usuario = await this.findOne(matricula); // Garante que o usuário existe
+  ): Promise<Pick<Usuario, 'matricula' | 'nomeUsuario' | 'biografia' | 'fotoUrl'>> {
+    const usuario = await this.findOne(idUsuario); // Garante que o usuário existe
+
+    if (updateUsuarioDto.matricula && updateUsuarioDto.matricula !== usuario.matricula) {
+      const existente = await this.usuarioRepository.findOne({ where: { matricula: updateUsuarioDto.matricula } });
+      if (existente) throw new ConflictException(ErrorMessages.EUSR00002.mensagem);
+    }
 
     // Se a pessoa estiver tentando mudar a senha, precisamos criptografar a nova também
     if (updateUsuarioDto.senha) {
@@ -251,19 +254,20 @@ export class UsuarioService {
     const atualizado = await this.usuarioRepository.save(usuario);
 
     return {
+      matricula: atualizado.matricula,
       nomeUsuario: atualizado.nomeUsuario,
       biografia: atualizado.biografia,
       fotoUrl: atualizado.fotoUrl,
     };
   }
 
-  async remove(matricula: string): Promise<void> {
-    const usuario = await this.findOne(matricula);
+  async remove(idUsuario: number): Promise<void> {
+    const usuario = await this.findOne(idUsuario);
     await this.usuarioRepository.remove(usuario);
   }
 
-  async alterarSenha(matricula: string, dto: AlterarSenhaDto): Promise<{ codigo: string; mensagem: string }> {
-    const usuario = await this.usuarioRepository.findOne({ where: { matricula } });
+  async alterarSenha(idUsuario: number, dto: AlterarSenhaDto): Promise<{ codigo: string; mensagem: string }> {
+    const usuario = await this.usuarioRepository.findOne({ where: { idUsuario } });
 
     if (!usuario) {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
@@ -281,8 +285,8 @@ export class UsuarioService {
     return { codigo: 'SUSR00008', mensagem: SuccessMessages.SUSR00008.mensagem };
   }
 
-  async alterarEmail(matricula: string, dto: AlterarEmailDto): Promise<{ codigo: string; mensagem: string }> {
-    const usuario = await this.usuarioRepository.findOne({ where: { matricula } });
+  async alterarEmail(idUsuario: number, dto: AlterarEmailDto): Promise<{ codigo: string; mensagem: string }> {
+    const usuario = await this.usuarioRepository.findOne({ where: { idUsuario } });
 
     if (!usuario) {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);

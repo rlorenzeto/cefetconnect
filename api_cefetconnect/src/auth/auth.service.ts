@@ -32,16 +32,14 @@ export class AuthService {
     }
 
     // Se o usuário e a senha estiverem corretos, gera o token JWT
-    const payload = { email: usuario.email, sub: usuario.matricula };
+    const payload = { email: usuario.email, sub: usuario.idUsuario};
     
     // Devolve o Token gerado e alguns dados básicos para o frontend exibir na tela
     return {
       access_token: this.jwtService.sign(payload),
       usuario: {
-        matricula: usuario.matricula,
         nomeUsuario: usuario.nomeUsuario,
-        email: usuario.email,
-        fotoUrl: usuario.fotoUrl,
+        fotoUrl: usuario.fotoUrl ?? null,
       }
     };
   }

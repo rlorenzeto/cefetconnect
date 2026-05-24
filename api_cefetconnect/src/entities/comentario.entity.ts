@@ -15,7 +15,7 @@ export class Comentario {
 
   // FK Usuario -> ON DELETE CASCADE
   @ManyToOne(() => Usuario, (usuario) => usuario.comentarios, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'fk_Usuario_matricula' })
+  @JoinColumn({ name: 'fk_Usuario_idUsuario' })
   usuario!: Usuario;
 
   // FK Post -> ON DELETE CASCADE

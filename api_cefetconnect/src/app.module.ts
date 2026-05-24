@@ -12,6 +12,8 @@ import { PostModule } from './post/post.module';
 import { ComentarioModule } from './comentario/comentario.module';
 import { ComunidadeModule } from './comunidade/comunidade.module';
 import { EventoModule } from './evento/evento.module';
+import { SearchModule } from './search/search.module';
+import { PinModule } from './pin/pin.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { EventoModule } from './evento/evento.module';
     ComentarioModule,
     ComunidadeModule,
     EventoModule,
+    SearchModule,
+    PinModule,
   ],
   controllers: [AppController],
   providers: [

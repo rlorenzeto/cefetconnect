@@ -32,10 +32,10 @@ export class PostService {
     private dataSource: DataSource,
   ) {}
 
-  async create(createPostDto: CreatePostDto, matricula: string, files?: Express.Multer.File[]) {
+  async create(createPostDto: CreatePostDto, idUsuario: number, files?: Express.Multer.File[]) {
     const autor = await this.usuarioRepository.findOne({
-      where: { matricula },
-      select: { matricula: true, nomeUsuario: true },
+      where: { idUsuario: idUsuario },
+      select: { idUsuario: true, nomeUsuario: true },
     });
 
     if (!autor) {
@@ -54,8 +54,8 @@ export class PostService {
       }
 
       const membro: unknown[] = await this.dataSource.query(
-        'SELECT 1 FROM participa WHERE usuarioMatricula = ? AND comunidadeIdComunidade = ?',
-        [matricula, createPostDto.idComunidade],
+        'SELECT 1 FROM participa WHERE usuarioIdUsuario = ? AND comunidadeIdComunidade = ?',
+        [idUsuario, createPostDto.idComunidade],
       );
 
       if (membro.length === 0) {
@@ -83,7 +83,13 @@ export class PostService {
       postCriado.fotosPost = fotosSalvas;
     }
 
-    return postCriado;
+    return {
+      idPost: postCriado.idPost,
+      conteudo: postCriado.conteudo,
+      dataHoraPublicacao: postCriado.dataHoraPublicacao,
+      usuario: { nomeUsuario: postCriado.usuario?.nomeUsuario },
+      fotosPost: postCriado.fotosPost ?? [],
+    };
   }
 
   // Parte de Leitura 
@@ -123,9 +129,9 @@ export class PostService {
   }
 
   // Essa função que retorna todos os posts de um usuário específico, possibilitando a visualização do perfil.
-  async findByUsuario(matricula: string) {
+  async findByUsuario(idUsuario: number) {
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
+      where: { idUsuario: idUsuario },
     });
 
     if (!usuario) {
@@ -134,13 +140,14 @@ export class PostService {
 
     return this.postRepository
       .createQueryBuilder('post')
-      .where('post.fk_Usuario_matricula = :matricula', { matricula }) 
+      .where('post.fk_Usuario_idUsuario = :idUsuario', { idUsuario })
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
-      .select([ 
+      .select([
         'post.idPost',
         'post.conteudo',
         'post.dataHoraPublicacao',
+        'usuario.idUsuario',
         'usuario.matricula',
         'usuario.nomeUsuario',
         'usuario.fotoUrl',
@@ -153,7 +160,7 @@ export class PostService {
 
   // Atualização / Exclusão 
 
-  async update(id: string, matricula: string, updatePostDto: UpdatePostDto) {
+  async update(id: string, idUsuario: number, updatePostDto: UpdatePostDto) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
       relations: ['usuario'],
@@ -161,7 +168,7 @@ export class PostService {
         idPost: true,
         conteudo: true,
         dataHoraPublicacao: true,
-        usuario: { matricula: true, nomeUsuario: true },
+        usuario: { idUsuario: true, nomeUsuario: true },
       },
     });
 
@@ -169,7 +176,7 @@ export class PostService {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    if (post.usuario.matricula !== matricula) {
+    if (post.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
@@ -177,11 +184,17 @@ export class PostService {
       post.conteudo = updatePostDto.conteudo;
     }
 
-    return await this.postRepository.save(post);
+    const atualizado = await this.postRepository.save(post);
+    return {
+      idPost: atualizado.idPost,
+      conteudo: atualizado.conteudo,
+      dataHoraPublicacao: atualizado.dataHoraPublicacao,
+      usuario: { nomeUsuario: atualizado.usuario?.nomeUsuario },
+    };
   }
 
   // Função para remover post
-  async remove(id: string, matricula: string) {
+  async remove(id: string, idUsuario: number) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
       relations: ['usuario', 'fotosPost', 'comentarios'], // Essa relações significam que o post vai buscar o usuário, as fotos e os comentários para deletar
@@ -191,7 +204,7 @@ export class PostService {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    if (post.usuario.matricula !== matricula) {
+    if (post.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
@@ -225,15 +238,15 @@ export class PostService {
 
   // Fotos 
 
-  async adicionarFotos(idPost: string, matricula: string, files: Express.Multer.File[]) {
+  async adicionarFotos(idPost: string, idUsuario: number, files: Express.Multer.File[]) {
     const post = await this.postRepository.findOne({
       where: { idPost },
       relations: ['usuario', 'fotosPost'],
-      select: { 
+      select: {
         idPost: true,
         conteudo: true,
         dataHoraPublicacao: true,
-        usuario: { matricula: true, nomeUsuario: true },
+        usuario: { idUsuario: true },
         fotosPost: true,
       },
     });
@@ -242,7 +255,7 @@ export class PostService {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    if (post.usuario.matricula !== matricula) {
+    if (post.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
@@ -260,17 +273,17 @@ export class PostService {
     return post;
   }
 
-  async removerFotos(idPost: string, matricula: string, ids?: string[]) {
+  async removerFotos(idPost: string, idUsuario: number, ids?: string[]) {
     const post = await this.postRepository.findOne({
       where: { idPost },
-      relations: ['usuario', 'fotosPost'], 
+      relations: ['usuario', 'fotosPost'],
     });
 
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    if (post.usuario.matricula !== matricula) {
+    if (post.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
@@ -313,11 +326,11 @@ export class PostService {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    const curtidas: { matricula: string; nomeUsuario: string }[] =
+    const curtidas: { nomeUsuario: string }[] =
       await this.dataSource.query(
-        `SELECT u.matricula, u.nomeUsuario
+        `SELECT u.nomeUsuario
          FROM likePost lp
-         INNER JOIN Usuario u ON u.matricula = lp.usuarioMatricula
+         INNER JOIN Usuario u ON u.idUsuario = lp.usuarioIdUsuario
          WHERE lp.postIdPost = ?`,
         [idPost],
       );
@@ -325,17 +338,16 @@ export class PostService {
     return { total: curtidas.length, usuarios: curtidas };
   }
 
-  async curtirPost(idPost: string, matricula: string) {
+  async curtirPost(idPost: string, idUsuario: number) {
     const post = await this.postRepository.findOne({ where: { idPost } });
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    // Verifica se o usuário já curtiu o post. 
-    // Faz uma busca na tabela likePost procurando registro daquela matrícula conectada a esse determinado post.
+    // Verifica se o usuário já curtiu o post.
     const existing: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM likePost WHERE usuarioMatricula = ? AND postIdPost = ?',
-      [matricula, idPost],
+      'SELECT 1 FROM likePost WHERE usuarioIdUsuario = ? AND postIdPost = ?',
+      [idUsuario, idPost],
     );
 
     // Se já existe, lança exceção de conflito
@@ -345,22 +357,22 @@ export class PostService {
 
     // Insere a curtida na tabela likePost
     await this.dataSource.query(
-      'INSERT INTO likePost (usuarioMatricula, postIdPost) VALUES (?, ?)',
-      [matricula, idPost],
+      'INSERT INTO likePost (usuarioIdUsuario, postIdPost) VALUES (?, ?)',
+      [idUsuario, idPost],
     );
 
     return { curtido: true };
   }
 
-  async descurtirPost(idPost: string, matricula: string) {
+  async descurtirPost(idPost: string, idUsuario: number) {
     const post = await this.postRepository.findOne({ where: { idPost } });
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
     const existing: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM likePost WHERE usuarioMatricula = ? AND postIdPost = ?',
-      [matricula, idPost],
+      'SELECT 1 FROM likePost WHERE usuarioIdUsuario = ? AND postIdPost = ?',
+      [idUsuario, idPost],
     );
 
     if (existing.length === 0) {
@@ -368,16 +380,16 @@ export class PostService {
     }
 
     await this.dataSource.query(
-      'DELETE FROM likePost WHERE usuarioMatricula = ? AND postIdPost = ?',
-      [matricula, idPost],
+      'DELETE FROM likePost WHERE usuarioIdUsuario = ? AND postIdPost = ?',
+      [idUsuario, idPost],
     );
 
     return { curtido: false };
   }
 
-  async contarLikesDadosPorUsuario(matricula: string) {
+  async contarLikesDadosPorUsuario(idUsuario: number) {
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
+      where: { idUsuario },
     });
 
     if (!usuario) {
@@ -388,9 +400,9 @@ export class PostService {
       `SELECT COUNT(*) AS total
        FROM likePost lp
        JOIN Post p ON lp.postIdPost = p.idPost
-       WHERE lp.usuarioMatricula = ?
-         AND p.fk_Usuario_matricula != ?`,
-      [matricula, matricula],
+       WHERE lp.usuarioIdUsuario = ?
+         AND p.fk_Usuario_idUsuario != ?`,
+      [idUsuario, idUsuario],
     );
 
     return { totalCurtidasEmPostsDeOutros: parseInt(totalRow.total, 10) };
@@ -398,15 +410,15 @@ export class PostService {
 
   // Comentários 
 
-  async comentarPost(idPost: string, matricula: string, texto: string) {
+  async comentarPost(idPost: string, idUsuario: number, texto: string) {
     const post = await this.postRepository.findOne({ where: { idPost } });
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
-      select: { matricula: true, nomeUsuario: true },
+      where: { idUsuario },
+      select: { idUsuario: true, nomeUsuario: true },
     });
     if (!usuario) {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
@@ -416,7 +428,7 @@ export class PostService {
     return await this.comentarioRepository.save(comentario);
   }
 
-  async removerComentario(idComentario: string, matricula: string) {
+  async removerComentario(idComentario: string, idUsuario: number) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario },
       relations: ['usuario'],
@@ -426,7 +438,7 @@ export class PostService {
       throw new NotFoundException(ErrorMessages.EUSR00020.mensagem);
     }
 
-    if (comentario.usuario.matricula !== matricula) {
+    if (comentario.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 

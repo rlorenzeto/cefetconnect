@@ -19,7 +19,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   // Serve a pasta de uploads como arquivos estáticos em /uploads
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });

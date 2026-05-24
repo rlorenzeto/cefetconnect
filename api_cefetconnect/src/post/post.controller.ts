@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, ParseIntPipe } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { PostService } from './post.service';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -26,7 +26,7 @@ export class PostController {
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   async create(@Body() createPostDto: CreatePostDto, @UploadedFiles() fotos: Express.Multer.File[], @Request() req: any) {
-    const dados = await this.postService.create(createPostDto, req.user.matricula, fotos);
+    const dados = await this.postService.create(createPostDto, req.user.idUsuario, fotos);
     return {
       codigo: 'SUSR00012',
       mensagem: SuccessMessages.SUSR00012.mensagem,
@@ -69,7 +69,7 @@ export class PostController {
   @ApiResponse({ status: 403, description: '[EUSR00013] Sem permissão para alterar este post.' })
   @ApiResponse({ status: 404, description: '[EUSR00012] Post não encontrado.' })
   async update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto, @Request() req: any) {
-    const dados = await this.postService.update(id, req.user.matricula, updatePostDto);
+    const dados = await this.postService.update(id, req.user.idUsuario, updatePostDto);
     return {
       codigo: 'SUSR00016',
       mensagem: SuccessMessages.SUSR00016.mensagem,
@@ -86,7 +86,7 @@ export class PostController {
   @ApiResponse({ status: 403, description: '[EUSR00013] Sem permissão para deletar este post.' })
   @ApiResponse({ status: 404, description: '[EUSR00012] Post não encontrado.' })
   async remove(@Param('id') id: string, @Request() req: any) {
-    await this.postService.remove(id, req.user.matricula);
+    await this.postService.remove(id, req.user.idUsuario);
     return {
       codigo: 'SUSR00017',
       mensagem: SuccessMessages.SUSR00017.mensagem,
@@ -111,7 +111,7 @@ export class PostController {
     @UploadedFiles() fotos: Express.Multer.File[], // Fotos enviadas via multipart/form-data 
     @Request() req: any, // Usuário autenticado
   ) {
-    const dados = await this.postService.adicionarFotos(id, req.user.matricula, fotos ?? []); // Adiciona as fotos ao post da seguinte forma: [id, matricula, fotos]
+    const dados = await this.postService.adicionarFotos(id, req.user.idUsuario, fotos ?? []); // Adiciona as fotos ao post da seguinte forma: [id, idUsuario, fotos]
     return {
       codigo: 'SUSR00018',
       mensagem: SuccessMessages.SUSR00018.mensagem,
@@ -154,7 +154,7 @@ export class PostController {
     @Body() removerFotosDto: RemoverFotosDto,
     @Request() req: any,
   ) {
-    const dados = await this.postService.removerFotos(id, req.user.matricula, removerFotosDto?.ids);
+    const dados = await this.postService.removerFotos(id, req.user.idUsuario, removerFotosDto?.ids);
     return {
       codigo: 'SUSR00025',
       mensagem: SuccessMessages.SUSR00025.mensagem,
@@ -173,7 +173,7 @@ export class PostController {
   @ApiResponse({ status: 404, description: '[EUSR00012] Post não encontrado.' })
   @ApiResponse({ status: 409, description: '[EUSR00018] Você já curtiu este post.' })
   async curtirPost(@Param('id') id: string, @Request() req: any) {
-    const dados = await this.postService.curtirPost(id, req.user.matricula);
+    const dados = await this.postService.curtirPost(id, req.user.idUsuario);
     return {
       codigo: 'SUSR00021',
       mensagem: SuccessMessages.SUSR00021.mensagem,
@@ -189,7 +189,7 @@ export class PostController {
   @ApiResponse({ status: 200, description: '[SUSR00022] Curtida removida com sucesso.' })
   @ApiResponse({ status: 404, description: '[EUSR00019] Curtida não encontrada.' })
   async descurtirPost(@Param('id') id: string, @Request() req: any) {
-    const dados = await this.postService.descurtirPost(id, req.user.matricula);
+    const dados = await this.postService.descurtirPost(id, req.user.idUsuario);
     return {
       codigo: 'SUSR00022',
       mensagem: SuccessMessages.SUSR00022.mensagem,
@@ -213,16 +213,16 @@ export class PostController {
     };
   }
 
-  @Get('usuario/:matricula')
+  @Get('usuario/:idUsuario')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiParam({ name: 'matricula', description: 'Matrícula do usuário cujos posts serão listados' })
+  @ApiParam({ name: 'idUsuario', description: 'ID do usuário cujos posts serão listados' })
   @ApiOperation({ summary: 'Listar posts de um usuário', description: 'Retorna todos os posts de um usuário específico, incluindo fotos. Usado na tela de perfil.' })
   @ApiResponse({ status: 200, description: '[SUSR00015] Posts do usuário retornados com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
-  async findByUsuario(@Param('matricula') matricula: string) {
-    const dados = await this.postService.findByUsuario(matricula);
+  async findByUsuario(@Param('idUsuario', ParseIntPipe) idUsuario: number) {
+    const dados = await this.postService.findByUsuario(idUsuario);
     return {
       codigo: 'SUSR00015',
       mensagem: SuccessMessages.SUSR00015.mensagem,
@@ -230,15 +230,15 @@ export class PostController {
     };
   }
 
-  @Get('usuario/:matricula/likes')
+  @Get('usuario/:idUsuario/likes')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiParam({ name: 'matricula', description: 'Matrícula do usuário' })
+  @ApiParam({ name: 'idUsuario', description: 'ID do usuário' })
   @ApiOperation({ summary: 'Curtidas dadas a posts de outros usuários', description: 'Retorna quantas curtidas o usuário deu em posts de outros usuários e quantos usuários distintos ele curtiu.' })
   @ApiResponse({ status: 200, description: '[SUSR00026] Estatísticas retornadas com sucesso.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
-  async contarLikesDados(@Param('matricula') matricula: string) {
-    const dados = await this.postService.contarLikesDadosPorUsuario(matricula);
+  async contarLikesDados(@Param('idUsuario', ParseIntPipe) idUsuario: number) {
+    const dados = await this.postService.contarLikesDadosPorUsuario(idUsuario);
     return {
       codigo: 'SUSR00026',
       mensagem: SuccessMessages.SUSR00026.mensagem,
@@ -260,7 +260,7 @@ export class PostController {
     @Body() createComentarioDto: CreateComentarioDto,
     @Request() req: any,
   ) {
-    const dados = await this.postService.comentarPost(id, req.user.matricula, createComentarioDto.texto);
+    const dados = await this.postService.comentarPost(id, req.user.idUsuario, createComentarioDto.texto);
     return {
       codigo: 'SUSR00023',
       mensagem: SuccessMessages.SUSR00023.mensagem,
@@ -277,7 +277,7 @@ export class PostController {
   @ApiResponse({ status: 403, description: '[EUSR00013] Sem permissão para remover este comentário.' })
   @ApiResponse({ status: 404, description: '[EUSR00020] Comentário não encontrado.' })
   async removerComentario(@Param('idComentario') idComentario: string, @Request() req: any) {
-    await this.postService.removerComentario(idComentario, req.user.matricula);
+    await this.postService.removerComentario(idComentario, req.user.idUsuario);
     return {
       codigo: 'SUSR00024',
       mensagem: SuccessMessages.SUSR00024.mensagem,

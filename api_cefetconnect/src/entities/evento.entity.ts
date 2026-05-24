@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, ManyToMany, JoinTable } from 'typeorm';
 import { Usuario } from './usuario.entity';
 import { Comunidade } from './comunidade.entity';
 import { Post } from './post.entity';
@@ -23,9 +23,15 @@ export class Evento {
   @Column({ type: 'datetime' })
   dataEvento!: Date;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  capaEvento?: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  fotoUrlEvento?: string | null;
+
   // FK Usuario -> ON DELETE CASCADE
   @ManyToOne(() => Usuario, (usuario) => usuario.eventos, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'fk_Usuario_matricula' })
+  @JoinColumn({ name: 'fk_Usuario_idUsuario' })
   usuario!: Usuario;
 
   // FK Comunidade -> ON DELETE SET NULL
@@ -35,4 +41,12 @@ export class Evento {
 
   @OneToMany(() => Post, (post) => post.evento)
   posts!: Post[];
+
+  @ManyToMany(() => Usuario, (usuario) => usuario.eventosParticipados)
+  @JoinTable({
+    name: 'participaEvento',
+    joinColumn: { name: 'eventoIdEvento', referencedColumnName: 'idEvento' },
+    inverseJoinColumn: { name: 'usuarioIdUsuario', referencedColumnName: 'idUsuario' },
+  })
+  participantes!: Usuario[];
 }

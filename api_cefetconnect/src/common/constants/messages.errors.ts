@@ -33,6 +33,20 @@ export const ErrorMessages = {
   ECOM00004: { mensagem: 'Você já é membro desta comunidade.', status: 409 },
   ECOM00005: { mensagem: 'Você não é membro desta comunidade.', status: 404 },
 
+  // ── Evento ──────────────────────────────────────────────────────────────────
+  EEVT00001: { mensagem: 'Evento não encontrado.', status: 404 },
+  EEVT00002: { mensagem: 'Você não tem permissão para modificar este evento.', status: 403 },
+  EEVT00003: { mensagem: 'Você já está participando deste evento.', status: 409 },
+  EEVT00004: { mensagem: 'Você não está participando deste evento.', status: 404 },
+  EEVT00005: { mensagem: 'Você precisa ser membro da comunidade para participar deste evento.', status: 403 },
+
+  // ── Pin ────────────────────────────────────────────────────────────────────
+  EPIN00001: { mensagem: 'Pin não encontrado.', status: 404 },
+  EPIN00002: { mensagem: 'Você não tem permissão para modificar este pin.', status: 403 },
+  EPIN00003: { mensagem: 'Você já possui um pin com este nome no seu perfil.', status: 409 },
+  EPIN00004: { mensagem: 'Este pin já está relacionado a esta comunidade.', status: 409 },
+  EPIN00005: { mensagem: 'Relacionamento pin-comunidade não encontrado.', status: 404 },
+
   // ── Autenticação ──────────────────────────────────────────────────────────
   EAUT00001: { mensagem: 'Email ou senha incorretos.', status: 401 },
   EAUT00002: { mensagem: 'E-mail não verificado. Verifique seu e-mail antes de fazer login.', status: 403 },
