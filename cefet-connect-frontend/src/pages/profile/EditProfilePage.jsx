@@ -155,10 +155,16 @@ export default function EditProfilePage() {
         fotoUrl: photoFile,
       });
 
-      const updatedUser = response?.dados || response;
+      const updatedProfile = response?.dados || response;
 
-      setUser(updatedUser);
-      saveCurrentUser(updatedUser);
+      const normalizedUser = {
+        ...user,
+        ...updatedProfile,
+        matricula: updatedProfile?.matricula || user?.matricula || matricula,
+      };
+
+      setUser(normalizedUser);
+      saveCurrentUser(normalizedUser);
       setPhotoFile(null);
       setProfileMessage("Perfil atualizado com sucesso.");
     } catch (error) {

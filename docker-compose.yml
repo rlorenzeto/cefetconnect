@@ -24,6 +24,8 @@ services:
     depends_on:
       - db # Diz pro backend só ligar depois que o banco existir
     restart: always
+    volumes:
+      - ./api_cefetconnect/uploads:/app/uploads
 
   frontend:
     build: ./cefet-connect-frontend

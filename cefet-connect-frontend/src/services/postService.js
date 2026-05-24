@@ -95,6 +95,10 @@ export function getPostLikes(idPost) {
   return apiFetch(`/post/${idPost}/curtidas`);
 }
 
+export function listUserPosts(matricula) {
+  return apiFetch(`/post/usuario/${matricula}`);
+}
+
 export function getUserPostLikes(matricula) {
   return apiFetch(`/post/usuario/${matricula}/likes`);
 }

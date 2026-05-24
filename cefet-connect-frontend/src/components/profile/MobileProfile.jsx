@@ -1,17 +1,36 @@
 import BrandLogo from "../auth/BrandLogo";
+import { BackIcon } from "../icons/AppIcons";
 import ProfileAvatar from "./ProfileAvatar";
+import PostCard from "../feed/PostCard";
 
 export default function MobileProfile({
   user,
+  currentUser,
   imageUrl,
   userPosts = [],
+  isOwnProfile = false,
   onEditProfile,
   onLogout,
+  onPostDeleted,
+  onPostUpdated,
+  onGoBack,
 }) {
   return (
     <div className="min-h-screen bg-[#f1f1f1] text-[#202020] lg:hidden">
       <header className="flex h-[60px] items-center justify-between bg-white px-5">
-        <BrandLogo className="h-9 w-auto object-contain" />
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onGoBack}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f1f1f1] text-[#343434] transition hover:bg-[#e8f7ef] hover:text-[#089464]"
+            aria-label="Voltar para o feed"
+            title="Voltar para o feed"
+          >
+            <BackIcon className="h-5 w-5" />
+          </button>
+
+          <BrandLogo className="h-9 w-auto object-contain" />
+        </div>
 
         <button className="flex flex-col gap-1" type="button" aria-label="Menu">
           <span className="h-0.5 w-6 bg-[#343434]" />
@@ -26,19 +45,21 @@ export default function MobileProfile({
             Perfil
           </h1>
 
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-full border border-[#d9d9d9] px-4 py-1.5 text-xs text-[#343434]"
-          >
-            Sair
-          </button>
+          {isOwnProfile && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="rounded-full border border-[#d9d9d9] px-4 py-1.5 text-xs text-[#343434]"
+            >
+              Sair
+            </button>
+          )}
         </div>
 
         <section className="overflow-hidden rounded-[32px] bg-white pb-8 shadow-sm">
           <div className="h-36 w-full">
             <img
-              src="../../../public/images/campus-cefet.png"
+              src="/images/campus-cefet.png"
               alt="Campus CEFET"
               className="h-full w-full object-cover"
             />
@@ -79,32 +100,37 @@ export default function MobileProfile({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={onEditProfile}
-            className="mt-8 h-11 w-full rounded-full bg-[#089464] text-sm font-semibold text-white"
-          >
-            Editar perfil
-          </button>
+          {isOwnProfile && (
+            <button
+              type="button"
+              onClick={onEditProfile}
+              className="mt-8 h-11 w-full rounded-full bg-[#089464] text-sm font-semibold text-white"
+            >
+              Editar perfil
+            </button>
+          )}
           <div className="mt-8 border-t border-[#eeeeee] pt-6">
             <h3 className="mb-4 text-lg font-bold text-[#202020]">
               Posts publicados
             </h3>
 
             {userPosts.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-5">
                 {userPosts.map((post) => (
-                  <div
+                  <PostCard
                     key={post.idPost}
-                    className="rounded-2xl bg-[#f1f1f1] px-4 py-3 text-left text-sm text-[#343434]"
-                  >
-                    {post.conteudo || "Post com imagem"}
-                  </div>
+                    post={post}
+                    currentUser={currentUser}
+                    onPostDeleted={onPostDeleted}
+                    onPostUpdated={onPostUpdated}
+                  />
                 ))}
               </div>
             ) : (
               <p className="rounded-2xl bg-[#f1f1f1] px-4 py-3 text-left text-sm text-[#777]">
-                Você ainda não publicou nenhum post.
+                {isOwnProfile
+                  ? "Você ainda não publicou nenhum post."
+                  : "Este usuário ainda não publicou nenhum post."}
               </p>
             )}
           </div>

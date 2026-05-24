@@ -1,35 +1,71 @@
-import { useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { resetPassword } from "../../services/authService";
 import PasswordInput from "./PasswordInput";
 import AuthButton from "./AuthButton";
 
 export default function ResetPasswordForm() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
-  const token = useMemo(() => searchParams.get("token") || "", [searchParams]);
 
   const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
+    email: "",
+    codigo: "",
+    novaSenha: "",
+    confirmarNovaSenha: "",
   });
 
   const [errors, setErrors] = useState({
-    password: "",
-    confirmPassword: "",
+    email: "",
+    codigo: "",
+    novaSenha: "",
+    confirmarNovaSenha: "",
   });
 
   const [apiError, setApiError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  function validateEmail(value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  function validatePassword(password) {
+    if (!password.trim()) {
+      return "A nova senha é obrigatória.";
+    }
+
+    if (password.length < 8) {
+      return "A nova senha deve ter no mínimo 8 caracteres.";
+    }
+
+    if (password.length > 25) {
+      return "A nova senha deve ter no máximo 25 caracteres.";
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      return "A nova senha deve conter pelo menos uma letra maiúscula.";
+    }
+
+    if (!/\d/.test(password)) {
+      return "A nova senha deve conter pelo menos um número.";
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>_\-+=/\\[\];'`~]/.test(password)) {
+      return "A nova senha deve conter pelo menos um caractere especial.";
+    }
+
+    return "";
+  }
+
   function handleChange(event) {
     const { name, value } = event.target;
 
+    const nextValue =
+      name === "codigo" ? value.replace(/\D/g, "").slice(0, 6) : value;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: nextValue,
     }));
 
     setErrors((prev) => ({
@@ -45,28 +81,46 @@ export default function ResetPasswordForm() {
     event.preventDefault();
 
     const newErrors = {
-      password: "",
-      confirmPassword: "",
+      email: "",
+      codigo: "",
+      novaSenha: "",
+      confirmarNovaSenha: "",
     };
 
-    if (!token) {
-      setApiError("Token de recuperação inválido ou ausente.");
-      return;
+    const email = formData.email.trim();
+    const codigo = formData.codigo.trim();
+    const novaSenha = formData.novaSenha.trim();
+    const confirmarNovaSenha = formData.confirmarNovaSenha.trim();
+
+    if (!email) {
+      newErrors.email = "O e-mail é obrigatório.";
+    } else if (!validateEmail(email)) {
+      newErrors.email = "Digite um e-mail válido.";
     }
 
-    if (!formData.password.trim()) {
-      newErrors.password = "A nova senha é obrigatória.";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "A senha deve ter pelo menos 6 caracteres.";
+    if (!codigo) {
+      newErrors.codigo = "O código de recuperação é obrigatório.";
+    } else if (!/^\d{6}$/.test(codigo)) {
+      newErrors.codigo = "O código deve ter exatamente 6 dígitos.";
     }
 
-    if (!formData.confirmPassword.trim()) {
-      newErrors.confirmPassword = "Confirme sua nova senha.";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "As senhas não coincidem.";
+    const passwordError = validatePassword(novaSenha);
+    if (passwordError) {
+      newErrors.novaSenha = passwordError;
     }
 
-    if (newErrors.password || newErrors.confirmPassword) {
+    if (!confirmarNovaSenha) {
+      newErrors.confirmarNovaSenha = "Confirme sua nova senha.";
+    } else if (novaSenha !== confirmarNovaSenha) {
+      newErrors.confirmarNovaSenha = "As senhas não coincidem.";
+    }
+
+    if (
+      newErrors.email ||
+      newErrors.codigo ||
+      newErrors.novaSenha ||
+      newErrors.confirmarNovaSenha
+    ) {
       setErrors(newErrors);
       return;
     }
@@ -75,13 +129,12 @@ export default function ResetPasswordForm() {
       setIsSubmitting(true);
 
       const response = await resetPassword({
-        token,
-        password: formData.password,
+        email,
+        codigo,
+        novaSenha,
       });
 
-      setSuccessMessage(
-        response?.message || "Senha redefinida com sucesso."
-      );
+      setSuccessMessage(response?.mensagem || "Senha redefinida com sucesso.");
 
       setTimeout(() => {
         navigate("/login");
@@ -96,42 +149,74 @@ export default function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <PasswordInput
-          type="password"
-          name="password"
-          value={formData.password}
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
           onChange={handleChange}
-          placeholder="Digite sua nova senha"
+          placeholder="Digite seu e-mail"
           className="h-11 w-full rounded-md border border-[#bfbfbf] bg-white px-3 text-sm outline-none"
         />
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+        )}
+      </div>
+
+      <div>
+        <input
+          type="text"
+          inputMode="numeric"
+          name="codigo"
+          maxLength={6}
+          value={formData.codigo}
+          onChange={handleChange}
+          placeholder="Digite o código recebido"
+          className="h-11 w-full rounded-md border border-[#bfbfbf] bg-white px-3 text-center text-sm tracking-[0.35em] outline-none"
+        />
+
+        {errors.codigo && (
+          <p className="mt-1 text-sm text-red-500">{errors.codigo}</p>
         )}
       </div>
 
       <div>
         <PasswordInput
-          name="confirmPassword"
-          value={formData.confirmPassword}
+          name="novaSenha"
+          value={formData.novaSenha}
+          onChange={handleChange}
+          placeholder="Digite sua nova senha"
+          autoComplete="new-password"
+        />
+
+        {errors.novaSenha && (
+          <p className="mt-1 text-sm text-red-500">{errors.novaSenha}</p>
+        )}
+      </div>
+
+      <div>
+        <PasswordInput
+          name="confirmarNovaSenha"
+          value={formData.confirmarNovaSenha}
           onChange={handleChange}
           placeholder="Confirme sua nova senha"
           autoComplete="new-password"
         />
-        {errors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+
+        {errors.confirmarNovaSenha && (
+          <p className="mt-1 text-sm text-red-500">
+            {errors.confirmarNovaSenha}
+          </p>
         )}
       </div>
 
       {apiError && <p className="text-sm text-red-500">{apiError}</p>}
+
       {successMessage && (
         <p className="text-sm text-[#2d67c5]">{successMessage}</p>
       )}
 
-      <AuthButton
-        type="submit"
-        disabled={isSubmitting}
-        className="mt-7"
-      >
+      <AuthButton type="submit" disabled={isSubmitting} className="mt-7">
         {isSubmitting ? "Salvando..." : "Redefinir senha"}
       </AuthButton>
     </form>

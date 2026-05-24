@@ -49,7 +49,7 @@ export default function DesktopEditProfile({
 
           <div className="mb-8 overflow-hidden rounded-[32px] bg-white shadow-sm">
             <img
-              src="../../../public/images/campus-cefet.png"
+              src="/images/campus-cefet.png"
               alt="Campus CEFET"
               className="h-48 w-full object-cover"
             />
