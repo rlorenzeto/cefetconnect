@@ -42,7 +42,39 @@ export const SuccessMessages = {
   SCOM00002: { mensagem: 'Comunidade retornada com sucesso', status: 200},
   SCOM00003: { mensagem: 'Você entrou na comunidade com sucesso.', status: 200 },
   SCOM00004: { mensagem: 'Você saiu da comunidade com sucesso.', status: 200 },
+  SCOM00005: { mensagem: 'Comunidade atualizada com sucesso.', status: 200 },
+  SCOM00006: { mensagem: 'Comunidade excluída com sucesso.', status: 200 },
+  SCOM00007: { mensagem: 'Comunidades retornadas com sucesso.', status: 200 },
+  SCOM00008: { mensagem: 'Comunidade não encontrada.', status: 404 },
+  SCOM00009: { mensagem: 'Você não tem autorização para deletar essa comunidade.', status: 403 },
+  SCOM00010: { mensagem: 'Eventos da comunidade retornados com sucesso.', status: 200 },
   
+  // ── Evento ────────────────────────────────────────────────────────────────
+  SEVT00001: { mensagem: 'Evento criado com sucesso.', status: 201 },
+  SEVT00002: { mensagem: 'Eventos retornados com sucesso.', status: 200 },
+  SEVT00003: { mensagem: 'Evento atualizado com sucesso.', status: 200 },
+  SEVT00004: { mensagem: 'Evento excluído com sucesso.', status: 200 },
+  SEVT00005: { mensagem: 'Eventos do usuário retornados com sucesso.', status: 200 },
+  SEVT00006: { mensagem: 'Você está participando do evento.', status: 200 },
+  SEVT00007: { mensagem: 'Você saiu do evento com sucesso.', status: 200 },
+  SEVT00008: { mensagem: 'Participação desconfirmada com sucesso.', status: 200 },
+
+  // ── Pin ───────────────────────────────────────────────────────────────────
+  SPIN00001: { mensagem: 'Pin adicionado com sucesso.', status: 201 },
+  SPIN00002: { mensagem: 'Pins retornados com sucesso.', status: 200 },
+  SPIN00003: { mensagem: 'Pin atualizado com sucesso.', status: 200 },
+  SPIN00004: { mensagem: 'Pin removido com sucesso.', status: 200 },
+  SPIN00005: { mensagem: 'Pins importados do Gradment com sucesso.', status: 201 },
+  SPIN00006: { mensagem: 'Sugestões de pins geradas com sucesso.', status: 200 },
+  SPIN00007: { mensagem: 'Detalhes do pin retornados com sucesso.', status: 200 },
+  SPIN00008: { mensagem: 'Usuários relacionados ao pin retornados com sucesso.', status: 200 },
+  SPIN00009: { mensagem: 'Comunidades relacionadas ao pin retornadas com sucesso.', status: 200 },
+  SPIN00010: { mensagem: 'Pin relacionado à comunidade com sucesso.', status: 200 },
+  SPIN00011: { mensagem: 'Relacionamento pin-comunidade removido com sucesso.', status: 200 },
+
+  // ── Busca ─────────────────────────────────────────────────────────────────
+  SBSC00001: { mensagem: 'Busca realizada com sucesso.', status: 200 },
+
   // ── Autenticação ──────────────────────────────────────────────────────────
   SAUT00001: { mensagem: 'Login realizado com sucesso.', status: 200 },
   SAUT00002: { mensagem: 'Logout realizado com sucesso.', status: 200 },

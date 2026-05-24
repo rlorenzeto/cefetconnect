@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
@@ -54,11 +55,11 @@ export class UsuarioController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verificar e-mail', description: 'Confirma o e-mail do usuário a partir do código recebido.' })
-  @ApiParam({ name: 'id', description: 'Matrícula do usuário que deseja verificar o e-mail.' })
+  @ApiParam({ name: 'id', description: 'Id do usuário que deseja verificar o e-mail.' })
   @ApiResponse({ status: 200, description: '[SUSR00006] E-mail verificado com sucesso.' })
   @ApiResponse({ status: 400, description: '[EUSR00004] E-mail já verificado. | [EUSR00005] Código de verificação inválido.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
-  verificarEmail(@Param('id') id: string, @Body() body: VerificarEmailDto) {
+  verificarEmail(@Param('id') id: number, @Body() body: VerificarEmailDto) {
     return this.usuarioService.verificarEmail(id, body.codigo);
   }
 
@@ -66,11 +67,11 @@ export class UsuarioController {
   @Public()
   @HttpCode(HttpStatus.OK) 
   @ApiOperation({ summary: 'Reenviar código de verificação', description: 'Gera e envia um novo código de verificação para o e-mail do usuário.' })
-  @ApiParam({ name: 'id', description: 'Matrícula do usuário que deseja reenviar o código de verificação.' })
+  @ApiParam({ name: 'id', description: 'Id do usuário que deseja reenviar o código de verificação.' })
   @ApiResponse({ status: 200, description: '[SUSR00007] Novo código de verificação enviado para o e-mail cadastrado.' })
   @ApiResponse({ status: 400, description: '[EUSR00004] E-mail já verificado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
-  reenviarCodigo(@Param('id') id: string) {
+  reenviarCodigo(@Param('id') id: number) {
     return this.usuarioService.reenviarCodigo(id);
   }
 
@@ -106,12 +107,12 @@ export class UsuarioController {
 
   @Get(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Buscar usuário por matrícula', description: 'Retorna os dados de um usuário pelo número de matrícula. Requer autenticação.' })
-  @ApiParam({ name: 'id', description: 'Matrícula do usuário que deseja buscar.' })
+  @ApiOperation({ summary: 'Buscar usuário por id', description: 'Retorna os dados de um usuário pelo id. Requer autenticação.' })
+  @ApiParam({ name: 'id', description: 'Id do usuário que deseja buscar.' })
   @ApiResponse({ status: 200, description: '[SUSR00004] Usuário localizado com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number) {
     const dados = await this.usuarioService.findPerfilCompleto(id); //Verificar!
     return {
       codigo: 'SUSR00004',
@@ -145,7 +146,7 @@ export class UsuarioController {
   @ApiBearerAuth()
   @UseInterceptors(FileInterceptor('fotoUrl', multerPerfilConfig)) 
   @ApiOperation({ summary: 'Atualizar usuário', description: 'Atualiza os dados de um usuário. Permite envio de foto de perfil (multipart/form-data). Requer autenticação.' })
-  @ApiParam({ name: 'id', description: 'Matrícula do usuário que terá a foto atualizada.' })
+  @ApiParam({ name: 'id', description: 'Id do usuário que terá a foto atualizada.' })
   @ApiResponse({ status: 200, description: '[SUSR00002] Usuário atualizado com sucesso.' })
   @ApiResponse({ status: 400, description: '[EUSR00001] Campos incorretos enviados.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
@@ -153,7 +154,7 @@ export class UsuarioController {
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   @ApiResponse({ status: 413, description: '[EUSR00009] Tamanho máximo de arquivo excedido (5MB).' })
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUsuarioDto: UpdateUsuarioDto,
     @Request() req,
     @UploadedFile(
@@ -164,7 +165,7 @@ export class UsuarioController {
     )
     fotoUrl?: Express.Multer.File,
   ) {
-    if (req.user.matricula !== id) {
+    if (req.user.idUsuario !== id) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
     const dados = await this.usuarioService.update(
@@ -182,14 +183,14 @@ export class UsuarioController {
   @Delete(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Excluir usuário', description: 'Remove permanentemente um usuário do sistema. Requer autenticação.' })
-  @ApiParam({ name: 'id', description: 'Matrícula do usuário que será excluído.' })
+  @ApiParam({ name: 'id', description: 'Id do usuário que será excluído.' })
   @ApiResponse({ status: 200, description: '[SUSR00003] Usuário excluído com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 403, description: '[EUSR00013] Você não tem permissão para excluir este usuário.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   // Verifica se o usuário autenticado é o mesmo que está sendo excluído, ou seja, se ele está excluindo sua própria conta. Caso contrário, lança um erro de permissão.
-  async remove(@Param('id') id: string, @Request() req: any) {
-    if (req.user.matricula !== id) {
+  async remove(@Param('id', ParseIntPipe) id: number, @Request() req: any) {
+    if (req.user.idUsuario !== id) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
     await this.usuarioService.remove(id); 
@@ -203,15 +204,15 @@ export class UsuarioController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Alterar senha', description: 'Altera a senha do usuário. Exige a senha atual para confirmar a operação.' })
-  @ApiParam({ name: 'id', description: 'Matrícula do usuário que terá a senha alterada.' })
+  @ApiParam({ name: 'id', description: 'Id do usuário que terá a senha alterada.' })
   @ApiResponse({ status: 200, description: '[SUSR00008] Senha alterada com sucesso.' })
   @ApiResponse({ status: 400, description: '[EUSR00010] Senha atual incorreta.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 403, description: '[EUSR00013] Você não tem permissão para alterar a senha deste usuário.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   // Verifica se o usuário autenticado é o mesmo que está alterando a senha, ou seja, se ele está alterando sua própria senha. Caso contrário, lança um erro de permissão.
-  async alterarSenha(@Param('id') id: string, @Body() dto: AlterarSenhaDto, @Request() req: any) {
-    if (req.user.matricula !== id) {
+  async alterarSenha(@Param('id', ParseIntPipe) id: number, @Body() dto: AlterarSenhaDto, @Request() req: any) {
+    if (req.user.idUsuario !== id) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
     return this.usuarioService.alterarSenha(id, dto);
@@ -221,7 +222,7 @@ export class UsuarioController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Alterar e-mail', description: 'Altera o e-mail do usuário. Exige a senha atual para confirmar. O novo e-mail deverá ser verificado antes do próximo login.' })
-  @ApiParam({ name: 'id', description: 'Matrícula do usuário que terá o e-mail alterado.' })
+  @ApiParam({ name: 'id', description: 'Id do usuário que terá o e-mail alterado.' })
   @ApiResponse({ status: 200, description: '[SUSR00009] E-mail alterado com sucesso. Verifique seu novo e-mail para ativar a conta.' })
   @ApiResponse({ status: 400, description: '[EUSR00010] Senha atual incorreta.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
@@ -229,8 +230,8 @@ export class UsuarioController {
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   @ApiResponse({ status: 409, description: '[EUSR00011] E-mail já está em uso por outro usuário.' })
   // Verifica se o usuário autenticado é o mesmo que está alterando o e-mail, ou seja, se ele está alterando seu próprio e-mail. Caso contrário, lança um erro de permissão.
-  async alterarEmail(@Param('id') id: string, @Body() dto: AlterarEmailDto, @Request() req: any) {
-    if (req.user.matricula !== id) {
+  async alterarEmail(@Param('id', ParseIntPipe) id: number, @Body() dto: AlterarEmailDto, @Request() req: any) {
+    if (req.user.idUsuario !== id) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
     return this.usuarioService.alterarEmail(id, dto);

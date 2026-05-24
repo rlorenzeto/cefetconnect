@@ -7,12 +7,12 @@ export class CreateComunidadeDto {
 @IsString( { message: 'O nome da comunidade deve ser uma string' })
 @IsNotEmpty({ message: 'O nome da comunidade é obrigatório' })
 @MaxLength(100) 
-nome!: string;
+nomeComunidade!: string;
 
 @ApiProperty({ description: 'A descrição da comunidade', example: 'Uma comunidade para discutir sobre programação e compartilhar conhecimentos.',})
 @IsString({ message: 'A descrição da comunidade deve ser uma string' })
 @IsNotEmpty({ message: 'A descrição da comunidade é obrigatória' })
 @MaxLength(500) 
-descricao!: string;
+descricaoComunidade!: string;
 }
 

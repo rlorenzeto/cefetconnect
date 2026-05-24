@@ -14,6 +14,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) { 
-    return { matricula: payload.sub, email: payload.email }; // extraindo a matrícula e o email para usar como dados do usuário autenticado.
+    return { idUsuario: Number(payload.sub), email: payload.email }; // extraindo o id e o email para usar como dados do usuário autenticado.
   }
 }

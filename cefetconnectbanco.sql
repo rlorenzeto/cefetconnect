@@ -102,6 +102,33 @@ LOCK TABLES `evento` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `participaEvento`
+--
+
+DROP TABLE IF EXISTS `participaEvento`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `participaEvento` (
+  `eventoIdEvento` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `usuarioMatricula` varchar(11) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`eventoIdEvento`,`usuarioMatricula`),
+  KEY `IDX_participaEvento_evento` (`eventoIdEvento`),
+  KEY `IDX_participaEvento_usuario` (`usuarioMatricula`),
+  CONSTRAINT `FK_participaEvento_evento` FOREIGN KEY (`eventoIdEvento`) REFERENCES `evento` (`idEvento`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_participaEvento_usuario` FOREIGN KEY (`usuarioMatricula`) REFERENCES `usuario` (`matricula`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET client = @saved_cs_client */;
+
+--
+-- Dumping data for table `participaEvento`
+--
+
+LOCK TABLES `participaEvento` WRITE;
+/*!40000 ALTER TABLE `participaEvento` DISABLE KEYS */;
+/*!40000 ALTER TABLE `participaEvento` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `likecomentario`
 --
 
@@ -282,4 +309,22 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+ALTER TABLE `comunidade` ADD COLUMN `capaComunidade` VARCHAR(255) NULL;
+ALTER TABLE `comunidade` ADD COLUMN `fotoUrlComunidade` VARCHAR(255) NULL;
+ALTER TABLE `evento` ADD COLUMN `capaEvento` VARCHAR(255) NULL;
+ALTER TABLE `evento` ADD COLUMN `fotoUrlEvento` VARCHAR(255) NULL;
+DROP TABLE IF EXISTS `participaEvento`;
+CREATE TABLE `participaEvento` (
+  `eventoIdEvento` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `usuarioIdUsuario` int NOT NULL,
+  PRIMARY KEY (`eventoIdEvento`, `usuarioIdUsuario`),
+  KEY `IDX_participaEvento_evento` (`eventoIdEvento`),
+  KEY `IDX_participaEvento_usuario` (`usuarioIdUsuario`),
+  CONSTRAINT `FK_participaEvento_evento` FOREIGN KEY (`eventoIdEvento`) REFERENCES `evento` (`idEvento`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_participaEvento_usuario` FOREIGN KEY (`usuarioIdUsuario`) REFERENCES `usuario` (`idUsuario`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- Dump completed on 2026-05-04  8:19:32

@@ -1,4 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 import { CreateComunidadeDto } from './dto/create-comunidade.dto';
 import { UpdateComunidadeDto } from './dto/update-comunidade.dto';
 import { Usuario } from '../entities/usuario.entity';
@@ -18,10 +20,15 @@ export class ComunidadeService {
     private dataSource: DataSource,
   ) {}
     
-  async create(createComunidadeDto: CreateComunidadeDto, matricula: string) {
+  async create(
+    createComunidadeDto: CreateComunidadeDto,
+    idUsuario: number,
+    capaFile?: Express.Multer.File,
+    fotoFile?: Express.Multer.File,
+  ) {
     const criadorComunidade = await this.usuarioRepository.findOne({
-      where: { matricula },
-      select: { matricula: true, nomeUsuario: true },
+      where: { idUsuario },
+      select: { idUsuario: true, nomeUsuario: true },
     });
 
     if (!criadorComunidade) {
@@ -29,9 +36,11 @@ export class ComunidadeService {
     }
 
     const novaComunidade = this.comunidadeRepository.create({
-      nomeComunidade: createComunidadeDto.nome,
-      descricaoComunidade: createComunidadeDto.descricao,
+      nomeComunidade: createComunidadeDto.nomeComunidade,
+      descricaoComunidade: createComunidadeDto.descricaoComunidade,
       criador: criadorComunidade,
+      capaComunidade: capaFile ? capaFile.path.replace(/\\/g, '/') : null,
+      fotoUrlComunidade: fotoFile ? fotoFile.path.replace(/\\/g, '/') : null,
     });
 
     return await this.comunidadeRepository.save(novaComunidade);
@@ -44,6 +53,8 @@ export class ComunidadeService {
         idComunidade: true,
         nomeComunidade: true,
         descricaoComunidade: true,
+        capaComunidade: true,
+        fotoUrlComunidade: true,
         criador: { nomeUsuario: true },
       },
     });
@@ -57,12 +68,20 @@ export class ComunidadeService {
         idComunidade: true,
         nomeComunidade: true,
         descricaoComunidade: true,
+        capaComunidade: true,
+        fotoUrlComunidade: true,
         criador: { nomeUsuario: true },
       },
     });
   }
 
-  async update(id: string, updateComunidadeDto: UpdateComunidadeDto, matricula: string) {
+  async update(
+    id: string,
+    updateComunidadeDto: UpdateComunidadeDto,
+    idUsuario: number,
+    capaFile?: Express.Multer.File,
+    fotoFile?: Express.Multer.File,
+  ) {
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade: id },
       relations: ['criador'],
@@ -70,7 +89,9 @@ export class ComunidadeService {
         idComunidade: true,
         nomeComunidade: true,
         descricaoComunidade: true,
-        criador: { matricula: true, nomeUsuario: true },
+        capaComunidade: true,
+        fotoUrlComunidade: true,
+        criador: { idUsuario: true, nomeUsuario: true },
       },
     });
 
@@ -78,22 +99,38 @@ export class ComunidadeService {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
-    if (comunidade.criador?.matricula !== matricula) {
+    if (comunidade.criador?.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.ECOM00002.mensagem);
     }
 
-    if (updateComunidadeDto.nome !== undefined) {
-      comunidade.nomeComunidade = updateComunidadeDto.nome;
+    if (updateComunidadeDto.nomeComunidade !== undefined) {
+      comunidade.nomeComunidade = updateComunidadeDto.nomeComunidade;
     }
 
-    if (updateComunidadeDto.descricao !== undefined) {
-      comunidade.descricaoComunidade = updateComunidadeDto.descricao;
+    if (updateComunidadeDto.descricaoComunidade !== undefined) {
+      comunidade.descricaoComunidade = updateComunidadeDto.descricaoComunidade;
+    }
+
+    if (capaFile) {
+      if (comunidade.capaComunidade) {
+        const caminhoAntigo = join(process.cwd(), comunidade.capaComunidade);
+        await unlink(caminhoAntigo).catch(() => {});
+      }
+      comunidade.capaComunidade = capaFile.path.replace(/\\/g, '/');
+    }
+
+    if (fotoFile) {
+      if (comunidade.fotoUrlComunidade) {
+        const caminhoAntigo = join(process.cwd(), comunidade.fotoUrlComunidade);
+        await unlink(caminhoAntigo).catch(() => {});
+      }
+      comunidade.fotoUrlComunidade = fotoFile.path.replace(/\\/g, '/');
     }
 
     return await this.comunidadeRepository.save(comunidade);
   }
 
-  async remove(id: string, matricula: string) {
+  async remove(id: string, idUsuario: number) {
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade: id },
       relations: ['criador'],
@@ -103,14 +140,14 @@ export class ComunidadeService {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
-    if (comunidade.criador?.matricula !== matricula) {
+    if (comunidade.criador?.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.ECOM00002.mensagem);
     }
 
     return await this.comunidadeRepository.remove(comunidade);
   }
 
-  async entrar(idComunidade: string, matricula: string) {
+  async entrar(idComunidade: string, idUsuario: number) {
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade },
     });
@@ -120,7 +157,7 @@ export class ComunidadeService {
     }
 
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
+      where: { idUsuario },
     });
 
     if (!usuario) {
@@ -128,8 +165,8 @@ export class ComunidadeService {
     }
 
     const membroExistente: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM participa WHERE usuarioMatricula = ? AND comunidadeIdComunidade = ?',
-      [matricula, idComunidade],
+      'SELECT 1 FROM participa WHERE usuarioIdUsuario = ? AND comunidadeIdComunidade = ?',
+      [idUsuario, idComunidade],
     );
 
     if (membroExistente.length > 0) {
@@ -137,14 +174,37 @@ export class ComunidadeService {
     }
 
     await this.dataSource.query(
-      'INSERT INTO participa (usuarioMatricula, comunidadeIdComunidade) VALUES (?, ?)',
-      [matricula, idComunidade],
+      'INSERT INTO participa (usuarioIdUsuario, comunidadeIdComunidade) VALUES (?, ?)',
+      [idUsuario, idComunidade],
     );
 
     return { entrou: true, idComunidade };
   }
 
-  async sair(idComunidade: string, matricula: string) {
+  async findEventos(idComunidade: string) {
+    const comunidade = await this.comunidadeRepository.findOne({
+      where: { idComunidade },
+      relations: ['eventos', 'eventos.usuario'],
+      select: {
+        idComunidade: true,
+        eventos: {
+          idEvento: true,
+          titulo: true,
+          descricaoEvento: true,
+          localEvento: true,
+          status: true,
+          dataEvento: true,
+          capaEvento: true,
+          usuario: { nomeUsuario: true },
+        },
+      },
+    });
+
+    if (!comunidade) throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    return comunidade.eventos ?? [];
+  }
+
+  async sair(idComunidade: string, idUsuario: number) {
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade },
     });
@@ -154,8 +214,8 @@ export class ComunidadeService {
     }
 
     const membroExistente: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM participa WHERE usuarioMatricula = ? AND comunidadeIdComunidade = ?',
-      [matricula, idComunidade],
+      'SELECT 1 FROM participa WHERE usuarioIdUsuario = ? AND comunidadeIdComunidade = ?',
+      [idUsuario, idComunidade],
     );
 
     if (membroExistente.length === 0) {
@@ -163,8 +223,8 @@ export class ComunidadeService {
     }
 
     await this.dataSource.query(
-      'DELETE FROM participa WHERE usuarioMatricula = ? AND comunidadeIdComunidade = ?',
-      [matricula, idComunidade],
+      'DELETE FROM participa WHERE usuarioIdUsuario = ? AND comunidadeIdComunidade = ?',
+      [idUsuario, idComunidade],
     );
 
     return { saiu: true, idComunidade };

@@ -1,9 +1,15 @@
 import { PartialType } from '@nestjs/swagger';
-import { IsOptional, IsString, IsStrongPassword, MaxLength, MinLength } from 'class-validator';
+import { IsOptional, IsString, IsStrongPassword, MaxLength, MinLength, Matches } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateUsuarioDto } from './create-usuario.dto';
 
 export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
+  @ApiPropertyOptional({ example: '12345678900', description: 'Matrícula do aluno/professor fornecida pelo SIGAA' })
+  @IsOptional()
+  @IsString({ message: 'A matrícula deve ser um texto' })
+  @Matches(/^\d{7}$|^\d{11}$/, { message: 'A matrícula deve ter 7 dígitos (caso seja professor) ou 11 dígitos (caso seja aluno)' })
+  matricula?: string;
+  
   @ApiPropertyOptional({ example: 'NovaSenha@2024', description: 'Nova senha do aluno (mínimo 8 caracteres, com número, símbolo e letra maiúscula)' })
   @IsOptional()
   @IsString()

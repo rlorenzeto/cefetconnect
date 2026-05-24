@@ -26,15 +26,15 @@ export class ComentarioService {
     private dataSource: DataSource,
   ) {}
 
-  async create(idPost: string, matricula: string, createComentarioDto: CreateComentarioDto) {
+  async create(idPost: string, idUsuario: number, createComentarioDto: CreateComentarioDto) {
     const post = await this.postRepository.findOne({ where: { idPost } }); // Vai no banco procurar o post onde o aluno quer comentar
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
     const usuario = await this.usuarioRepository.findOne({
-      where: { matricula },
-      select: { matricula: true, nomeUsuario: true }, 
+      where: { idUsuario },
+      select: { idUsuario: true, nomeUsuario: true },
     });
     if (!usuario) {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
@@ -65,7 +65,7 @@ export class ComentarioService {
         'comentario.idComentario',
         'comentario.texto',
         'comentario.dataHora',
-        'usuario.matricula',
+        'usuario.idUsuario',
         'usuario.nomeUsuario',
       ])
       .orderBy('comentario.dataHora', 'ASC') // ordene os comentários pela data de criação, do mais antigo ao mais novo.
@@ -81,7 +81,7 @@ export class ComentarioService {
         idComentario: true,
         texto: true,
         dataHora: true,
-        usuario: { matricula: true, nomeUsuario: true }, // entra apenas matrícula e nome do usuário
+        usuario: { idUsuario: true, nomeUsuario: true },
         post: { idPost: true }, // entra apenas o ID do post
       },
     });
@@ -93,7 +93,7 @@ export class ComentarioService {
     return comentario;
   }
 
-  async update(id: string, matricula: string, updateComentarioDto: UpdateComentarioDto) {
+  async update(id: string, idUsuario: number, updateComentarioDto: UpdateComentarioDto) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario: id },
       relations: ['usuario'],
@@ -103,7 +103,7 @@ export class ComentarioService {
       throw new NotFoundException(ErrorMessages.EUSR00020.mensagem);
     }
 
-    if (comentario.usuario.matricula !== matricula) {
+    if (comentario.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
@@ -114,7 +114,7 @@ export class ComentarioService {
     return await this.comentarioRepository.save(comentario);
   }
 
-  async remove(id: string, matricula: string) {
+  async remove(id: string, idUsuario: number) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario: id },
       relations: ['usuario'],
@@ -124,7 +124,7 @@ export class ComentarioService {
       throw new NotFoundException(ErrorMessages.EUSR00020.mensagem);
     }
 
-    if (comentario.usuario.matricula !== matricula) {
+    if (comentario.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
@@ -133,7 +133,7 @@ export class ComentarioService {
 
   // Curtidas 
 
-  async curtirComentario(idComentario: string, matricula: string) {
+  async curtirComentario(idComentario: string, idUsuario: number) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario },
     });
@@ -142,9 +142,9 @@ export class ComentarioService {
     }
 
     // Verifica se o usuário já curtiu o comentário, retorna 1 se existir
-    const existing: unknown[] = await this.dataSource.query( 
-      'SELECT 1 FROM likeComentario WHERE usuarioMatricula = ? AND comentarioIdComentario = ?',
-      [matricula, idComentario],
+    const existing: unknown[] = await this.dataSource.query(
+      'SELECT 1 FROM likeComentario WHERE usuarioIdUsuario = ? AND comentarioIdComentario = ?',
+      [idUsuario, idComentario],
     );
 
     // Se já curtiu, lança exceção
@@ -154,14 +154,14 @@ export class ComentarioService {
 
     // Insere a curtida
     await this.dataSource.query(
-      'INSERT INTO likeComentario (usuarioMatricula, comentarioIdComentario) VALUES (?, ?)',
-      [matricula, idComentario],
+      'INSERT INTO likeComentario (usuarioIdUsuario, comentarioIdComentario) VALUES (?, ?)',
+      [idUsuario, idComentario],
     );
 
     return { curtido: true };
   }
 
-  async descurtirComentario(idComentario: string, matricula: string) {
+  async descurtirComentario(idComentario: string, idUsuario: number) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario },
     });
@@ -170,8 +170,8 @@ export class ComentarioService {
     }
 
     const existing: unknown[] = await this.dataSource.query(
-      'SELECT 1 FROM likeComentario WHERE usuarioMatricula = ? AND comentarioIdComentario = ?',
-      [matricula, idComentario],
+      'SELECT 1 FROM likeComentario WHERE usuarioIdUsuario = ? AND comentarioIdComentario = ?',
+      [idUsuario, idComentario],
     );
 
     if (existing.length === 0) {
@@ -179,8 +179,8 @@ export class ComentarioService {
     }
 
     await this.dataSource.query(
-      'DELETE FROM likeComentario WHERE usuarioMatricula = ? AND comentarioIdComentario = ?',
-      [matricula, idComentario],
+      'DELETE FROM likeComentario WHERE usuarioIdUsuario = ? AND comentarioIdComentario = ?',
+      [idUsuario, idComentario],
     );
 
     return { curtido: false };

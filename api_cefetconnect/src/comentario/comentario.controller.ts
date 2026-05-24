@@ -24,7 +24,7 @@ export class ComentarioController {
     @Body() createComentarioDto: CreateComentarioDto,
     @Request() req: any,
   ) {
-    const dados = await this.comentarioService.create(idPost, req.user.matricula, createComentarioDto);
+    const dados = await this.comentarioService.create(idPost, req.user.idUsuario, createComentarioDto);
     return {
       codigo: 'SUSR00023',
       mensagem: SuccessMessages.SUSR00023.mensagem,
@@ -77,7 +77,7 @@ export class ComentarioController {
     @Body() updateComentarioDto: UpdateComentarioDto,
     @Request() req: any,
   ) {
-    const dados = await this.comentarioService.update(id, req.user.matricula, updateComentarioDto);
+    const dados = await this.comentarioService.update(id, req.user.idUsuario, updateComentarioDto);
     return {
       codigo: 'SUSR00032',
       mensagem: SuccessMessages.SUSR00032.mensagem,
@@ -94,7 +94,7 @@ export class ComentarioController {
   @ApiResponse({ status: 403, description: '[EUSR00013] Sem permissão para remover este comentário.' })
   @ApiResponse({ status: 404, description: '[EUSR00020] Comentário não encontrado.' })
   async remove(@Param('id') id: string, @Request() req: any) {
-    await this.comentarioService.remove(id, req.user.matricula);
+    await this.comentarioService.remove(id, req.user.idUsuario);
     return {
       codigo: 'SUSR00024',
       mensagem: SuccessMessages.SUSR00024.mensagem,
@@ -110,7 +110,7 @@ export class ComentarioController {
   @ApiResponse({ status: 404, description: '[EUSR00020] Comentário não encontrado.' })
   @ApiResponse({ status: 409, description: '[EUSR00021] Você já curtiu este comentário.' })
   async curtirComentario(@Param('id') id: string, @Request() req: any) {
-    const dados = await this.comentarioService.curtirComentario(id, req.user.matricula);
+    const dados = await this.comentarioService.curtirComentario(id, req.user.idUsuario);
     return {
       codigo: 'SUSR00027',
       mensagem: SuccessMessages.SUSR00027.mensagem,
@@ -125,7 +125,7 @@ export class ComentarioController {
   @ApiResponse({ status: 200, description: '[SUSR00028] Curtida de comentário removida com sucesso.' })
   @ApiResponse({ status: 404, description: '[EUSR00022] Curtida de comentário não encontrada.' })
   async descurtirComentario(@Param('id') id: string, @Request() req: any) {
-    const dados = await this.comentarioService.descurtirComentario(id, req.user.matricula);
+    const dados = await this.comentarioService.descurtirComentario(id, req.user.idUsuario);
     return {
       codigo: 'SUSR00028',
       mensagem: SuccessMessages.SUSR00028.mensagem,

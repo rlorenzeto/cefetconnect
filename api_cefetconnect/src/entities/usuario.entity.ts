@@ -1,11 +1,12 @@
 import {
   Entity,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
   Column,
   OneToMany,
   ManyToMany,
   JoinTable,
 } from 'typeorm';
+import { PossuiPin } from './possui-pin.entity.js';
 import { Post } from './post.entity.js';
 import { Evento } from './evento.entity.js';
 import { Comentario } from './comentario.entity.js';
@@ -13,7 +14,10 @@ import { Comunidade } from './comunidade.entity.js';
 
 @Entity('Usuario')
 export class Usuario {
-  @PrimaryColumn({ type: 'varchar', length: 11 })
+  @PrimaryGeneratedColumn()
+  idUsuario!: number;
+
+  @Column({ type: 'varchar', length: 11, unique: true })
   matricula!: string;
 
   @Column({ type: 'varchar', length: 255 })
@@ -44,8 +48,14 @@ export class Usuario {
   @OneToMany(() => Evento, (evento) => evento.usuario)
   eventos!: Evento[];
 
+  @ManyToMany(() => Evento, (evento) => evento.participantes)
+  eventosParticipados!: Evento[];
+
   @OneToMany(() => Comentario, (comentario) => comentario.usuario)
   comentarios!: Comentario[];
+
+  @OneToMany(() => PossuiPin, (pp) => pp.usuario)
+  pinsAssociados!: PossuiPin[];
 
   @OneToMany(() => Comunidade, (comunidade) => comunidade.criador)
   comunidadesCriadas!: Comunidade[];
@@ -54,7 +64,7 @@ export class Usuario {
   @ManyToMany(() => Comunidade)
   @JoinTable({
     name: 'participa',
-    joinColumn: { name: 'usuarioMatricula', referencedColumnName: 'matricula' },
+    joinColumn: { name: 'usuarioIdUsuario', referencedColumnName: 'idUsuario' },
     inverseJoinColumn: { name: 'comunidadeIdComunidade', referencedColumnName: 'idComunidade' },
   })
   comunidades!: Comunidade[];
@@ -62,7 +72,7 @@ export class Usuario {
   @ManyToMany(() => Post)
   @JoinTable({
     name: 'likePost',
-    joinColumn: { name: 'usuarioMatricula', referencedColumnName: 'matricula' },
+    joinColumn: { name: 'usuarioIdUsuario', referencedColumnName: 'idUsuario' },
     inverseJoinColumn: { name: 'postIdPost', referencedColumnName: 'idPost' },
   })
   postsCurtidos!: Post[];
@@ -70,7 +80,7 @@ export class Usuario {
   @ManyToMany(() => Comentario)
   @JoinTable({
     name: 'likeComentario',
-    joinColumn: { name: 'usuarioMatricula', referencedColumnName: 'matricula' },
+    joinColumn: { name: 'usuarioIdUsuario', referencedColumnName: 'idUsuario' },
     inverseJoinColumn: { name: 'comentarioIdComentario', referencedColumnName: 'idComentario' },
   })
   comentariosCurtidos!: Comentario[];
