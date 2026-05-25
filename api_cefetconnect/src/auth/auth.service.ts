@@ -38,8 +38,12 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
       usuario: {
+        idUsuario: usuario.idUsuario,
+        matricula: usuario.matricula,
         nomeUsuario: usuario.nomeUsuario,
+        email: usuario.email,
         fotoUrl: usuario.fotoUrl ?? null,
+        emailVerificado: usuario.emailVerificado,
       }
     };
   }

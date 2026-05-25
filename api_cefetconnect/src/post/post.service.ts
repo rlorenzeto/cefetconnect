@@ -102,7 +102,7 @@ export class PostService {
         idPost: true,
         conteudo: true,
         dataHoraPublicacao: true,
-        usuario: { matricula: true, nomeUsuario: true, fotoUrl: true },
+        usuario: { idUsuario: true, matricula: true, nomeUsuario: true, fotoUrl: true },
         fotosPost: true,
       },
     });
@@ -116,7 +116,7 @@ export class PostService {
         idPost: true,
         conteudo: true,
         dataHoraPublicacao: true,
-        usuario: { matricula: true, nomeUsuario: true, fotoUrl: true },
+        usuario: { idUsuario: true, matricula: true, nomeUsuario: true, fotoUrl: true },
         fotosPost: true,
       },
     });
