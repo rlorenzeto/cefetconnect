@@ -23,20 +23,20 @@ export default function FeedPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
 
-  const matricula = savedUser?.matricula || user?.matricula;
+  const idUsuario = savedUser?.idUsuario || user?.idUsuario;
 
   const userImageUrl = useMemo(() => {
     return getProfileImageUrl(user?.fotoUrl);
   }, [user?.fotoUrl]);
 
   useEffect(() => {
-    if (!matricula) {
+    if (!idUsuario) {
       navigate("/login");
       return;
     }
 
     loadInitialData();
-  }, [matricula]);
+  }, [idUsuario]);
 
   async function loadInitialData() {
     try {
@@ -44,7 +44,7 @@ export default function FeedPage() {
       setError("");
 
       const [profileResponse, postsResponse] = await Promise.all([
-        getUserProfile(matricula),
+        getUserProfile(idUsuario),
         listPosts(),
       ]);
 
@@ -52,6 +52,7 @@ export default function FeedPage() {
       const normalizedProfile = {
         ...savedUser,
         ...profile,
+        idUsuario: profile?.idUsuario || savedUser?.idUsuario,
         matricula: profile?.matricula || savedUser?.matricula,
       };
       const postsData = postsResponse?.dados || postsResponse;
@@ -62,8 +63,8 @@ export default function FeedPage() {
         ? [...postsData]
             .map((post) => {
               const isCurrentUserPost =
-                post?.usuario?.matricula === normalizedProfile?.matricula ||
-                post?.usuario?.matricula === savedUser?.matricula;
+                String(post?.usuario?.idUsuario || "") === String(normalizedProfile?.idUsuario || "") ||
+                String(post?.usuario?.idUsuario || "") === String(savedUser?.idUsuario || "");
 
               return {
                 ...post,

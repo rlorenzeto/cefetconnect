@@ -6,7 +6,7 @@ import {
 } from "../../services/authService";
 import AuthButton from "./AuthButton";
 
-export default function ConfirmEmailForm({ matricula, email }) {
+export default function ConfirmEmailForm({ idUsuario, email }) {
   const navigate = useNavigate();
 
   const [codigo, setCodigo] = useState("");
@@ -68,7 +68,7 @@ export default function ConfirmEmailForm({ matricula, email }) {
       return;
     }
 
-    if (!matricula) {
+    if (!idUsuario) {
       setApiError("Não foi possível identificar o cadastro para confirmar.");
       return;
     }
@@ -77,7 +77,7 @@ export default function ConfirmEmailForm({ matricula, email }) {
       setIsSubmitting(true);
 
       const response = await verifyEmail({
-        matricula,
+        idUsuario,
         codigo: codigo.trim(),
       });
 
@@ -98,7 +98,7 @@ export default function ConfirmEmailForm({ matricula, email }) {
   async function handleResendCode() {
     clearMessages();
 
-    if (!matricula) {
+    if (!idUsuario) {
       setApiError("Não foi possível identificar o cadastro para reenviar o código.");
       return;
     }
@@ -106,7 +106,7 @@ export default function ConfirmEmailForm({ matricula, email }) {
     try {
       setIsResending(true);
 
-      const response = await resendEmailVerificationCode({ matricula });
+      const response = await resendEmailVerificationCode({ idUsuario });
 
       setResendMessage(response?.mensagem || "Novo código enviado para o seu e-mail.");
       setCodigo("");

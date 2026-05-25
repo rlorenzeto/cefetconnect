@@ -98,20 +98,20 @@ export default function PostCard({
   const navigate = useNavigate();
 
   function handleGoToUserProfile() {
-    const matriculaAutor = post?.usuario?.matricula;
+    const idAutor = post?.usuario?.idUsuario;
 
-    if (!matriculaAutor) return;
+    if (!idAutor) return;
 
-    navigate(`/profile/${matriculaAutor}`);
+    navigate(`/profile/${idAutor}`);
   }
 
-  const postOwnerMatricula = String(post?.usuario?.matricula || "");
-  const currentUserMatricula = String(currentUser?.matricula || "");
+  const postOwnerId = String(post?.usuario?.idUsuario || "");
+  const currentUserId = String(currentUser?.idUsuario || "");
 
   const isOwner =
-    postOwnerMatricula &&
-    currentUserMatricula &&
-    postOwnerMatricula === currentUserMatricula;
+    postOwnerId &&
+    currentUserId &&
+    postOwnerId === currentUserId;
 
   useEffect(() => {
     setConteudo(post.conteudo || "");
@@ -127,7 +127,7 @@ export default function PostCard({
 
         const usuarios = dados?.usuarios || [];
         const userLiked = usuarios.some(
-          (usuario) => usuario.matricula === currentUser?.matricula
+          (usuario) => usuario.idUsuario === currentUser?.idUsuario
         );
 
         setLiked(userLiked);
@@ -139,7 +139,7 @@ export default function PostCard({
     if (post?.idPost) {
       loadLikes();
     }
-  }, [post?.idPost, currentUser?.matricula]);
+  }, [post?.idPost, currentUser?.idUsuario]);
 
   function formatDate(date) {
     if (!date) return "";

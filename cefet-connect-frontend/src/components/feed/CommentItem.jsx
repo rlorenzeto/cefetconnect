@@ -17,7 +17,8 @@ export default function CommentItem({ comment, currentUser, onDeleted }) {
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const isOwner = comment?.usuario?.matricula === currentUser?.matricula;
+  const isOwner =
+  String(comment?.usuario?.idUsuario || "") === String(currentUser?.idUsuario || "");
 
   useEffect(() => {
     async function loadLikes() {

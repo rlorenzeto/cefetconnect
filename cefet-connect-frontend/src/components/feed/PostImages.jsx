@@ -12,12 +12,12 @@ export default function PostImages({ fotos = [], post, currentUser }) {
   const navigate = useNavigate();
 
   function handleGoToUserProfile() {
-    const matriculaAutor = post?.usuario?.matricula;
+    const idAutor = post?.usuario?.idUsuario;
 
-    if (!matriculaAutor) return;
+    if (!idAutor) return;
 
     setIsModalOpen(false);
-    navigate(`/profile/${matriculaAutor}`);
+    navigate(`/profile/${idAutor}`);
   }
 
   const images = useMemo(() => {

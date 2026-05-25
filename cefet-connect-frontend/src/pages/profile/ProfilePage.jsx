@@ -14,12 +14,12 @@ import {
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { matriculaPerfil } = useParams();
+  const { idUsuarioPerfil } = useParams();
 
   const savedUser = getCurrentUser();
 
-  const loggedUserMatricula = savedUser?.matricula;
-  const profileMatricula = matriculaPerfil || loggedUserMatricula;
+  const loggedUserId = savedUser?.idUsuario;
+  const profileId = idUsuarioPerfil || loggedUserId;
 
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,9 +27,9 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
 
   const isOwnProfile =
-    loggedUserMatricula &&
-    profileMatricula &&
-    String(loggedUserMatricula) === String(profileMatricula);
+    loggedUserId &&
+    profileId &&
+    String(loggedUserId) === String(profileId);
 
   const imageUrl = useMemo(() => {
     return getProfileImageUrl(user?.fotoUrl);
@@ -37,12 +37,12 @@ export default function ProfilePage() {
 
   useEffect(() => {
     async function loadProfile() {
-      if (!loggedUserMatricula) {
+      if (!loggedUserId) {
         navigate("/login");
         return;
       }
 
-      if (!profileMatricula) {
+      if (!profileId) {
         navigate("/profile");
         return;
       }
@@ -53,8 +53,8 @@ export default function ProfilePage() {
 
         const [profileResponse, postsResponse, likesResponse] =
           await Promise.all([
-            getUserProfile(profileMatricula),
-            listUserPosts(profileMatricula),
+            getUserProfile(profileId),
+            listUserPosts(profileId),
           ]);
 
         const profile = profileResponse?.dados || profileResponse;
@@ -62,7 +62,8 @@ export default function ProfilePage() {
 
         setUser({
           ...profile,
-          matricula: profile?.matricula || profileMatricula,
+          idUsuario: profile?.idUsuario || profileId,
+          matricula: profile?.matricula,
         });
 
         const orderedPosts = Array.isArray(postsData)
@@ -82,7 +83,7 @@ export default function ProfilePage() {
     }
 
     loadProfile();
-  }, [loggedUserMatricula, profileMatricula, navigate]);
+  }, [loggedUserId, profileId, navigate]);
 
   function handleLogout() {
     const confirmed = window.confirm("Tem certeza que deseja sair da sua conta?");

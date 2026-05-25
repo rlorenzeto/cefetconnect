@@ -10,7 +10,7 @@ export default function ConfirmEmailPage() {
   const navigate = useNavigate();
 
   const pendingVerification = useMemo(() => {
-    if (location.state?.matricula) {
+    if (location.state?.idUsuario) {
       return location.state;
     }
 
@@ -18,7 +18,7 @@ export default function ConfirmEmailPage() {
     return saved ? JSON.parse(saved) : null;
   }, [location.state]);
 
-  const matricula = pendingVerification?.matricula || "";
+  const idUsuario = pendingVerification?.idUsuario || "";
   const email = pendingVerification?.email || "";
 
   return (
@@ -41,8 +41,8 @@ export default function ConfirmEmailPage() {
               ativar sua conta no Cefet Connect.
             </p>
 
-            {matricula ? (
-              <ConfirmEmailForm matricula={matricula} email={email} />
+            {idUsuario ? (
+              <ConfirmEmailForm idUsuario={idUsuario} email={email} />
             ) : (
               <div className="space-y-4">
                 <p className="text-center text-sm text-red-500">
@@ -62,11 +62,11 @@ export default function ConfirmEmailPage() {
         </section>
 
         <section className="lg:hidden">
-          {matricula ? (
+          {idUsuario ? (
             <MobileConfirmEmailModal
               isOpen={true}
               onClose={() => navigate("/register")}
-              matricula={matricula}
+              idUsuario={idUsuario}
               email={email}
             />
           ) : (
