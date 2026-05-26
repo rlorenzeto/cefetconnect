@@ -332,20 +332,33 @@ export class PostService {
   // Entrega quantas curtidas tem o post e quais usuarios curtiram
   async obterCurtidasPost(idPost: string) {
     const post = await this.postRepository.findOne({ where: { idPost } });
+
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    const curtidas: { nomeUsuario: string }[] =
-      await this.dataSource.query(
-        `SELECT u.nomeUsuario
-         FROM likePost lp
-         INNER JOIN Usuario u ON u.idUsuario = lp.usuarioIdUsuario
-         WHERE lp.postIdPost = ?`,
-        [idPost],
-      );
+    const curtidas: {
+      idUsuario: number;
+      matricula: string;
+      nomeUsuario: string;
+      fotoUrl: string | null;
+    }[] = await this.dataSource.query(
+      `SELECT 
+        u.idUsuario AS idUsuario,
+        u.matricula AS matricula,
+        u.nomeUsuario AS nomeUsuario,
+        u.fotoUrl AS fotoUrl
+      FROM likePost lp
+      INNER JOIN Usuario u ON u.idUsuario = lp.usuarioIdUsuario
+      WHERE lp.postIdPost = ?
+      ORDER BY u.nomeUsuario ASC`,
+      [idPost],
+    );
 
-    return { total: curtidas.length, usuarios: curtidas };
+    return {
+      total: curtidas.length,
+      usuarios: curtidas,
+    };
   }
 
   async curtirPost(idPost: string, idUsuario: number) {
