@@ -47,21 +47,23 @@ export default function PostLikesModal({ isOpen, onClose, users = [] }) {
                 key={user.idUsuario}
                 type="button"
                 onClick={() => handleGoToProfile(user.idUsuario)}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-left transition hover:bg-[#f1f1f1]"
+                className="flex w-full items-center justify-start gap-3 rounded-2xl px-3 py-2 text-left transition hover:bg-[#f1f1f1]"
               >
-                <ProfileAvatar
-                  src={getProfileImageUrl(user.fotoUrl)}
-                  name={user.nomeUsuario}
-                  size="post"
-                />
+                <div className="shrink-0">
+                  <ProfileAvatar
+                    src={getProfileImageUrl(user.fotoUrl)}
+                    name={user.nomeUsuario}
+                    size="post"
+                  />
+                </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1 text-left">
                   <p className="truncate text-sm font-bold text-[#202020]">
                     {user.nomeUsuario || "Usuário"}
                   </p>
                 </div>
               </button>
-            ))
+            ))          
           )}
         </div>
       </div>
