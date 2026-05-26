@@ -5,6 +5,7 @@ import LikeButton from "./LikeButton";
 import PostImages from "./PostImages";
 import CommentSection from "./CommentSection";
 import EditPostModal from "./EditPostModal";
+import PostLikesModal from "./PostLikesModal";
 import {
   addPostPhotos,
   deletePost,
@@ -90,6 +91,8 @@ export default function PostCard({
   const [showComments, setShowComments] = useState(false);
   const [likeTotal, setLikeTotal] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [likedUsers, setLikedUsers] = useState([]);
+  const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -123,11 +126,15 @@ export default function PostCard({
         const response = await getPostLikes(post.idPost);
         const dados = response?.dados || response;
 
-        setLikeTotal(dados?.total || 0);
+        const usuarios = Array.isArray(dados?.usuarios) ? dados.usuarios : [];
 
-        const usuarios = dados?.usuarios || [];
+        setLikeTotal(Number(dados?.total ?? usuarios.length ?? 0));
+        setLikedUsers(usuarios);
+
         const userLiked = usuarios.some(
-          (usuario) => usuario.idUsuario === currentUser?.idUsuario
+          (usuario) =>
+            String(usuario?.idUsuario || "") ===
+            String(currentUser?.idUsuario || "")
         );
 
         setLiked(userLiked);
@@ -171,12 +178,41 @@ export default function PostCard({
 
       if (liked) {
         await unlikePost(post.idPost);
+
         setLiked(false);
         setLikeTotal((prev) => Math.max(prev - 1, 0));
+
+        setLikedUsers((prev) =>
+          prev.filter(
+            (usuario) =>
+              String(usuario?.idUsuario || "") !==
+              String(currentUser?.idUsuario || "")
+          )
+        );
       } else {
         await likePost(post.idPost);
+
         setLiked(true);
         setLikeTotal((prev) => prev + 1);
+
+        setLikedUsers((prev) => {
+          const alreadyInList = prev.some(
+            (usuario) =>
+              String(usuario?.idUsuario || "") ===
+              String(currentUser?.idUsuario || "")
+          );
+
+          if (alreadyInList) return prev;
+
+          return [
+            ...prev,
+            {
+              idUsuario: currentUser?.idUsuario,
+              nomeUsuario: currentUser?.nomeUsuario,
+              fotoUrl: currentUser?.fotoUrl,
+            },
+          ];
+        });
       }
     } catch (error) {
       if (error.message?.toLowerCase().includes("já curtiu")) {
@@ -188,7 +224,6 @@ export default function PostCard({
       setIsLikeLoading(false);
     }
   }
-
   async function handleDoubleClick() {
     if (!liked) {
       await handleToggleLike();
@@ -233,6 +268,7 @@ export default function PostCard({
       setIsSavingEdit(false);
     }
   }
+
   async function handleDelete() {
     try {
       setIsDeleting(true);
@@ -317,6 +353,7 @@ export default function PostCard({
               liked={liked}
               total={likeTotal}
               onClick={handleToggleLike}
+              onTotalClick={() => setIsLikesModalOpen(true)}
               disabled={isLikeLoading}
             />
 
@@ -387,6 +424,11 @@ export default function PostCard({
           </div>
         </div>
       )}
+      <PostLikesModal
+        isOpen={isLikesModalOpen}
+        onClose={() => setIsLikesModalOpen(false)}
+        users={likedUsers}
+      />
     </>
   );
 }
