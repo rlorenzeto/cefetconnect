@@ -5,7 +5,11 @@ import {
   listPostComments,
 } from "../../services/commentService";
 
-export default function CommentSection({ postId, currentUser }) {
+export default function CommentSection({
+  postId,
+  currentUser,
+  onCountChange,
+}) {
   const [comments, setComments] = useState([]);
   const [texto, setTexto] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +24,10 @@ export default function CommentSection({ postId, currentUser }) {
       const response = await listPostComments(postId);
       const dados = response?.dados || response;
 
-      setComments(Array.isArray(dados) ? dados : []);
+      const comentarios = Array.isArray(dados) ? dados : [];
+
+      setComments(comentarios);
+      onCountChange?.(comentarios.length);
     } catch (error) {
       setError(error.message || "Não foi possível carregar os comentários.");
     } finally {
@@ -47,7 +54,11 @@ export default function CommentSection({ postId, currentUser }) {
       const response = await createComment(postId, texto.trim());
       const novoComentario = response?.dados || response;
 
-      setComments((prev) => [...prev, novoComentario]);
+      setComments((prev) => {
+        const next = [...prev, novoComentario];
+        onCountChange?.(next.length);
+        return next;
+      });
       setTexto("");
     } catch (error) {
       setError(error.message || "Não foi possível comentar.");
@@ -57,9 +68,14 @@ export default function CommentSection({ postId, currentUser }) {
   }
 
   function handleDeleted(idComentario) {
-    setComments((prev) =>
-      prev.filter((comment) => comment.idComentario !== idComentario)
-    );
+    setComments((prev) => {
+      const next = prev.filter(
+        (comment) => comment.idComentario !== idComentario
+      );
+
+      onCountChange?.(next.length);
+      return next;
+    });
   }
 
   return (

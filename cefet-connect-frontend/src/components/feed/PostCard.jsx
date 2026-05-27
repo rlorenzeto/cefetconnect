@@ -89,6 +89,9 @@ export default function PostCard({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [conteudo, setConteudo] = useState(post.conteudo || "");
   const [showComments, setShowComments] = useState(false);
+  const [commentTotal, setCommentTotal] = useState(
+    Number(post?.totalComentarios ?? post?.comentarios?.length ?? 0)
+  );
   const [likeTotal, setLikeTotal] = useState(0);
   const [liked, setLiked] = useState(false);
   const [likedUsers, setLikedUsers] = useState([]);
@@ -119,6 +122,10 @@ export default function PostCard({
   useEffect(() => {
     setConteudo(post.conteudo || "");
   }, [post.conteudo]);
+
+  useEffect(() => {
+    setCommentTotal(Number(post?.totalComentarios ?? post?.comentarios?.length ?? 0));
+  }, [post?.totalComentarios, post?.comentarios?.length]);
 
   useEffect(() => {
     async function loadLikes() {
@@ -284,6 +291,15 @@ export default function PostCard({
     }
   }
 
+  function getCommentButtonLabel() {
+    const totalText =
+      commentTotal === 1 ? "1 comentário" : `${commentTotal} comentários`;
+
+    return showComments
+      ? `Ocultar comentários (${totalText})`
+      : `Mostrar comentários (${totalText})`;
+  }
+
   return (
     <>
       <article
@@ -362,7 +378,7 @@ export default function PostCard({
               onClick={() => setShowComments((prev) => !prev)}
               className="rounded-full bg-[#f1f1f1] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-[#e5e5e5]"
             >
-              {showComments ? "Ocultar comentários" : "Mostrar comentários"}
+              {getCommentButtonLabel()}
             </button>
             
           </div>
@@ -372,7 +388,11 @@ export default function PostCard({
         </footer>
 
         {showComments && (
-          <CommentSection postId={post.idPost} currentUser={currentUser} />
+          <CommentSection
+            postId={post.idPost}
+            currentUser={currentUser}
+            onCountChange={setCommentTotal}
+          />
         )}
       </article>
 

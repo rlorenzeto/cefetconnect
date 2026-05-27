@@ -94,23 +94,29 @@ export class PostService {
 
   // Parte de Leitura 
 
-  // Essa função que retorna todos os posts com suas respectivas fotos e usuários, possibilitando o feed funcionar
+  // Essa função retorna todos os posts com suas respectivas fotos, usuários
+  // e a quantidade de comentários, possibilitando o feed funcionar
   async findAll() {
-    return await this.postRepository.find({
-      relations: ['usuario', 'fotosPost'],
-      select: {
-        idPost: true,
-        conteudo: true,
-        dataHoraPublicacao: true,
-        usuario: {
-          idUsuario: true,
-          matricula: true,
-          nomeUsuario: true,
-          fotoUrl: true,
-        },
-        fotosPost: true,
-      },
-    });
+    return this.postRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.usuario', 'usuario')
+      .leftJoinAndSelect('post.fotosPost', 'foto')
+      .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
+      .select([
+        'post.idPost',
+        'post.conteudo',
+        'post.dataHoraPublicacao',
+        'usuario.idUsuario',
+        'usuario.matricula',
+        'usuario.nomeUsuario',
+        'usuario.fotoUrl',
+        'foto.idFoto',
+        'foto.url',
+        'foto.ordem',
+      ])
+      .orderBy('post.dataHoraPublicacao', 'DESC')
+      .addOrderBy('foto.ordem', 'ASC')
+      .getMany();
   }
 
   async findOne(id: string) {
@@ -153,6 +159,7 @@ export class PostService {
       .where('post.fk_Usuario_idUsuario = :idUsuario', { idUsuario })
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
+      .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
       .select([
         'post.idPost',
         'post.conteudo',
@@ -165,6 +172,8 @@ export class PostService {
         'foto.url',
         'foto.ordem',
       ])
+      .orderBy('post.dataHoraPublicacao', 'DESC')
+      .addOrderBy('foto.ordem', 'ASC')
       .getMany();
   }
 

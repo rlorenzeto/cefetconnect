@@ -2,7 +2,13 @@ import { useNavigate } from "react-router-dom";
 import ProfileAvatar from "../profile/ProfileAvatar";
 import { getProfileImageUrl } from "../../services/authService";
 
-export default function PostLikesModal({ isOpen, onClose, users = [] }) {
+export default function PostLikesModal({
+  isOpen,
+  onClose,
+  users = [],
+  title = "Pessoas que curtiram",
+  emptyMessage = "Ninguém curtiu ainda.",
+}) {
   const navigate = useNavigate();
 
   if (!isOpen) return null;
@@ -23,7 +29,7 @@ export default function PostLikesModal({ isOpen, onClose, users = [] }) {
       <div className="w-full max-w-[420px] rounded-[24px] bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-[#202020]">
-            Pessoas que curtiram
+            {title}
           </h2>
 
           <button
@@ -39,7 +45,7 @@ export default function PostLikesModal({ isOpen, onClose, users = [] }) {
         <div className="mt-5 max-h-[360px] space-y-2 overflow-y-auto">
           {users.length === 0 ? (
             <p className="text-sm text-[#777]">
-              Ninguém curtiu este post ainda.
+              {emptyMessage}
             </p>
           ) : (
             users.map((user) => (

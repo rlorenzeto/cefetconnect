@@ -36,4 +36,6 @@ export class Post {
 
   @OneToMany(() => FotoPost, (foto) => foto.post)
   fotosPost?: FotoPost[];
+
+  totalComentarios?: number;
 }
