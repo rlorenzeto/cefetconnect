@@ -17,8 +17,8 @@ export class Pin {
   @ManyToMany(() => Comunidade)
   @JoinTable({
     name: 'relacionadoA',
-    joinColumn: { name: 'pinIdPin', referencedColumnName: 'idPin' },
-    inverseJoinColumn: { name: 'comunidadeIdComunidade', referencedColumnName: 'idComunidade' },
+    joinColumn: { name: 'fk_Pin_idPin', referencedColumnName: 'idPin' },
+    inverseJoinColumn: { name: 'fk_Comunidade_idComunidade', referencedColumnName: 'idComunidade' },
   })
   comunidades: Comunidade[];
 }
