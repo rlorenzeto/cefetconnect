@@ -4,6 +4,7 @@ import CreatePostCard from "../feed/CreatePostCard";
 import PostCard from "../feed/PostCard";
 import CommunityMembersModal from "./CommunityMembersModal";
 import { getCommunityImageUrl } from "../../services/comunidadeService";
+import GlobalCreateMenu from "../common/GlobalCreateMenu";
 
 export default function MobileCommunity({
   community,
@@ -178,13 +179,7 @@ export default function MobileCommunity({
           Comunidades
         </button>
 
-        <button
-          type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="-mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-[#089464] text-3xl font-light text-white shadow-lg"
-        >
-          +
-        </button>
+        <GlobalCreateMenu />
 
         <button type="button" className="text-sm text-[#777]">
           Avisos

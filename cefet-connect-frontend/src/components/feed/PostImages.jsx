@@ -88,16 +88,32 @@ export default function PostImages({ fotos = [], post, currentUser }) {
     setIsModalOpen(false);
   }
 
+  function normalizeDate(date) {
+    if (!date) return null;
+
+    const value = String(date);
+
+    const hasTimezone =
+      value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value);
+
+    const normalizedValue = hasTimezone ? value : `${value}Z`;
+
+    return new Date(normalizedValue);
+  }
+
   function formatDate(date) {
-    if (!date) return "";
+    const parsedDate = normalizeDate(date);
+
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return "";
 
     return new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(new Date(date));
+    }).format(parsedDate);
   }
 
   function getPostLocationLabel() {

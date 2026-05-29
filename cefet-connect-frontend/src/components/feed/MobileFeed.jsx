@@ -7,6 +7,7 @@ import {
   HeartOutlineIcon,
   TrophyIcon,
 } from "../icons/AppIcons";
+import GlobalCreateMenu from "../common/GlobalCreateMenu";
 
 const GRADMENT_URL = "https://gradment.com.br"; //MUDAR COM A UTL DO GRADMENT, VER COM OS MENINOS
 
@@ -23,6 +24,9 @@ export default function MobileFeed({
   communities = [],
   onGoToProfile,
   onLogout,
+  onCreatePostShortcut,
+  onCreateCommunityShortcut,
+  onCreateEventShortcut,
 }) {
   const [isGradmentMenuOpen, setIsGradmentMenuOpen] = useState(false);
 
@@ -127,13 +131,15 @@ export default function MobileFeed({
         </div>
 
         <div className="space-y-5">
-          <CreatePostCard
-            user={user}
-            userImageUrl={userImageUrl}
-            onCreatePost={onCreatePost}
-            isCreating={isCreating}
-            communities={communities}
-          />
+          <div id="post-composer">
+            <CreatePostCard
+              user={user}
+              userImageUrl={userImageUrl}
+              onCreatePost={onCreatePost}
+              isCreating={isCreating}
+              communities={communities}
+            />
+          </div>
 
           {error && (
             <div className="rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">
@@ -178,15 +184,18 @@ export default function MobileFeed({
           Comunidades
         </button>
 
+        <GlobalCreateMenu
+          onCreatePost={onCreatePostShortcut}
+          onCreateCommunity={onCreateCommunityShortcut}
+          onCreateEvent={onCreateEventShortcut}
+        />
+
         <button
           type="button"
-          className="-mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-[#089464] text-3xl font-light text-white shadow-lg"
+          onClick={() => window.location.assign("/eventos")}
+          className="text-sm text-[#777]"
         >
-          +
-        </button>
-
-        <button type="button" className="text-sm text-[#777]">
-          Avisos
+          Eventos
         </button>
 
         <button

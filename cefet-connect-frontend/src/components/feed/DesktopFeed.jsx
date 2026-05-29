@@ -10,6 +10,7 @@ export default function DesktopFeed({
   userImageUrl,
   posts,
   communities = [],
+  events = [],
   isLoading,
   error,
   isCreating,
@@ -17,7 +18,22 @@ export default function DesktopFeed({
   onPostDeleted,
   onPostUpdated,
   onLogout,
+  onOpenEvents,
+  onOpenEventDetails,
 }) {
+  
+  function formatEventDate(date) {
+    if (!date) return "";
+
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(date));
+  }
+
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
       <div className="flex min-h-screen w-full bg-[#f1f1f1]">
@@ -116,18 +132,46 @@ export default function DesktopFeed({
                 </div>
               </section>
               <section className="rounded-[28px] bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-bold text-[#202020]">
-                  Próximos eventos
-                </h2>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-bold text-[#202020]">
+                    Próximos eventos
+                  </h2>
+
+                  <button
+                    type="button"
+                    onClick={onOpenEvents}
+                    className="text-xs font-bold text-[#089464] hover:underline"
+                  >
+                    Ver todos
+                  </button>
+                </div>
 
                 <div className="mt-4 space-y-3 text-sm text-[#343434]">
-                  <p className="rounded-2xl bg-[#f1f1f1] p-3">
-                    Semana acadêmica de Computação
-                  </p>
+                  {events.slice(0, 3).map((event) => (
+                    <button
+                      key={event.idEvento}
+                      type="button"
+                      onClick={() => onOpenEventDetails(event)}
+                      className="block w-full rounded-2xl bg-[#f1f1f1] p-3 text-left transition hover:bg-[#e8f7ef]"
+                    >
+                      <p className="truncate font-semibold text-[#202020]">
+                        {event.titulo}
+                      </p>
+                      <p className="mt-1 truncate text-xs font-semibold text-[#089464]">
+                        {formatEventDate(event.dataEvento)}
+                      </p>
 
-                  <p className="rounded-2xl bg-[#f1f1f1] p-3">
-                    Workshop de Currículo e LinkedIn
-                  </p>
+                      <p className="mt-1 truncate text-xs text-[#777]">
+                        {event?.comunidade?.nomeComunidade || "Evento público"}
+                      </p>
+                    </button>
+                  ))}
+
+                  {events.length === 0 && (
+                    <p className="rounded-2xl bg-[#f1f1f1] p-3 text-sm text-[#777]">
+                      Nenhum evento disponível.
+                    </p>
+                  )}
                 </div>
               </section>
 

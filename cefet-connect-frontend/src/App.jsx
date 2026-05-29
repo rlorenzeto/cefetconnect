@@ -9,6 +9,7 @@ import EditProfilePage from "./pages/profile/EditProfilePage";
 import FeedPage from "./pages/feed/FeedPage";
 import CommunitiesPage from "./pages/community/CommunitiesPage";
 import CommunityPage from "./pages/community/CommunityPage";
+import EventsPage from "./pages/events/EventsPage";
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/profile/:idUsuarioPerfil" element={<ProfilePage />} />
       <Route path="/comunidades" element={<CommunitiesPage />} />
       <Route path="/comunidades/:idComunidade" element={<CommunityPage />} />
+      <Route path="/eventos" element={<EventsPage />} />
 
       <Route path="/home" element={<FeedPage />} />
       <Route path="/feed" element={<FeedPage />} />

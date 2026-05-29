@@ -60,6 +60,29 @@ function UserIcon({ active }) {
   );
 }
 
+function CalendarIcon({ active }) {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+      <rect
+        x="4"
+        y="5"
+        width="16"
+        height="15"
+        rx="3"
+        stroke="currentColor"
+        strokeWidth="2"
+        fill={active ? "currentColor" : "none"}
+      />
+      <path
+        d="M8 3v4M16 3v4M4 10h16"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 function NavButton({ children, active = false, onClick, label }) {
   return (
     <button
@@ -102,6 +125,13 @@ export default function ProfileSidebar({ activePage = "profile" }) {
           onClick={() => navigate("/comunidades")}
         >
           <CommunityIcon active={activePage === "community"} />
+        </NavButton>
+        <NavButton
+          label="Eventos"
+          active={activePage === "events"}
+          onClick={() => navigate("/eventos")}
+        >
+          <CalendarIcon active={activePage === "events"} />
         </NavButton>
 
         <NavButton label="Pesquisar">

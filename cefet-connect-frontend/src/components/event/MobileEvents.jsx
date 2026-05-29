@@ -1,19 +1,18 @@
 import BrandLogo from "../auth/BrandLogo";
-import CommunityCard from "./CommunityCard";
+import EventCard from "./EventCard";
 import GlobalCreateMenu from "../common/GlobalCreateMenu";
 
-export default function MobileCommunities({
-  communities = [],
+export default function MobileEvents({
+  events = [],
   currentUser,
   isLoading,
   error,
   loadingActionId,
   onOpenCreate,
-  onOpenCommunity,
-  onJoin,
-  onLeave,
+  onOpenDetails,
   onEdit,
   onDelete,
+  onToggleParticipation,
 }) {
   return (
     <div className="min-h-screen bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
@@ -25,18 +24,18 @@ export default function MobileCommunities({
           onClick={onOpenCreate}
           className="rounded-full bg-[#089464] px-4 py-1.5 text-xs font-semibold text-white"
         >
-          Nova
+          Novo
         </button>
       </header>
 
       <main className="px-4 pt-6">
         <div className="mb-6">
           <h1 className="text-[32px] font-bold text-[#202020]">
-            Comunidades
+            Eventos
           </h1>
 
           <p className="mt-1 text-sm text-[#666]">
-            Participe dos grupos do CEFET.
+            Descubra eventos do CEFET.
           </p>
         </div>
 
@@ -48,27 +47,26 @@ export default function MobileCommunities({
 
         {isLoading ? (
           <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
-            Carregando comunidades...
+            Carregando eventos...
           </div>
-        ) : communities.length > 0 ? (
+        ) : events.length > 0 ? (
           <div className="space-y-5">
-            {communities.map((community) => (
-              <CommunityCard
-                key={community.idComunidade}
-                community={community}
+            {events.map((event) => (
+              <EventCard
+                key={event.idEvento}
+                event={event}
                 currentUser={currentUser}
-                isLoadingAction={loadingActionId === community.idComunidade}
-                onOpen={() => onOpenCommunity(community.idComunidade)}
-                onJoin={() => onJoin(community)}
-                onLeave={() => onLeave(community)}
-                onEdit={() => onEdit(community)}
-                onDelete={() => onDelete(community)}
+                isLoadingAction={loadingActionId === event.idEvento}
+                onOpen={onOpenDetails}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onToggleParticipation={onToggleParticipation}
               />
             ))}
           </div>
         ) : (
           <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
-            Nenhuma comunidade criada ainda.
+            Nenhum evento criado ainda.
           </div>
         )}
       </main>
@@ -82,14 +80,18 @@ export default function MobileCommunities({
           Início
         </button>
 
-        <button type="button" className="text-sm font-semibold text-[#089464]">
+        <button
+          type="button"
+          onClick={() => window.location.assign("/comunidades")}
+          className="text-sm text-[#777]"
+        >
           Comunidades
         </button>
 
         <GlobalCreateMenu />
 
-        <button type="button" className="text-sm text-[#777]">
-          Avisos
+        <button type="button" className="text-sm font-semibold text-[#089464]">
+          Eventos
         </button>
 
         <button
