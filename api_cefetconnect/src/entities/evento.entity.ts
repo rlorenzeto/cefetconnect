@@ -3,7 +3,7 @@ import { Usuario } from './usuario.entity';
 import { Comunidade } from './comunidade.entity';
 import { Post } from './post.entity';
 
-@Entity('Evento')
+@Entity('evento')
 export class Evento {
   @PrimaryGeneratedColumn('uuid')
   idEvento!: string;
@@ -11,7 +11,7 @@ export class Evento {
   @Column({ type: 'varchar', length: 255 })
   titulo!: string;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Column({ type: 'text', nullable: true })
   descricaoEvento!: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
@@ -29,8 +29,8 @@ export class Evento {
   @Column({ type: 'varchar', length: 500, nullable: true })
   fotoUrlEvento?: string | null;
 
-  // FK Usuario -> ON DELETE CASCADE
-  @ManyToOne(() => Usuario, (usuario) => usuario.eventos, { onDelete: 'CASCADE' })
+  // FK Usuario -> ON DELETE RESTRICT ON UPDATE CASCADE
+  @ManyToOne(() => Usuario, (usuario) => usuario.eventos, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'fk_Usuario_idUsuario' })
   usuario!: Usuario;
 

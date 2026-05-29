@@ -112,14 +112,17 @@ export class PostService {
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
       .leftJoinAndSelect('post.comunidade', 'comunidade')
+      .leftJoinAndSelect('post.evento', 'evento')
+      .leftJoinAndSelect('evento.comunidade', 'eventoComunidade')
+      .leftJoinAndSelect('evento.participantes', 'eventoParticipante')
       .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
       .where(
         `
-        comunidade.idComunidade IS NULL
+        post.fk_Comunidade_idComunidade IS NULL
         OR EXISTS (
           SELECT 1
           FROM participa participaFeed
-          WHERE participaFeed.comunidadeIdComunidade = comunidade.idComunidade
+          WHERE participaFeed.comunidadeIdComunidade = post.fk_Comunidade_idComunidade
             AND participaFeed.usuarioIdUsuario = :idUsuario
         )
         `,
@@ -140,6 +143,17 @@ export class PostService {
         'comunidade.nomeComunidade',
         'comunidade.capaComunidade',
         'comunidade.fotoUrlComunidade',
+        'evento.idEvento',
+        'evento.titulo',
+        'evento.descricaoEvento',
+        'evento.localEvento',
+        'evento.status',
+        'evento.dataEvento',
+        'evento.capaEvento',
+        'evento.fotoUrlEvento',
+        'eventoComunidade.idComunidade',
+        'eventoComunidade.nomeComunidade',
+        'eventoParticipante.idUsuario',
       ])
       .orderBy('post.dataHoraPublicacao', 'DESC')
       .addOrderBy('foto.ordem', 'ASC')
@@ -201,6 +215,9 @@ export class PostService {
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
       .leftJoinAndSelect('post.comunidade', 'comunidade')
+      .leftJoinAndSelect('post.evento', 'evento')
+      .leftJoinAndSelect('evento.comunidade', 'eventoComunidade')
+      .leftJoinAndSelect('evento.participantes', 'eventoParticipante')
       .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
       .select([
         'post.idPost',
@@ -217,6 +234,17 @@ export class PostService {
         'comunidade.nomeComunidade',
         'comunidade.capaComunidade',
         'comunidade.fotoUrlComunidade',
+        'evento.idEvento',
+        'evento.titulo',
+        'evento.descricaoEvento',
+        'evento.localEvento',
+        'evento.status',
+        'evento.dataEvento',
+        'evento.capaEvento',
+        'evento.fotoUrlEvento',
+        'eventoComunidade.idComunidade',
+        'eventoComunidade.nomeComunidade',
+        'eventoParticipante.idUsuario',
       ])
       .orderBy('post.dataHoraPublicacao', 'DESC')
       .addOrderBy('foto.ordem', 'ASC')

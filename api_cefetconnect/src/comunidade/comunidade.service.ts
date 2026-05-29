@@ -386,47 +386,72 @@ export class ComunidadeService {
 
     const posts = await this.dataSource.query(
       ` 
-      SELECT 
-        p.idPost, 
-        p.conteudo, 
-        p.dataHoraPublicacao, 
-    
-        u.idUsuario AS usuario_idUsuario, 
-        u.nomeUsuario AS usuario_nomeUsuario, 
-        u.fotoUrl AS usuario_fotoUrl, 
-    
-        c.idComunidade AS comunidade_idComunidade, 
-        c.nomeComunidade AS comunidade_nomeComunidade, 
-    
-        criador.idUsuario AS comunidade_idCriador, 
-        criador.nomeUsuario AS comunidade_nomeCriador, 
-    
-        COUNT(DISTINCT comentario.idComentario) AS totalComentarios 
-      FROM post p 
-      INNER JOIN usuario u 
-        ON u.idUsuario = p.fk_Usuario_idUsuario 
-      INNER JOIN comunidade c 
-        ON c.idComunidade = p.fk_Comunidade_idComunidade 
-      LEFT JOIN usuario criador 
-        ON criador.idUsuario = c.fk_Usuario_idUsuario 
-      LEFT JOIN comentario 
-        ON comentario.fk_Post_idPost = p.idPost 
-      WHERE c.idComunidade = ? 
-      GROUP BY 
-        p.idPost, 
-        p.conteudo, 
-        p.dataHoraPublicacao, 
-        u.idUsuario, 
-        u.nomeUsuario, 
-        u.fotoUrl, 
-        c.idComunidade, 
-        c.nomeComunidade, 
-        criador.idUsuario, 
-        criador.nomeUsuario 
-      ORDER BY p.dataHoraPublicacao DESC 
+      SELECT
+      p.idPost,
+      p.conteudo,
+      p.dataHoraPublicacao,
+
+      u.idUsuario AS usuario_idUsuario,
+      u.nomeUsuario AS usuario_nomeUsuario,
+      u.fotoUrl AS usuario_fotoUrl,
+
+      c.idComunidade AS comunidade_idComunidade,
+      c.nomeComunidade AS comunidade_nomeComunidade,
+
+      criador.idUsuario AS comunidade_idCriador,
+      criador.nomeUsuario AS comunidade_nomeCriador,
+
+      e.idEvento AS evento_idEvento,
+      e.titulo AS evento_titulo,
+      e.descricaoEvento AS evento_descricaoEvento,
+      e.localEvento AS evento_localEvento,
+      e.status AS evento_status,
+      e.dataEvento AS evento_dataEvento,
+      e.capaEvento AS evento_capaEvento,
+      e.fotoUrlEvento AS evento_fotoUrlEvento,
+
+      pe.usuarioIdUsuario AS evento_participanteAtual,
+
+      COUNT(DISTINCT comentario.idComentario) AS totalComentarios
+      FROM post p
+      INNER JOIN usuario u
+      ON u.idUsuario = p.fk_Usuario_idUsuario
+      INNER JOIN comunidade c
+      ON c.idComunidade = p.fk_Comunidade_idComunidade
+      LEFT JOIN usuario criador
+      ON criador.idUsuario = c.fk_Usuario_idUsuario
+      LEFT JOIN evento e
+      ON e.idEvento = p.fk_Evento_idEvento
+      LEFT JOIN participaEvento pe
+      ON pe.eventoIdEvento = e.idEvento
+      AND pe.usuarioIdUsuario = ?
+      LEFT JOIN comentario
+      ON comentario.fk_Post_idPost = p.idPost
+      WHERE c.idComunidade = ?
+      GROUP BY
+        p.idPost,
+        p.conteudo,
+        p.dataHoraPublicacao,
+        u.idUsuario,
+        u.nomeUsuario,
+        u.fotoUrl,
+        c.idComunidade,
+        c.nomeComunidade,
+        criador.idUsuario,
+        criador.nomeUsuario,
+        e.idEvento,
+        e.titulo,
+        e.descricaoEvento,
+        e.localEvento,
+        e.status,
+        e.dataEvento,
+        e.capaEvento,
+        e.fotoUrlEvento,
+        pe.usuarioIdUsuario
       `,
-      [idComunidade],
+      [idUsuario, idComunidade],
     );
+
     const postsFormatados = await Promise.all(
       posts.map(async (post) => {
        const fotosPost = await this.dataSource.query(
@@ -460,6 +485,25 @@ export class ComunidadeService {
               nomeUsuario: post.comunidade_nomeCriador,
             },
           },
+          evento: post.evento_idEvento
+            ? {
+                idEvento: post.evento_idEvento,
+                titulo: post.evento_titulo,
+                descricaoEvento: post.evento_descricaoEvento,
+                localEvento: post.evento_localEvento,
+                status: Boolean(Number(post.evento_status)),
+                dataEvento: post.evento_dataEvento,
+                capaEvento: post.evento_capaEvento,
+                fotoUrlEvento: post.evento_fotoUrlEvento,
+                isParticipando: Boolean(post.evento_participanteAtual),
+
+                comunidade: {
+                  idComunidade: post.comunidade_idComunidade,
+                  nomeComunidade: post.comunidade_nomeComunidade,
+                },
+              }
+            : null,
+
           fotosPost,
         };
       }),
