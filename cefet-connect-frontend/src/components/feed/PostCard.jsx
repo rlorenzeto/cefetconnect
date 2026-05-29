@@ -19,7 +19,7 @@ import {
 import { getProfileImageUrl } from "../../services/authService";
 import { EditIcon, TrashIcon } from "../icons/AppIcons";
 
-function PostActionMenu({ onEdit, onDelete }) {
+function PostActionMenu({ onEdit, onDelete, canEdit = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -50,17 +50,19 @@ function PostActionMenu({ onEdit, onDelete }) {
 
       {isOpen && (
         <div className="absolute right-0 top-10 z-40 w-40 overflow-hidden rounded-2xl border border-[#e3e3e3] bg-white py-2 shadow-lg">
-          <button
-            type="button"
-            onClick={() => {
-              setIsOpen(false);
-              onEdit();
-            }}
-            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-[#343434] transition hover:bg-[#f7f7f7]"
-          >
-            <EditIcon className="h-4 w-4" />
-            Editar
-          </button>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onEdit();
+              }}
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-[#343434] transition hover:bg-[#f7f7f7]"
+            >
+              <EditIcon className="h-4 w-4" />
+              Editar
+            </button>
+          )}
 
           <button
             type="button"
@@ -118,6 +120,19 @@ export default function PostCard({
     postOwnerId &&
     currentUserId &&
     postOwnerId === currentUserId;
+  
+  const communityOwnerId = String(
+    post?.comunidade?.criador?.idUsuario ||
+      post?.comunidade?.idCriador ||
+      ""
+  );
+
+  const isCommunityAdmin =
+    communityOwnerId &&
+    currentUserId &&
+    communityOwnerId === currentUserId;
+
+  const canManagePost = isOwner || isCommunityAdmin;
 
   useEffect(() => {
     setConteudo(post.conteudo || "");
@@ -168,11 +183,21 @@ export default function PostCard({
   }
 
   function getPostLocationLabel() {
-    if (post?.comunidade?.nome) {
-      return post.comunidade.nome;
+    const communityName =
+      post?.comunidade?.nomeComunidade ||
+      post?.comunidade?.nome ||
+      post?.nomeComunidade;
+
+    if (communityName) {
+      return communityName;
     }
 
-    if (post?.fk_Comunidade_idComunidade || post?.comunidade) {
+    const communityId =
+      post?.fk_Comunidade_idComunidade ||
+      post?.idComunidade ||
+      post?.comunidade?.idComunidade;
+
+    if (communityId) {
       return "Comunidade";
     }
 
@@ -340,10 +365,11 @@ export default function PostCard({
             </div>
           </div>
 
-          {isOwner && (
+          {canManagePost && (
             <PostActionMenu
-              onEdit={() => setIsEditModalOpen(true)}
+              onEdit={isOwner ? () => setIsEditModalOpen(true) : undefined}
               onDelete={() => setIsDeleteModalOpen(true)}
+              canEdit={isOwner}
             />
           )}
         </header>
@@ -419,7 +445,7 @@ export default function PostCard({
             </h2>
 
             <p className="mt-2 text-sm leading-relaxed text-[#666]">
-              Essa ação não poderá ser desfeita. O post será removido do feed.
+              Essa ação não poderá ser desfeita. O post será removido.
             </p>
 
             <div className="mt-6 flex justify-end gap-3">

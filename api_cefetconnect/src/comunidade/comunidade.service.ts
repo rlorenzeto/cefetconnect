@@ -43,36 +43,150 @@ export class ComunidadeService {
       fotoUrlComunidade: fotoFile ? fotoFile.path.replace(/\\/g, '/') : null,
     });
 
-    return await this.comunidadeRepository.save(novaComunidade);
+    const comunidadeCriada = await this.comunidadeRepository.save(novaComunidade);
+    await this.dataSource.query(
+      `
+      INSERT IGNORE INTO participa (usuarioIdUsuario, comunidadeIdComunidade)
+      VALUES (?, ?)
+      `,
+      [idUsuario, comunidadeCriada.idComunidade],
+    );
+
+    return comunidadeCriada;
   }
 
-  async findAll() {
-    return await this.comunidadeRepository.find({
-      relations: ['criador'],
-      select: { 
-        idComunidade: true,
-        nomeComunidade: true,
-        descricaoComunidade: true,
-        capaComunidade: true,
-        fotoUrlComunidade: true,
-        criador: { nomeUsuario: true },
-      },
-    });
+  async findAll(idUsuario?: number) { 
+    const comunidades = await this.dataSource.query(
+      ` 
+      SELECT 
+        c.idComunidade, 
+        c.nomeComunidade, 
+        c.descricaoComunidade, 
+        c.capaComunidade, 
+        c.fotoUrlComunidade, 
+        criador.idUsuario AS idCriador, 
+        criador.nomeUsuario AS nomeCriador, 
+        COUNT(DISTINCT p.usuarioIdUsuario) AS totalMembros, 
+        COUNT(DISTINCT post.idPost) AS totalPosts, 
+        CASE 
+          WHEN minhaParticipacao.usuarioIdUsuario IS NULL THEN 0 
+          ELSE 1 
+        END AS isMembro 
+      FROM comunidade c 
+      LEFT JOIN usuario criador 
+        ON criador.idUsuario = c.fk_Usuario_idUsuario 
+      LEFT JOIN participa p 
+        ON p.comunidadeIdComunidade = c.idComunidade 
+      LEFT JOIN post 
+        ON post.fk_Comunidade_idComunidade = c.idComunidade 
+      LEFT JOIN participa minhaParticipacao 
+        ON minhaParticipacao.comunidadeIdComunidade = c.idComunidade 
+        AND minhaParticipacao.usuarioIdUsuario = ? 
+      GROUP BY 
+        c.idComunidade, 
+        c.nomeComunidade, 
+        c.descricaoComunidade, 
+        c.capaComunidade, 
+        c.fotoUrlComunidade, 
+        criador.idUsuario, 
+        criador.nomeUsuario, 
+        minhaParticipacao.usuarioIdUsuario 
+      ORDER BY c.nomeComunidade ASC 
+      `,
+      [idUsuario || 0],
+    );
+
+    return comunidades.map((comunidade) => ({
+      ...comunidade,
+      isMembro: Boolean(Number(comunidade.isMembro)),
+      totalMembros: Number(comunidade.totalMembros || 0),
+      totalPosts: Number(comunidade.totalPosts || 0),
+    }));
   }
 
-  async findOne(id: string) {
-    return await this.comunidadeRepository.findOne({
-      where: { idComunidade: id },
-      relations: ['criador'],
-      select: { 
-        idComunidade: true,
-        nomeComunidade: true,
-        descricaoComunidade: true,
-        capaComunidade: true,
-        fotoUrlComunidade: true,
-        criador: { nomeUsuario: true },
+  async findOne(id: string, idUsuario: number) {
+    const rows = await this.dataSource.query(
+      `
+      SELECT
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+
+        criador.idUsuario AS idCriador,
+        criador.nomeUsuario AS nomeCriador,
+
+        COUNT(DISTINCT p.usuarioIdUsuario) AS totalMembros,
+        COUNT(DISTINCT post.idPost) AS totalPosts,
+
+        CASE
+          WHEN minhaParticipacao.usuarioIdUsuario IS NULL THEN 0
+          ELSE 1
+        END AS isMembro
+      FROM comunidade c
+      LEFT JOIN usuario criador
+        ON criador.idUsuario = c.fk_Usuario_idUsuario
+      LEFT JOIN participa p
+        ON p.comunidadeIdComunidade = c.idComunidade
+      LEFT JOIN post
+        ON post.fk_Comunidade_idComunidade = c.idComunidade
+      LEFT JOIN participa minhaParticipacao
+        ON minhaParticipacao.comunidadeIdComunidade = c.idComunidade
+        AND minhaParticipacao.usuarioIdUsuario = ?
+      WHERE c.idComunidade = ?
+      GROUP BY
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+        criador.idUsuario,
+        criador.nomeUsuario,
+        minhaParticipacao.usuarioIdUsuario
+      LIMIT 1
+      `,
+      [idUsuario, id],
+    );
+
+    if (rows.length === 0) {
+      throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    }
+
+    const comunidade = rows[0];
+
+    const membros = await this.dataSource.query(
+      `
+      SELECT
+        u.idUsuario,
+        u.nomeUsuario,
+        u.fotoUrl
+      FROM participa p
+      INNER JOIN usuario u
+        ON u.idUsuario = p.usuarioIdUsuario
+      WHERE p.comunidadeIdComunidade = ?
+      ORDER BY u.nomeUsuario ASC
+      `,
+      [id],
+    );
+
+    return {
+      idComunidade: comunidade.idComunidade,
+      nomeComunidade: comunidade.nomeComunidade,
+      descricaoComunidade: comunidade.descricaoComunidade,
+      capaComunidade: comunidade.capaComunidade,
+      fotoUrlComunidade: comunidade.fotoUrlComunidade,
+
+      criador: {
+        idUsuario: comunidade.idCriador,
+        nomeUsuario: comunidade.nomeCriador,
       },
-    });
+
+      isMembro: Boolean(Number(comunidade.isMembro)),
+      totalMembros: Number(comunidade.totalMembros || 0),
+      totalPosts: Number(comunidade.totalPosts || 0),
+      membros,
+    };
   }
 
   async update(
@@ -147,6 +261,32 @@ export class ComunidadeService {
     return await this.comunidadeRepository.remove(comunidade);
   }
 
+  async findMembros(idComunidade: string) {
+    const comunidade = await this.comunidadeRepository.findOne({
+      where: { idComunidade },
+      select: { idComunidade: true },
+    });
+
+    if (!comunidade) {
+      throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    }
+
+    return this.dataSource.query(
+      `
+      SELECT
+        u.idUsuario,
+        u.nomeUsuario,
+        u.fotoUrl
+      FROM participa p
+      INNER JOIN usuario u
+        ON u.idUsuario = p.usuarioIdUsuario
+      WHERE p.comunidadeIdComunidade = ?
+      ORDER BY u.nomeUsuario ASC
+      `,
+      [idComunidade],
+    );
+  }
+
   async entrar(idComunidade: string, idUsuario: number) {
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade },
@@ -181,6 +321,153 @@ export class ComunidadeService {
     return { entrou: true, idComunidade };
   }
 
+  async findByUsuario(idUsuario: number) {
+    const usuario = await this.usuarioRepository.findOne({
+      where: { idUsuario },
+    });
+
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    return await this.dataSource.query(
+      ` 
+      SELECT 
+        c.idComunidade, 
+        c.nomeComunidade, 
+        c.descricaoComunidade, 
+        c.capaComunidade, 
+        c.fotoUrlComunidade, 
+        criador.idUsuario AS idCriador, 
+        criador.nomeUsuario AS nomeCriador, 
+        COUNT(DISTINCT p2.usuarioIdUsuario) AS totalMembros, 
+        COUNT(DISTINCT post.idPost) AS totalPosts 
+      FROM participa p 
+      INNER JOIN comunidade c 
+        ON c.idComunidade = p.comunidadeIdComunidade 
+      LEFT JOIN usuario criador 
+        ON criador.idUsuario = c.fk_Usuario_idUsuario 
+      LEFT JOIN participa p2 
+        ON p2.comunidadeIdComunidade = c.idComunidade 
+      LEFT JOIN post 
+        ON post.fk_Comunidade_idComunidade = c.idComunidade 
+      WHERE p.usuarioIdUsuario = ? 
+      GROUP BY 
+        c.idComunidade, 
+        c.nomeComunidade, 
+        c.descricaoComunidade, 
+        c.capaComunidade, 
+        c.fotoUrlComunidade, 
+        criador.idUsuario, 
+        criador.nomeUsuario 
+      ORDER BY c.nomeComunidade ASC 
+      `,
+      [idUsuario],
+    );
+  }
+
+  async findPosts(idComunidade: string, idUsuario: number) {
+    const comunidade = await this.comunidadeRepository.findOne({
+      where: { idComunidade },
+    });
+
+    if (!comunidade) {
+      throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    }
+
+    const membro: unknown[] = await this.dataSource.query(
+      'SELECT 1 FROM participa WHERE usuarioIdUsuario = ? AND comunidadeIdComunidade = ?',
+      [idUsuario, idComunidade],
+    );
+
+    if (membro.length === 0) {
+      throw new ForbiddenException(ErrorMessages.ECOM00003.mensagem);
+    }
+
+    const posts = await this.dataSource.query(
+      ` 
+      SELECT 
+        p.idPost, 
+        p.conteudo, 
+        p.dataHoraPublicacao, 
+    
+        u.idUsuario AS usuario_idUsuario, 
+        u.nomeUsuario AS usuario_nomeUsuario, 
+        u.fotoUrl AS usuario_fotoUrl, 
+    
+        c.idComunidade AS comunidade_idComunidade, 
+        c.nomeComunidade AS comunidade_nomeComunidade, 
+    
+        criador.idUsuario AS comunidade_idCriador, 
+        criador.nomeUsuario AS comunidade_nomeCriador, 
+    
+        COUNT(DISTINCT comentario.idComentario) AS totalComentarios 
+      FROM post p 
+      INNER JOIN usuario u 
+        ON u.idUsuario = p.fk_Usuario_idUsuario 
+      INNER JOIN comunidade c 
+        ON c.idComunidade = p.fk_Comunidade_idComunidade 
+      LEFT JOIN usuario criador 
+        ON criador.idUsuario = c.fk_Usuario_idUsuario 
+      LEFT JOIN comentario 
+        ON comentario.fk_Post_idPost = p.idPost 
+      WHERE c.idComunidade = ? 
+      GROUP BY 
+        p.idPost, 
+        p.conteudo, 
+        p.dataHoraPublicacao, 
+        u.idUsuario, 
+        u.nomeUsuario, 
+        u.fotoUrl, 
+        c.idComunidade, 
+        c.nomeComunidade, 
+        criador.idUsuario, 
+        criador.nomeUsuario 
+      ORDER BY p.dataHoraPublicacao DESC 
+      `,
+      [idComunidade],
+    );
+    const postsFormatados = await Promise.all(
+      posts.map(async (post) => {
+       const fotosPost = await this.dataSource.query(
+          `
+          SELECT 
+            id_foto AS idFoto,
+            url,
+            ordem
+          FROM post_fotos
+          WHERE idPost = ?
+          ORDER BY ordem ASC
+          `,
+          [post.idPost],
+        );
+
+        return {
+          idPost: post.idPost,
+          conteudo: post.conteudo,
+          dataHoraPublicacao: post.dataHoraPublicacao,
+          totalComentarios: Number(post.totalComentarios || 0),
+          usuario: {
+            idUsuario: post.usuario_idUsuario,
+            nomeUsuario: post.usuario_nomeUsuario,
+            fotoUrl: post.usuario_fotoUrl,
+          },
+          comunidade: {
+            idComunidade: post.comunidade_idComunidade,
+            nomeComunidade: post.comunidade_nomeComunidade,
+            criador: {
+              idUsuario: post.comunidade_idCriador,
+              nomeUsuario: post.comunidade_nomeCriador,
+            },
+          },
+          fotosPost,
+        };
+      }),
+    );
+
+    return postsFormatados;
+  }
+
   async findEventos(idComunidade: string) {
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade },
@@ -200,7 +487,8 @@ export class ComunidadeService {
       },
     });
 
-    if (!comunidade) throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    if (!comunidade)
+      throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     return comunidade.eventos ?? [];
   }
 

@@ -11,6 +11,7 @@ import {
 import {
   listUserPosts,
 } from "../../services/postService";
+import { listMinhasComunidades } from "../../services/comunidadeService";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -25,6 +26,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [userPosts, setUserPosts] = useState([]);
   const [error, setError] = useState("");
+  const [communities, setCommunities] = useState([]);
+  const [showAllCommunities, setShowAllCommunities] = useState(false);
 
   const isOwnProfile =
     loggedUserId &&
@@ -51,14 +54,17 @@ export default function ProfilePage() {
         setIsLoading(true);
         setError("");
 
-        const [profileResponse, postsResponse, likesResponse] =
+        const [profileResponse, postsResponse, communitiesResponse] =
           await Promise.all([
             getUserProfile(profileId),
             listUserPosts(profileId),
+            listMinhasComunidades(),
           ]);
-
         const profile = profileResponse?.dados || profileResponse;
         const postsData = postsResponse?.dados || postsResponse;
+
+        const communitiesData = communitiesResponse?.dados || communitiesResponse;
+        setCommunities(Array.isArray(communitiesData) ? communitiesData : []);
 
         setUser({
           ...profile,
@@ -157,6 +163,10 @@ export default function ProfilePage() {
         onGoBack={handleGoBackToFeed}
         onPostDeleted={handlePostDeleted}
         onPostUpdated={handlePostUpdated}
+        communities={communities}
+        showAllCommunities={showAllCommunities}
+        onToggleCommunities={() => setShowAllCommunities((prev) => !prev)}
+        onOpenCommunity={(idComunidade) => navigate(`/comunidades/${idComunidade}`)}
       />
 
       <MobileProfile
@@ -170,6 +180,10 @@ export default function ProfilePage() {
         onGoBack={handleGoBackToFeed}
         onPostDeleted={handlePostDeleted}
         onPostUpdated={handlePostUpdated}
+        communities={communities}
+        showAllCommunities={showAllCommunities}
+        onToggleCommunities={() => setShowAllCommunities((prev) => !prev)}
+        onOpenCommunity={(idComunidade) => navigate(`/comunidades/${idComunidade}`)}
       />
     </>
   );

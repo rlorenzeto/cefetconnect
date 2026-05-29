@@ -1,6 +1,14 @@
+import { useState } from "react";
 import BrandLogo from "../auth/BrandLogo";
 import CreatePostCard from "./CreatePostCard";
 import PostCard from "./PostCard";
+import {
+  ChevronDownIcon,
+  HeartOutlineIcon,
+  TrophyIcon,
+} from "../icons/AppIcons";
+
+const GRADMENT_URL = "https://gradment.com.br"; //MUDAR COM A UTL DO GRADMENT, VER COM OS MENINOS
 
 export default function MobileFeed({
   user,
@@ -12,21 +20,89 @@ export default function MobileFeed({
   onCreatePost,
   onPostDeleted,
   onPostUpdated,
+  communities = [],
   onGoToProfile,
   onLogout,
 }) {
+  const [isGradmentMenuOpen, setIsGradmentMenuOpen] = useState(false);
+
+  function handleOpenGradment() {
+    window.open(GRADMENT_URL, "_blank", "noreferrer");
+    setIsGradmentMenuOpen(false);
+  }
   return (
     <div className="min-h-screen bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
       <header className="sticky top-0 z-20 flex h-[60px] items-center justify-between bg-white px-5 shadow-sm">
-        <BrandLogo className="h-9 w-auto object-contain" />
-
-        <div className="flex items-center gap-2">
+        <div className="relative">
           <button
             type="button"
-            onClick={onGoToProfile}
-            className="rounded-full bg-[#089464] px-4 py-1.5 text-xs font-semibold text-white"
+            onClick={() => setIsGradmentMenuOpen((prev) => !prev)}
+            className="flex items-center gap-2"
+            aria-label="Abrir opções do Cefet Connect"
+            aria-expanded={isGradmentMenuOpen}
           >
-            Perfil
+            <BrandLogo className="h-9 w-auto object-contain" />
+
+            <ChevronDownIcon
+              open={isGradmentMenuOpen}
+              className="h-4 w-4 text-[#111827]"
+            />
+          </button>
+
+          {isGradmentMenuOpen && (
+            <div className="absolute left-0 top-12 z-40 w-[216px] overflow-hidden rounded-b-md border border-[#d3d3d3] bg-white shadow-lg">
+              <button
+                type="button"
+                onClick={() => setIsGradmentMenuOpen(false)}
+                className="flex h-8 w-full items-center px-3 text-left text-sm font-bold text-[#202020] transition hover:bg-[#f1f1f1]"
+              >
+                Tudo no cefet
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsGradmentMenuOpen(false)}
+                className="flex h-8 w-full items-center border-t border-[#d3d3d3] px-3 text-left text-sm font-bold text-[#202020] transition hover:bg-[#f1f1f1]"
+              >
+                Comunidades seguidas
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenGradment}
+                className="flex h-8 w-full items-center border-t border-[#d3d3d3] px-3 text-left transition hover:bg-[#f1f1f1]"
+              >
+                <span className="flex items-center gap-2">
+                  <img
+                    src="/images/gradment-logo.svg"
+                    alt="GradMent"
+                    className="h-5 w-auto object-contain"
+                  />
+
+                  <span className="text-sm font-extrabold text-[#39b02f]">
+                    GradMent
+                  </span>
+                </span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-5 text-[#0f172a]">
+          <button
+            type="button"
+            className="transition hover:text-[#089464]"
+            aria-label="Ranking"
+          >
+            <TrophyIcon className="h-6 w-6" />
+          </button>
+
+          <button
+            type="button"
+            className="transition hover:text-[#089464]"
+            aria-label="Favoritos"
+          >
+            <HeartOutlineIcon className="h-6 w-6" />
           </button>
 
           <button
@@ -56,6 +132,7 @@ export default function MobileFeed({
             userImageUrl={userImageUrl}
             onCreatePost={onCreatePost}
             isCreating={isCreating}
+            communities={communities}
           />
 
           {error && (
@@ -93,8 +170,12 @@ export default function MobileFeed({
           Início
         </button>
 
-        <button type="button" className="text-sm text-[#777]">
-          Buscar
+        <button
+          type="button"
+          onClick={() => window.location.assign("/comunidades")}
+          className="text-sm text-[#777]"
+        >
+          Comunidades
         </button>
 
         <button

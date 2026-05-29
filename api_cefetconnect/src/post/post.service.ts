@@ -35,7 +35,7 @@ export class PostService {
   async create(createPostDto: CreatePostDto, idUsuario: number, files?: Express.Multer.File[]) {
     const autor = await this.usuarioRepository.findOne({
       where: { idUsuario: idUsuario },
-      select: { idUsuario: true, nomeUsuario: true },
+      select: { idUsuario: true, nomeUsuario: true, fotoUrl: true },
     });
 
     if (!autor) {
@@ -87,7 +87,17 @@ export class PostService {
       idPost: postCriado.idPost,
       conteudo: postCriado.conteudo,
       dataHoraPublicacao: postCriado.dataHoraPublicacao,
-      usuario: { nomeUsuario: postCriado.usuario?.nomeUsuario },
+      usuario: {
+        idUsuario: postCriado.usuario?.idUsuario,
+        nomeUsuario: postCriado.usuario?.nomeUsuario,
+        fotoUrl: postCriado.usuario?.fotoUrl,
+      },
+      comunidade: comunidade
+        ? {
+            idComunidade: comunidade.idComunidade,
+            nomeComunidade: comunidade.nomeComunidade,
+          }
+        : null,
       fotosPost: postCriado.fotosPost ?? [],
     };
   }
@@ -96,12 +106,25 @@ export class PostService {
 
   // Essa função retorna todos os posts com suas respectivas fotos, usuários
   // e a quantidade de comentários, possibilitando o feed funcionar
-  async findAll() {
+  async findAll(idUsuario: number) {
     return this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
+      .leftJoinAndSelect('post.comunidade', 'comunidade')
       .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
+      .where(
+        `
+        comunidade.idComunidade IS NULL
+        OR EXISTS (
+          SELECT 1
+          FROM participa participaFeed
+          WHERE participaFeed.comunidadeIdComunidade = comunidade.idComunidade
+            AND participaFeed.usuarioIdUsuario = :idUsuario
+        )
+        `,
+        { idUsuario },
+      )
       .select([
         'post.idPost',
         'post.conteudo',
@@ -113,6 +136,10 @@ export class PostService {
         'foto.idFoto',
         'foto.url',
         'foto.ordem',
+        'comunidade.idComunidade',
+        'comunidade.nomeComunidade',
+        'comunidade.capaComunidade',
+        'comunidade.fotoUrlComunidade',
       ])
       .orderBy('post.dataHoraPublicacao', 'DESC')
       .addOrderBy('foto.ordem', 'ASC')
@@ -122,7 +149,14 @@ export class PostService {
   async findOne(id: string) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
-      relations: ['usuario', 'fotosPost', 'comentarios', 'comentarios.usuario'],
+      relations: [
+        'usuario',
+        'fotosPost',
+        'comentarios',
+        'comentarios.usuario',
+        'comunidade',
+        'comunidade.criador',
+      ],
       select: {
         idPost: true,
         conteudo: true,
@@ -132,6 +166,14 @@ export class PostService {
           matricula: true,
           nomeUsuario: true,
           fotoUrl: true,
+        },
+        comunidade: {
+          idComunidade: true,
+          nomeComunidade: true,
+          criador: {
+            idUsuario: true,
+            nomeUsuario: true,
+          },
         },
         fotosPost: true,
       },
@@ -144,7 +186,6 @@ export class PostService {
     return post;
   }
 
-  // Essa função que retorna todos os posts de um usuário específico, possibilitando a visualização do perfil.
   async findByUsuario(idUsuario: number) {
     const usuario = await this.usuarioRepository.findOne({
       where: { idUsuario: idUsuario },
@@ -159,6 +200,7 @@ export class PostService {
       .where('post.fk_Usuario_idUsuario = :idUsuario', { idUsuario })
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
+      .leftJoinAndSelect('post.comunidade', 'comunidade')
       .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
       .select([
         'post.idPost',
@@ -171,23 +213,30 @@ export class PostService {
         'foto.idFoto',
         'foto.url',
         'foto.ordem',
+        'comunidade.idComunidade',
+        'comunidade.nomeComunidade',
+        'comunidade.capaComunidade',
+        'comunidade.fotoUrlComunidade',
       ])
       .orderBy('post.dataHoraPublicacao', 'DESC')
       .addOrderBy('foto.ordem', 'ASC')
       .getMany();
   }
-
   // Atualização / Exclusão 
 
   async update(id: string, idUsuario: number, updatePostDto: UpdatePostDto) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
-      relations: ['usuario'],
+      relations: ['usuario', 'comunidade'],
       select: {
         idPost: true,
         conteudo: true,
         dataHoraPublicacao: true,
-        usuario: { idUsuario: true, nomeUsuario: true },
+        usuario: { idUsuario: true, nomeUsuario: true, fotoUrl: true },
+        comunidade: {
+          idComunidade: true,
+          nomeComunidade: true,
+        },
       },
     });
 
@@ -208,7 +257,17 @@ export class PostService {
       idPost: atualizado.idPost,
       conteudo: atualizado.conteudo,
       dataHoraPublicacao: atualizado.dataHoraPublicacao,
-      usuario: { nomeUsuario: atualizado.usuario?.nomeUsuario },
+      usuario: {
+        idUsuario: atualizado.usuario?.idUsuario,
+        nomeUsuario: atualizado.usuario?.nomeUsuario,
+        fotoUrl: atualizado.usuario?.fotoUrl,
+      },
+      comunidade: atualizado.comunidade
+        ? {
+            idComunidade: atualizado.comunidade.idComunidade,
+            nomeComunidade: atualizado.comunidade.nomeComunidade,
+          }
+        : null,
     };
   }
 
@@ -216,14 +275,16 @@ export class PostService {
   async remove(id: string, idUsuario: number) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
-      relations: ['usuario', 'fotosPost', 'comentarios'], // Essa relações significam que o post vai buscar o usuário, as fotos e os comentários para deletar
+      relations: ['usuario', 'fotosPost', 'comentarios', 'comunidade', 'comunidade.criador'], // Essa relações significam que o post vai buscar o usuário, as fotos e os comentários para deletar
     });
 
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    if (post.usuario.idUsuario !== idUsuario) {
+    const isAutor = post.usuario.idUsuario === idUsuario;
+    const isAdminComunidade = post.comunidade?.criador?.idUsuario === idUsuario;
+    if (!isAutor && !isAdminComunidade) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 

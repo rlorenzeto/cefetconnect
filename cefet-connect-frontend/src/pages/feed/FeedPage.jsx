@@ -12,6 +12,7 @@ import {
   getUserProfile,
   logoutUser,
 } from "../../services/authService";
+import { listMinhasComunidades } from "../../services/comunidadeService";
 
 export default function FeedPage() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export default function FeedPage() {
 
   const [user, setUser] = useState(savedUser);
   const [posts, setPosts] = useState([]);
+  const [myCommunities, setMyCommunities] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState("");
@@ -43,9 +45,10 @@ export default function FeedPage() {
       setIsLoading(true);
       setError("");
 
-      const [profileResponse, postsResponse] = await Promise.all([
+      const [profileResponse, postsResponse, communitiesResponse] = await Promise.all([
         getUserProfile(idUsuario),
         listPosts(),
+        listMinhasComunidades(),
       ]);
 
       const profile = profileResponse?.dados || profileResponse;
@@ -56,6 +59,9 @@ export default function FeedPage() {
         matricula: profile?.matricula || savedUser?.matricula,
       };
       const postsData = postsResponse?.dados || postsResponse;
+
+      const communitiesData = communitiesResponse?.dados || communitiesResponse;
+      setMyCommunities(Array.isArray(communitiesData) ? communitiesData : []);
 
       setUser(normalizedProfile);
 
@@ -156,6 +162,7 @@ export default function FeedPage() {
         user={user}
         userImageUrl={userImageUrl}
         posts={posts}
+        communities={myCommunities}
         isLoading={isLoading}
         error={error}
         isCreating={isCreating}
@@ -169,6 +176,7 @@ export default function FeedPage() {
         user={user}
         userImageUrl={userImageUrl}
         posts={posts}
+        communities={myCommunities}
         isLoading={isLoading}
         error={error}
         isCreating={isCreating}

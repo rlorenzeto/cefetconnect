@@ -7,6 +7,8 @@ import ConfirmEmailPage from "./pages/auth/ConfirmEmailPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import EditProfilePage from "./pages/profile/EditProfilePage";
 import FeedPage from "./pages/feed/FeedPage";
+import CommunitiesPage from "./pages/community/CommunitiesPage";
+import CommunityPage from "./pages/community/CommunityPage";
 
 export default function App() {
   return (
@@ -21,6 +23,8 @@ export default function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/profile/edit" element={<EditProfilePage />} />
       <Route path="/profile/:idUsuarioPerfil" element={<ProfilePage />} />
+      <Route path="/comunidades" element={<CommunitiesPage />} />
+      <Route path="/comunidades/:idComunidade" element={<CommunityPage />} />
 
       <Route path="/home" element={<FeedPage />} />
       <Route path="/feed" element={<FeedPage />} />

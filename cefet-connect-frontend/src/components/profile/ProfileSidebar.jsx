@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import BrandLogo from "../auth/BrandLogo";
+import { CommunityIcon } from "../icons/AppIcons";
 
 function HomeIcon({ active }) {
   return (
@@ -93,6 +94,14 @@ export default function ProfileSidebar({ activePage = "profile" }) {
           onClick={() => navigate("/home")}
         >
           <HomeIcon active={activePage === "home"} />
+        </NavButton>
+
+        <NavButton
+          label="Comunidades"
+          active={activePage === "community"}
+          onClick={() => navigate("/comunidades")}
+        >
+          <CommunityIcon active={activePage === "community"} />
         </NavButton>
 
         <NavButton label="Pesquisar">

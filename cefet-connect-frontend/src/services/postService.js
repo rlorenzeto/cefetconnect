@@ -18,14 +18,15 @@ export function getPostById(idPost) {
   return apiFetch(`/post/${idPost}`);
 }
 
-export function createPost({ conteudo, fotos, destino }) {
+export function createPost({ conteudo, fotos, idComunidade }) {
   const formData = new FormData();
 
   if (conteudo) {
     formData.append("conteudo", conteudo);
   }
-  if (destino) {
-    formData.append("destino", destino);
+
+  if (idComunidade) {
+    formData.append("idComunidade", idComunidade);
   }
 
   if (fotos?.length) {
