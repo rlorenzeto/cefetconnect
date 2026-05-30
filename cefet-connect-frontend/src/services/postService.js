@@ -18,14 +18,15 @@ export function getPostById(idPost) {
   return apiFetch(`/post/${idPost}`);
 }
 
-export function createPost({ conteudo, fotos, destino }) {
+export function createPost({ conteudo, fotos, idComunidade }) {
   const formData = new FormData();
 
   if (conteudo) {
     formData.append("conteudo", conteudo);
   }
-  if (destino) {
-    formData.append("destino", destino);
+
+  if (idComunidade) {
+    formData.append("idComunidade", idComunidade);
   }
 
   if (fotos?.length) {
@@ -95,10 +96,10 @@ export function getPostLikes(idPost) {
   return apiFetch(`/post/${idPost}/curtidas`);
 }
 
-export function listUserPosts(matricula) {
-  return apiFetch(`/post/usuario/${matricula}`);
+export function listUserPosts(idUsuario) {
+  return apiFetch(`/post/usuario/${idUsuario}`);
 }
 
-export function getUserPostLikes(matricula) {
-  return apiFetch(`/post/usuario/${matricula}/likes`);
+export function getUserPostLikes(idUsuario) {
+  return apiFetch(`/post/usuario/${idUsuario}/likes`);
 }

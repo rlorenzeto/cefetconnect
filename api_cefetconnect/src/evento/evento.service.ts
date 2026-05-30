@@ -8,6 +8,7 @@ import { UpdateEventoDto } from './dto/update-evento.dto';
 import { Evento } from '../entities/evento.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { Comunidade } from '../entities/comunidade.entity';
+import { Post } from '../entities/post.entity';
 import { ErrorMessages } from '../common/constants/messages.errors';
 
 @Injectable()
@@ -19,6 +20,8 @@ export class EventoService {
     private usuarioRepository: Repository<Usuario>,
     @InjectRepository(Comunidade)
     private comunidadeRepository: Repository<Comunidade>,
+    @InjectRepository(Post)
+    private postRepository: Repository<Post>,
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
@@ -36,19 +39,44 @@ export class EventoService {
       if (!comunidade) throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
+    const dataEvento = new Date(dto.dataEvento);
+    if (Number.isNaN(dataEvento.getTime()) || dataEvento <= new Date()) {
+      throw new ForbiddenException('A data do evento precisa ser futura.');
+    }
+
     const evento = this.eventoRepository.create({
       titulo: dto.titulo,
       descricaoEvento: dto.descricaoEvento,
       localEvento: dto.localEvento,
       status: dto.status ?? true,
-      dataEvento: new Date(dto.dataEvento),
+      dataEvento: dataEvento,
       usuario: criador,
       comunidade: comunidade ?? undefined,
       capaEvento: capaFile ? capaFile.path.replace(/\\/g, '/') : null,
       fotoUrlEvento: fotoFile ? fotoFile.path.replace(/\\/g, '/') : null,
     });
 
-    return await this.eventoRepository.save(evento);
+    const eventoCriado = await this.eventoRepository.save(evento);
+
+    await this.dataSource.query(
+      `
+        INSERT IGNORE INTO participaEvento (eventoIdEvento, usuarioIdUsuario)
+        VALUES (?, ?)
+      `,
+      [eventoCriado.idEvento, criador.idUsuario],
+    );
+
+    const postEvento = this.postRepository.create({
+      conteudo: dto.descricaoEvento || dto.titulo,
+      usuario: criador,
+      dataHoraPublicacao: new Date(),
+      evento: eventoCriado,
+      ...(comunidade && { comunidade }),
+    });
+
+    await this.postRepository.save(postEvento);
+
+    return eventoCriado;
   }
 
   async findAll() {
@@ -63,7 +91,11 @@ export class EventoService {
         dataEvento: true,
         capaEvento: true,
         fotoUrlEvento: true,
-        usuario: { nomeUsuario: true },
+        usuario: {
+          idUsuario: true,
+          nomeUsuario: true,
+          fotoUrl: true,
+        },
         comunidade: { idComunidade: true, nomeComunidade: true },
       },
       order: { dataEvento: 'ASC' },
@@ -83,9 +115,17 @@ export class EventoService {
         dataEvento: true,
         capaEvento: true,
         fotoUrlEvento: true,
-        usuario: { nomeUsuario: true },
+        usuario: {
+          idUsuario: true,
+          nomeUsuario: true,
+          fotoUrl: true,
+        },
         comunidade: { idComunidade: true, nomeComunidade: true },
-        participantes: { nomeUsuario: true, fotoUrl: true },
+        participantes: {
+          idUsuario: true,
+          nomeUsuario: true,
+          fotoUrl: true,
+        },
       },
     });
 
@@ -112,7 +152,11 @@ export class EventoService {
           dataEvento: true,
           capaEvento: true,
           fotoUrlEvento: true,
-          usuario: { nomeUsuario: true },
+          usuario: {
+            idUsuario: true,
+            nomeUsuario: true,
+            fotoUrl: true,
+          },
           comunidade: { idComunidade: true, nomeComunidade: true },
         },
       },
@@ -177,7 +221,11 @@ export class EventoService {
         dataEvento: true,
         capaEvento: true,
         fotoUrlEvento: true,
-        usuario: { nomeUsuario: true },
+        usuario: {
+          idUsuario: true,
+          nomeUsuario: true,
+          fotoUrl: true,
+        },
         comunidade: { idComunidade: true, nomeComunidade: true },
       },
     });
@@ -197,6 +245,38 @@ export class EventoService {
     if (!evento) throw new NotFoundException(ErrorMessages.EEVT00001.mensagem);
     if (evento.usuario?.idUsuario !== idUsuario) throw new ForbiddenException(ErrorMessages.EEVT00002.mensagem);
 
+    const postsEvento: { idPost: string }[] = await this.dataSource.query(
+    'SELECT idPost FROM post WHERE fk_Evento_idEvento = ?',
+    [id],
+    );
+
+    for (const postEvento of postsEvento) {
+      await this.dataSource.query(
+      `DELETE likeComentario FROM likeComentario INNER JOIN comentario ON comentario.idComentario = likeComentario.comentarioIdComentario WHERE comentario.fk_Post_idPost = ? `,
+      [postEvento.idPost],
+    );
+
+    await this.dataSource.query(
+      'DELETE FROM comentario WHERE fk_Post_idPost = ?',
+      [postEvento.idPost],
+    );
+
+    await this.dataSource.query(
+      'DELETE FROM likePost WHERE postIdPost = ?',
+      [postEvento.idPost],
+    );
+
+    await this.dataSource.query(
+      'DELETE FROM post_fotos WHERE idPost = ?',
+      [postEvento.idPost],
+    );
+
+    await this.dataSource.query(
+      'DELETE FROM post WHERE idPost = ?',
+      [postEvento.idPost],
+    );
+    }
+
     await this.eventoRepository.remove(evento);
     return { removido: true, idEvento: id, titulo: evento.titulo };
   }
@@ -207,6 +287,9 @@ export class EventoService {
       relations: ['comunidade'],
     });
     if (!evento) throw new NotFoundException(ErrorMessages.EEVT00001.mensagem);
+    if (!evento.status || evento.dataEvento < new Date()) {
+      throw new ForbiddenException('Este evento já foi finalizado.');
+    }
 
     const usuario = await this.usuarioRepository.findOne({
       where: { idUsuario },

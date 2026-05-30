@@ -35,7 +35,7 @@ export class PostService {
   async create(createPostDto: CreatePostDto, idUsuario: number, files?: Express.Multer.File[]) {
     const autor = await this.usuarioRepository.findOne({
       where: { idUsuario: idUsuario },
-      select: { idUsuario: true, nomeUsuario: true },
+      select: { idUsuario: true, nomeUsuario: true, fotoUrl: true },
     });
 
     if (!autor) {
@@ -87,7 +87,17 @@ export class PostService {
       idPost: postCriado.idPost,
       conteudo: postCriado.conteudo,
       dataHoraPublicacao: postCriado.dataHoraPublicacao,
-      usuario: { nomeUsuario: postCriado.usuario?.nomeUsuario },
+      usuario: {
+        idUsuario: postCriado.usuario?.idUsuario,
+        nomeUsuario: postCriado.usuario?.nomeUsuario,
+        fotoUrl: postCriado.usuario?.fotoUrl,
+      },
+      comunidade: comunidade
+        ? {
+            idComunidade: comunidade.idComunidade,
+            nomeComunidade: comunidade.nomeComunidade,
+          }
+        : null,
       fotosPost: postCriado.fotosPost ?? [],
     };
   }
@@ -151,7 +161,6 @@ export class PostService {
     return post;
   }
 
-  // Essa função que retorna todos os posts de um usuário específico, possibilitando a visualização do perfil.
   async findByUsuario(idUsuario: number) {
     const usuario = await this.usuarioRepository.findOne({
       where: { idUsuario: idUsuario },
@@ -166,6 +175,11 @@ export class PostService {
       .where('post.fk_Usuario_idUsuario = :idUsuario', { idUsuario })
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
+      .leftJoinAndSelect('post.comunidade', 'comunidade')
+      .leftJoinAndSelect('post.evento', 'evento')
+      .leftJoinAndSelect('evento.comunidade', 'eventoComunidade')
+      .leftJoinAndSelect('evento.participantes', 'eventoParticipante')
+      .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
       .select([
         'post.idPost',
         'post.conteudo',
@@ -177,21 +191,41 @@ export class PostService {
         'foto.idFoto',
         'foto.url',
         'foto.ordem',
+        'comunidade.idComunidade',
+        'comunidade.nomeComunidade',
+        'comunidade.capaComunidade',
+        'comunidade.fotoUrlComunidade',
+        'evento.idEvento',
+        'evento.titulo',
+        'evento.descricaoEvento',
+        'evento.localEvento',
+        'evento.status',
+        'evento.dataEvento',
+        'evento.capaEvento',
+        'evento.fotoUrlEvento',
+        'eventoComunidade.idComunidade',
+        'eventoComunidade.nomeComunidade',
+        'eventoParticipante.idUsuario',
       ])
+      .orderBy('post.dataHoraPublicacao', 'DESC')
+      .addOrderBy('foto.ordem', 'ASC')
       .getMany();
   }
-
   // Atualização / Exclusão 
 
   async update(id: string, idUsuario: number, updatePostDto: UpdatePostDto) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
-      relations: ['usuario'],
+      relations: ['usuario', 'comunidade'],
       select: {
         idPost: true,
         conteudo: true,
         dataHoraPublicacao: true,
-        usuario: { idUsuario: true, nomeUsuario: true },
+        usuario: { idUsuario: true, nomeUsuario: true, fotoUrl: true },
+        comunidade: {
+          idComunidade: true,
+          nomeComunidade: true,
+        },
       },
     });
 
@@ -212,7 +246,17 @@ export class PostService {
       idPost: atualizado.idPost,
       conteudo: atualizado.conteudo,
       dataHoraPublicacao: atualizado.dataHoraPublicacao,
-      usuario: { nomeUsuario: atualizado.usuario?.nomeUsuario },
+      usuario: {
+        idUsuario: atualizado.usuario?.idUsuario,
+        nomeUsuario: atualizado.usuario?.nomeUsuario,
+        fotoUrl: atualizado.usuario?.fotoUrl,
+      },
+      comunidade: atualizado.comunidade
+        ? {
+            idComunidade: atualizado.comunidade.idComunidade,
+            nomeComunidade: atualizado.comunidade.nomeComunidade,
+          }
+        : null,
     };
   }
 
@@ -220,14 +264,16 @@ export class PostService {
   async remove(id: string, idUsuario: number) {
     const post = await this.postRepository.findOne({
       where: { idPost: id },
-      relations: ['usuario', 'fotosPost', 'comentarios'], // Essa relações significam que o post vai buscar o usuário, as fotos e os comentários para deletar
+      relations: ['usuario', 'fotosPost', 'comentarios', 'comunidade', 'comunidade.criador'], // Essa relações significam que o post vai buscar o usuário, as fotos e os comentários para deletar
     });
 
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    if (post.usuario.idUsuario !== idUsuario) {
+    const isAutor = post.usuario.idUsuario === idUsuario;
+    const isAdminComunidade = post.comunidade?.criador?.idUsuario === idUsuario;
+    if (!isAutor && !isAdminComunidade) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
@@ -345,20 +391,33 @@ export class PostService {
   // Entrega quantas curtidas tem o post e quais usuarios curtiram
   async obterCurtidasPost(idPost: string) {
     const post = await this.postRepository.findOne({ where: { idPost } });
+
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    const curtidas: { nomeUsuario: string }[] =
-      await this.dataSource.query(
-        `SELECT u.nomeUsuario
-         FROM likePost lp
-         INNER JOIN Usuario u ON u.idUsuario = lp.usuarioIdUsuario
-         WHERE lp.postIdPost = ?`,
-        [idPost],
-      );
+    const curtidas: {
+      idUsuario: number;
+      matricula: string;
+      nomeUsuario: string;
+      fotoUrl: string | null;
+    }[] = await this.dataSource.query(
+      `SELECT 
+        u.idUsuario AS idUsuario,
+        u.matricula AS matricula,
+        u.nomeUsuario AS nomeUsuario,
+        u.fotoUrl AS fotoUrl
+      FROM likePost lp
+      INNER JOIN Usuario u ON u.idUsuario = lp.usuarioIdUsuario
+      WHERE lp.postIdPost = ?
+      ORDER BY u.nomeUsuario ASC`,
+      [idPost],
+    );
 
-    return { total: curtidas.length, usuarios: curtidas };
+    return {
+      total: curtidas.length,
+      usuarios: curtidas,
+    };
   }
 
   async curtirPost(idPost: string, idUsuario: number) {

@@ -163,6 +163,23 @@ export class UsuarioService {
     });
   }
 
+  async buscarPorMatricula(matricula: string) {
+    const usuario = await this.usuarioRepository.findOne({
+      where: { matricula },
+    });
+
+    if (!usuario) {
+      throw new NotFoundException('Usuário não encontrado.');
+    }
+
+    return {
+      idUsuario: usuario.idUsuario,
+      matricula: usuario.matricula,
+      email: usuario.email,
+      emailVerificado: usuario.emailVerificado,
+    };
+  }
+
   async findOne(idUsuario: number): Promise<Usuario> {
     const usuario = await this.usuarioRepository.findOne({
       where: { idUsuario },

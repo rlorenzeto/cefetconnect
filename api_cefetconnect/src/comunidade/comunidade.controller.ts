@@ -45,8 +45,8 @@ export class ComunidadeController {
   @ApiOperation({ summary: 'Listar todas as comunidades', description: 'Retorna todas as comunidades. Requer autenticação.' })
   @ApiResponse({ status: 200, description: '[SCOM00002] Comunidade retornada com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
-  async findAll() { 
-    const dados = await this.comunidadeService.findAll(); 
+  async findAll(@Request() req: any) {
+    const dados = await this.comunidadeService.findAll(req.user.idUsuario);
     return {
       codigo: 'SCOM00007',
       mensagem: SuccessMessages.SCOM00007.mensagem,
@@ -88,12 +88,13 @@ export class ComunidadeController {
   @ApiOperation({ summary: 'Buscar uma comunidade específica', description: 'Retorna a comunidade específica.' })
   @ApiResponse({ status: 200, description: '[SUSR00002] Comunidade retornada com sucesso.' })
   @ApiResponse({ status: 404, description: '[EUSR00008] Comunidade não encontrada.' })
-  async findOne(@Param('id') id: string) {
-    const dados = await this.comunidadeService.findOne(id);
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    const dados = await this.comunidadeService.findOne(id, req.user.idUsuario);
+
     return {
-    codigo: 'SCOM00002',
-    mensagem: SuccessMessages.SCOM00002.mensagem,
-    dados,
+      codigo: 'SCOM00002',
+      mensagem: SuccessMessages.SCOM00002.mensagem,
+      dados,
     };
   }
 
@@ -139,6 +140,23 @@ export class ComunidadeController {
         nomeComunidade: comunidade.nomeComunidade,
         nomeCriador: comunidade.criador?.nomeUsuario,
       },
+    };
+  }
+
+  @Get(':id/posts')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'ID da comunidade' })
+  @ApiOperation({
+    summary: 'Listar posts de uma comunidade',
+    description: 'Retorna os posts da comunidade se o usuário for membro.',
+  })
+  async findPosts(@Param('id') id: string, @Request() req: any) {
+    const dados = await this.comunidadeService.findPosts(id, req.user.idUsuario);
+    return {
+      codigo: 'SCOM00009',
+      mensagem: 'Posts da comunidade retornados com sucesso.',
+      dados,
     };
   }
 

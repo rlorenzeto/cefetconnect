@@ -78,13 +78,10 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
       setIsSubmitting(true);
       setApiError("");
 
-      const response = await loginUser({
+      await loginUser({
         email: formData.login,
         senha: formData.senha,
       });
-
-      console.log("Resposta login:", response);
-
       navigate("/home");
     } catch (error) {
       const message = error.message || "Não foi possível entrar.";

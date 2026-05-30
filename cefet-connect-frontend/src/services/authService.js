@@ -67,7 +67,7 @@ export function logoutUser() {
 }
 
 export function verifyEmail(payload) {
-  return apiFetch(`/usuario/${payload.matricula}/verificar-email`, {
+  return apiFetch(`/usuario/${payload.idUsuario}/verificar-email`, {
     method: "POST",
     body: JSON.stringify({
       codigo: payload.codigo,
@@ -76,30 +76,30 @@ export function verifyEmail(payload) {
 }
 
 export function resendEmailVerificationCode(payload) {
-  return apiFetch(`/usuario/${payload.matricula}/reenviar-codigo`, {
+  return apiFetch(`/usuario/${payload.idUsuario}/reenviar-codigo`, {
     method: "POST",
   });
 }
 
-export function getUserProfile(matricula) {
-  return apiFetch(`/usuario/${matricula}`);
+export function getUserProfile(idUsuario) {
+  return apiFetch(`/usuario/${idUsuario}`);
 }
 
-export function updateUserProfile(matricula, payload) {
+export function updateUserProfile(idUsuario, payload) {
   const formData = new FormData();
 
   if (payload.nomeUsuario) formData.append("nomeUsuario", payload.nomeUsuario);
   if (payload.biografia !== undefined) formData.append("biografia", payload.biografia);
   if (payload.fotoUrl) formData.append("fotoUrl", payload.fotoUrl);
 
-  return apiFetch(`/usuario/${matricula}`, {
+  return apiFetch(`/usuario/${idUsuario}`, {
     method: "PATCH",
     body: formData,
   });
 }
 
-export function changeUserPassword(matricula, payload) {
-  return apiFetch(`/usuario/${matricula}/alterar-senha`, {
+export function changeUserPassword(idUsuario, payload) {
+  return apiFetch(`/usuario/${idUsuario}/alterar-senha`, {
     method: "PATCH",
     body: JSON.stringify({
       senhaAtual: payload.senhaAtual,
@@ -108,8 +108,8 @@ export function changeUserPassword(matricula, payload) {
   });
 }
 
-export function changeUserEmail(matricula, payload) {
-  return apiFetch(`/usuario/${matricula}/alterar-email`, {
+export function changeUserEmail(idUsuario, payload) {
+  return apiFetch(`/usuario/${idUsuario}/alterar-email`, {
     method: "PATCH",
     body: JSON.stringify({
       senha: payload.senha,
@@ -118,8 +118,8 @@ export function changeUserEmail(matricula, payload) {
   });
 }
 
-export function deleteUserAccount(matricula) {
-  return apiFetch(`/usuario/${matricula}`, {
+export function deleteUserAccount(idUsuario) {
+  return apiFetch(`/usuario/${idUsuario}`, {
     method: "DELETE",
   });
 }

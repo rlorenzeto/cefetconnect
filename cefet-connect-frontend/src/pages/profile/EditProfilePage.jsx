@@ -53,7 +53,7 @@ export default function EditProfilePage() {
   const [isPasswordCardOpen, setIsPasswordCardOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const matricula = savedUser?.matricula || user?.matricula;
+  const idUsuario = savedUser?.idUsuario || user?.idUsuario;
 
   const currentPhotoUrl = useMemo(() => {
     if (photoPreview) return photoPreview;
@@ -62,13 +62,13 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     async function loadProfile() {
-      if (!matricula) {
+      if (!idUsuario) {
         navigate("/login");
         return;
       }
 
       try {
-        const response = await getUserProfile(matricula);
+        const response = await getUserProfile(idUsuario);
         const profile = response?.dados || response;
 
         setUser(profile);
@@ -88,7 +88,7 @@ export default function EditProfilePage() {
     }
 
     loadProfile();
-  }, [matricula, navigate]);
+  }, [idUsuario, navigate]);
 
   function handleProfileChange(event) {
     const { name, value } = event.target;
@@ -149,7 +149,7 @@ export default function EditProfilePage() {
       setProfileError("");
       setProfileMessage("");
 
-      const response = await updateUserProfile(matricula, {
+      const response = await updateUserProfile(idUsuario, {
         nomeUsuario: profileForm.nomeUsuario,
         biografia: profileForm.biografia,
         fotoUrl: photoFile,
@@ -160,7 +160,8 @@ export default function EditProfilePage() {
       const normalizedUser = {
         ...user,
         ...updatedProfile,
-        matricula: updatedProfile?.matricula || user?.matricula || matricula,
+        idUsuario: updatedProfile?.idUsuario || user?.idUsuario || idUsuario,
+        matricula: updatedProfile?.matricula || user?.matricula,
       };
 
       setUser(normalizedUser);
@@ -192,14 +193,14 @@ async function handleSaveEmail(event) {
         setEmailError("");
         setEmailMessage("");
 
-        await changeUserEmail(matricula, {
+        await changeUserEmail(idUsuario, {
         novoEmail: emailForm.novoEmail,
         senha: emailForm.senha,
         });
 
         const pendingVerification = {
-        matricula,
-        email: emailForm.novoEmail,
+          idUsuario,
+          email: emailForm.novoEmail,
         };
 
         localStorage.setItem(
@@ -280,7 +281,7 @@ async function handleSaveEmail(event) {
       setIsSavingPassword(true);
       setPasswordError("");
 
-      await changeUserPassword(matricula, {
+      await changeUserPassword(idUsuario, {
         senhaAtual: passwordForm.senhaAtual,
         novaSenha,
       });
@@ -303,7 +304,7 @@ async function handleSaveEmail(event) {
     try {
       setIsDeleting(true);
 
-      await deleteUserAccount(matricula);
+      await deleteUserAccount(idUsuario);
 
       logoutUser();
       navigate("/login");

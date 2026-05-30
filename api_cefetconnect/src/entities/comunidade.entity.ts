@@ -3,9 +3,9 @@ import { Post } from './post.entity';
 import { Evento } from './evento.entity';
 import { Usuario } from './usuario.entity.js';
 
-@Entity('Comunidade')
+@Entity('comunidade')
 export class Comunidade {
-  @PrimaryGeneratedColumn('uuid') 
+  @PrimaryGeneratedColumn('uuid')
   idComunidade!: string;
 
   @Column({ type: 'varchar', length: 255 })

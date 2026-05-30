@@ -2,6 +2,7 @@ import { BackIcon } from "../icons/AppIcons";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileSidebar from "./ProfileSidebar";
 import PostCard from "../feed/PostCard";
+import ProfileCommunities from "./ProfileCommunities";
 
 export default function DesktopProfile({
   user,
@@ -14,6 +15,10 @@ export default function DesktopProfile({
   onPostDeleted,
   onPostUpdated,
   onGoBack,
+  communities = [],
+  showAllCommunities = false,
+  onToggleCommunities,
+  onOpenCommunity,
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
@@ -70,7 +75,9 @@ export default function DesktopProfile({
                   </div>
 
                   <div className="rounded-2xl bg-[#f1f1f1] px-3 py-4">
-                    <p className="text-2xl font-bold text-[#0291db]">0</p>
+                    <p className="text-2xl font-bold text-[#0291db]">
+                      {communities.length}
+                    </p>
                     <p className="text-xs text-[#343434]">Comunidades</p>
                   </div>
                 </div>
@@ -106,6 +113,12 @@ export default function DesktopProfile({
                     Editar perfil
                   </button>
                 )}
+                <ProfileCommunities
+                  communities={communities}
+                  showAll={showAllCommunities}
+                  onToggle={onToggleCommunities}
+                  onOpenCommunity={onOpenCommunity}
+                />
               </div>
             </div>
             </div>

@@ -63,12 +63,13 @@ export class ComentarioService {
       .createQueryBuilder('comentario')
       .where('comentario.fk_Post_idPost = :idPost', { idPost }) // traga apenas comentários desse post específico.
       .leftJoinAndSelect('comentario.usuario', 'usuario') // junte as informações do usuário que fez o comentário
-      .select([ // me entrega apenas esses campos
+      .select([
         'comentario.idComentario',
         'comentario.texto',
         'comentario.dataHora',
         'usuario.idUsuario',
         'usuario.nomeUsuario',
+        'usuario.fotoUrl',
       ])
       .orderBy('comentario.dataHora', 'ASC') // ordene os comentários pela data de criação, do mais antigo ao mais novo.
       .getMany();
@@ -83,7 +84,7 @@ export class ComentarioService {
         idComentario: true,
         texto: true,
         dataHora: true,
-        usuario: { idUsuario: true, nomeUsuario: true },
+        usuario: { idUsuario: true, nomeUsuario: true, fotoUrl: true },
         post: { idPost: true }, // entra apenas o ID do post
       },
     });
@@ -192,15 +193,31 @@ export class ComentarioService {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario },
     });
+
     if (!comentario) {
       throw new NotFoundException(ErrorMessages.EUSR00020.mensagem);
     }
 
-    const [row]: [{ total: string }] = await this.dataSource.query(
-      'SELECT COUNT(*) AS total FROM likeComentario WHERE comentarioIdComentario = ?',
+    const usuarios: {
+      idUsuario: number;
+      nomeUsuario: string;
+      fotoUrl: string | null;
+    }[] = await this.dataSource.query(
+      `SELECT 
+        u.idUsuario AS idUsuario,
+        u.nomeUsuario AS nomeUsuario,
+        u.fotoUrl AS fotoUrl
+      FROM likeComentario lc
+      INNER JOIN Usuario u ON u.idUsuario = lc.usuarioIdUsuario
+      WHERE lc.comentarioIdComentario = ?
+      ORDER BY u.nomeUsuario ASC`,
       [idComentario],
     );
 
-    return { idComentario, totalCurtidas: parseInt(row.total, 10) };
+    return {
+      idComentario,
+      totalCurtidas: usuarios.length,
+      usuarios,
+    };
   }
 }

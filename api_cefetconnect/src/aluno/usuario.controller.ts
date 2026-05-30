@@ -104,7 +104,16 @@ export class UsuarioController {
     const dados = await this.usuarioService.buscarPorNome(nome ?? '');
     return { dados };
   }
+  @Get('matricula/:matricula')
+  @Public()
+  async buscarPorMatricula(@Param('matricula') matricula: string) {
+    const usuario = await this.usuarioService.buscarPorMatricula(matricula);
 
+    return {
+      mensagem: 'Usuário encontrado com sucesso.',
+      dados: usuario,
+    };
+  }
   @Get(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Buscar usuário por id', description: 'Retorna os dados de um usuário pelo id. Requer autenticação.' })

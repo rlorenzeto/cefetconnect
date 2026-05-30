@@ -9,7 +9,7 @@ import EmailVerificationIcon from "./EmailVerificationIcon";
 export default function MobileConfirmEmailModal({
   isOpen,
   onClose,
-  matricula,
+  idUsuario,
   email,
 }) {
   const navigate = useNavigate();
@@ -123,7 +123,7 @@ export default function MobileConfirmEmailModal({
       return;
     }
 
-    if (!matricula) {
+    if (!idUsuario) {
       setApiError("Não foi possível identificar o cadastro para confirmar.");
       return;
     }
@@ -132,7 +132,7 @@ export default function MobileConfirmEmailModal({
       setIsSubmitting(true);
 
       const response = await verifyEmail({
-        matricula,
+        idUsuario,
         codigo: codigoCompleto,
       });
 
@@ -153,7 +153,7 @@ export default function MobileConfirmEmailModal({
   async function handleResendCode() {
     clearMessages();
 
-    if (!matricula) {
+    if (!idUsuario) {
       setApiError("Não foi possível identificar o cadastro para reenviar o código.");
       return;
     }
@@ -161,7 +161,7 @@ export default function MobileConfirmEmailModal({
     try {
       setIsResending(true);
 
-      const response = await resendEmailVerificationCode({ matricula });
+      const response = await resendEmailVerificationCode({ idUsuario });
 
       setResendMessage(response?.mensagem || "Novo código enviado para o seu e-mail.");
       setCodigo(["", "", "", "", "", ""]);

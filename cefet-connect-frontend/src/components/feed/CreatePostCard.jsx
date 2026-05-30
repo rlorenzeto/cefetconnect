@@ -1,20 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import ProfileAvatar from "../profile/ProfileAvatar";
 import { ImageIcon } from "../icons/AppIcons";
+import CommunitySelectorModal from "../community/CommunitySelectorModal";
 
 export default function CreatePostCard({
   user,
   userImageUrl,
   onCreatePost,
   isCreating,
+  communities = [],
+  fixedCommunity = null,
 }) {
   const fileInputRef = useRef(null);
 
   const [conteudo, setConteudo] = useState("");
   const [fotos, setFotos] = useState([]);
-  const [destino, setDestino] = useState("feed");
+  const [destino, setDestino] = useState(() =>
+    fixedCommunity ? "comunidade" : "feed"
+  );
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
   const [error, setError] = useState("");
+  const [selectedCommunity, setSelectedCommunity] = useState(() =>
+    fixedCommunity || null
+  );
+  const [isCommunityModalOpen, setIsCommunityModalOpen] = useState(false);
 
   const hasContent = conteudo.trim().length > 0 || fotos.length > 0;
 
@@ -85,8 +94,33 @@ export default function CreatePostCard({
   }
 
   function handleSelectDestino(value) {
-    setDestino(value);
     setIsDestinationOpen(false);
+
+    if (fixedCommunity) {
+      setDestino("comunidade");
+      setSelectedCommunity(fixedCommunity);
+      return;
+    }
+
+    if (value === "feed") {
+      setDestino("feed");
+      setSelectedCommunity(null);
+      return;
+    }
+
+    if (communities.length === 0) {
+      setError("Você precisa entrar em uma comunidade antes de postar nela.");
+      return;
+    }
+
+    setIsCommunityModalOpen(true);
+  }
+
+  function handleSelectCommunity(community) {
+    setDestino("comunidade");
+    setSelectedCommunity(community);
+    setIsCommunityModalOpen(false);
+    setError("");
   }
 
   async function handleSubmit(event) {
@@ -96,11 +130,17 @@ export default function CreatePostCard({
       setError("Escreva algo ou adicione pelo menos uma imagem.");
       return;
     }
+    if (destino === "comunidade" && !selectedCommunity?.idComunidade) {
+      setError("Escolha uma comunidade para publicar.");
+      setIsCommunityModalOpen(true);
+      return;
+    }
 
     await onCreatePost({
       conteudo: conteudo.trim(),
       fotos: fotos.map((foto) => foto.file),
-      destino,
+      idComunidade:
+        destino === "comunidade" ? selectedCommunity?.idComunidade : undefined,
     });
 
     fotos.forEach((foto) => {
@@ -111,7 +151,8 @@ export default function CreatePostCard({
 
     setConteudo("");
     setFotos([]);
-    setDestino("feed");
+    setDestino(fixedCommunity ? "comunidade" : "feed");
+    setSelectedCommunity(fixedCommunity || null);
     setIsDestinationOpen(false);
     setError("");
 
@@ -139,10 +180,17 @@ export default function CreatePostCard({
               <div className="relative mt-1 inline-block">
                 <button
                   type="button"
-                  onClick={() => setIsDestinationOpen((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#e5e7eb] px-2.5 py-0.5 text-xs font-semibold text-[#343434] transition hover:bg-[#d9dce1]"
+                  onClick={() => {
+                    if (fixedCommunity) return;
+                    setIsDestinationOpen((prev) => !prev);
+                  }}
+                  className={`inline-flex items-center gap-1.5 rounded-full bg-[#e5e7eb] px-2.5 py-0.5 text-xs font-semibold text-[#343434] transition ${
+                    fixedCommunity ? "cursor-default" : "hover:bg-[#d9dce1]"
+                  }`}
                 >
-                  {destino === "feed" ? "Feed" : "Comunidade"}
+                  {destino === "feed"
+                    ? "Feed"
+                    : selectedCommunity?.nomeComunidade || "Comunidade"}
 
                   <svg
                     viewBox="0 0 24 24"
@@ -161,7 +209,7 @@ export default function CreatePostCard({
                   </svg>
                 </button>
 
-                {isDestinationOpen && (
+                {isDestinationOpen && !fixedCommunity && (
                   <div className="absolute left-0 top-9 z-20 w-44 overflow-hidden rounded-2xl border border-[#e3e3e3] bg-white py-2 shadow-lg">
                     <button
                       type="button"
@@ -328,6 +376,13 @@ export default function CreatePostCard({
           </button>
         </div>
       </form>
+      <CommunitySelectorModal
+        isOpen={isCommunityModalOpen}
+        communities={communities}
+        selectedCommunityId={selectedCommunity?.idComunidade}
+        onSelect={handleSelectCommunity}
+        onClose={() => setIsCommunityModalOpen(false)}
+      />
     </section>
   );
 }

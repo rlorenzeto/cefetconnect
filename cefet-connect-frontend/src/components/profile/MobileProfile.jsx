@@ -2,6 +2,7 @@ import BrandLogo from "../auth/BrandLogo";
 import { BackIcon } from "../icons/AppIcons";
 import ProfileAvatar from "./ProfileAvatar";
 import PostCard from "../feed/PostCard";
+import ProfileCommunities from "./ProfileCommunities";
 
 export default function MobileProfile({
   user,
@@ -14,6 +15,10 @@ export default function MobileProfile({
   onPostDeleted,
   onPostUpdated,
   onGoBack,
+  communities = [],
+  showAllCommunities = false,
+  onToggleCommunities,
+  onOpenCommunity,
 }) {
   return (
     <div className="min-h-screen bg-[#f1f1f1] text-[#202020] lg:hidden">
@@ -83,7 +88,9 @@ export default function MobileProfile({
             </div>
 
             <div className="rounded-2xl bg-[#f1f1f1] px-3 py-4">
-              <p className="text-2xl font-bold text-[#0291db]">0</p>
+              <p className="text-2xl font-bold text-[#0291db]">
+                {communities.length}
+              </p>
               <p className="text-xs text-[#343434]">Comunidades</p>
             </div>
           </div>
@@ -109,6 +116,12 @@ export default function MobileProfile({
               Editar perfil
             </button>
           )}
+          <ProfileCommunities
+            communities={communities}
+            showAll={showAllCommunities}
+            onToggle={onToggleCommunities}
+            onOpenCommunity={onOpenCommunity}
+          />
           <div className="mt-8 border-t border-[#eeeeee] pt-6">
             <h3 className="mb-4 text-lg font-bold text-[#202020]">
               Posts publicados

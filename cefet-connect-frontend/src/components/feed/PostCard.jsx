@@ -5,6 +5,8 @@ import LikeButton from "./LikeButton";
 import PostImages from "./PostImages";
 import CommentSection from "./CommentSection";
 import EditPostModal from "./EditPostModal";
+import PostLikesModal from "./PostLikesModal";
+import EventFormModal from "../event/EventFormModal";
 import {
   addPostPhotos,
   deletePost,
@@ -17,8 +19,15 @@ import {
 } from "../../services/postService";
 import { getProfileImageUrl } from "../../services/authService";
 import { EditIcon, TrashIcon } from "../icons/AppIcons";
+import EventPostContent from "./EventPostContent";
+import {
+  deleteEvento,
+  participarEvento,
+  sairEvento,
+  updateEvento,
+} from "../../services/eventoService";
 
-function PostActionMenu({ onEdit, onDelete }) {
+function PostActionMenu({ onEdit, onDelete, canEdit = true }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -49,17 +58,19 @@ function PostActionMenu({ onEdit, onDelete }) {
 
       {isOpen && (
         <div className="absolute right-0 top-10 z-40 w-40 overflow-hidden rounded-2xl border border-[#e3e3e3] bg-white py-2 shadow-lg">
-          <button
-            type="button"
-            onClick={() => {
-              setIsOpen(false);
-              onEdit();
-            }}
-            className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-[#343434] transition hover:bg-[#f7f7f7]"
-          >
-            <EditIcon className="h-4 w-4" />
-            Editar
-          </button>
+          {canEdit && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsOpen(false);
+                onEdit();
+              }}
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-semibold text-[#343434] transition hover:bg-[#f7f7f7]"
+            >
+              <EditIcon className="h-4 w-4" />
+              Editar
+            </button>
+          )}
 
           <button
             type="button"
@@ -88,34 +99,64 @@ export default function PostCard({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [conteudo, setConteudo] = useState(post.conteudo || "");
   const [showComments, setShowComments] = useState(false);
+  const [commentTotal, setCommentTotal] = useState(
+    Number(post?.totalComentarios ?? post?.comentarios?.length ?? 0)
+  );
   const [likeTotal, setLikeTotal] = useState(0);
   const [liked, setLiked] = useState(false);
+  const [likedUsers, setLikedUsers] = useState([]);
+  const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [isParticipatingEvent, setIsParticipatingEvent] = useState(false);
+  const [isEventActionLoading, setIsEventActionLoading] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isEventEditModalOpen, setIsEventEditModalOpen] = useState(false);
+  const [isSavingEventEdit, setIsSavingEventEdit] = useState(false);
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
+  const event = post?.evento || null;
+  const isEventPost = Boolean(event?.idEvento);
+  const isEventFinished = isEventPost && isPastEvent(event?.dataEvento);
+
   function handleGoToUserProfile() {
-    const matriculaAutor = post?.usuario?.matricula;
+    const idAutor = post?.usuario?.idUsuario;
 
-    if (!matriculaAutor) return;
+    if (!idAutor) return;
 
-    navigate(`/profile/${matriculaAutor}`);
+    navigate(`/profile/${idAutor}`);
   }
 
-  const postOwnerMatricula = String(post?.usuario?.matricula || "");
-  const currentUserMatricula = String(currentUser?.matricula || "");
+  const postOwnerId = String(post?.usuario?.idUsuario || "");
+  const currentUserId = String(currentUser?.idUsuario || "");
 
   const isOwner =
-    postOwnerMatricula &&
-    currentUserMatricula &&
-    postOwnerMatricula === currentUserMatricula;
+    postOwnerId &&
+    currentUserId &&
+    postOwnerId === currentUserId;
+  
+  const communityOwnerId = String(
+    post?.comunidade?.criador?.idUsuario ||
+      post?.comunidade?.idCriador ||
+      ""
+  );
+
+  const isCommunityAdmin =
+    communityOwnerId &&
+    currentUserId &&
+    communityOwnerId === currentUserId;
+
+  const canManagePost = isOwner || isCommunityAdmin;
 
   useEffect(() => {
     setConteudo(post.conteudo || "");
   }, [post.conteudo]);
+
+  useEffect(() => {
+    setCommentTotal(Number(post?.totalComentarios ?? post?.comentarios?.length ?? 0));
+  }, [post?.totalComentarios, post?.comentarios?.length]);
 
   useEffect(() => {
     async function loadLikes() {
@@ -123,11 +164,15 @@ export default function PostCard({
         const response = await getPostLikes(post.idPost);
         const dados = response?.dados || response;
 
-        setLikeTotal(dados?.total || 0);
+        const usuarios = Array.isArray(dados?.usuarios) ? dados.usuarios : [];
 
-        const usuarios = dados?.usuarios || [];
+        setLikeTotal(Number(dados?.total ?? usuarios.length ?? 0));
+        setLikedUsers(usuarios);
+
         const userLiked = usuarios.some(
-          (usuario) => usuario.matricula === currentUser?.matricula
+          (usuario) =>
+            String(usuario?.idUsuario || "") ===
+            String(currentUser?.idUsuario || "")
         );
 
         setLiked(userLiked);
@@ -136,29 +181,89 @@ export default function PostCard({
       }
     }
 
-    if (post?.idPost) {
+    if (post?.idPost && !isEventPost) {
       loadLikes();
     }
-  }, [post?.idPost, currentUser?.matricula]);
+ }, [post?.idPost, currentUser?.idUsuario, isEventPost]);
+
+  useEffect(() => {
+    if (!isEventPost || !event) return;
+
+    const participantes = Array.isArray(event?.participantes)
+      ? event.participantes
+      : [];
+
+    const alreadyParticipating = participantes.some(
+      (usuario) =>
+        String(usuario?.idUsuario || "") ===
+        String(currentUser?.idUsuario || "")
+    );
+
+    setIsParticipatingEvent(Boolean(event?.isParticipando || alreadyParticipating));
+  }, [isEventPost, event, currentUser?.idUsuario]);
+
+  function normalizeDate(date) {
+    if (!date) return null;
+
+    const value = String(date);
+
+    const hasTimezone =
+      value.endsWith("Z") || /[+-]\d{2}:\d{2}$/.test(value);
+
+    const normalizedValue = hasTimezone ? value : `${value}Z`;
+
+    return new Date(normalizedValue);
+  }
 
   function formatDate(date) {
-    if (!date) return "";
+    const parsedDate = normalizeDate(date);
+
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return "";
 
     return new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    }).format(new Date(date));
+    }).format(parsedDate);
+  }
+
+  function isPastEvent(date) {
+    const parsedDate = normalizeDate(date);
+
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) return false;
+
+    return parsedDate < new Date();
   }
 
   function getPostLocationLabel() {
-    if (post?.comunidade?.nome) {
-      return post.comunidade.nome;
+    if (isEventPost) {
+      const eventCommunityName =
+        event?.comunidade?.nomeComunidade ||
+        post?.comunidade?.nomeComunidade;
+
+      return eventCommunityName
+        ? `Evento em ${eventCommunityName}`
+        : "Evento público";
     }
 
-    if (post?.fk_Comunidade_idComunidade || post?.comunidade) {
+    const communityName =
+      post?.comunidade?.nomeComunidade ||
+      post?.comunidade?.nome ||
+      post?.nomeComunidade;
+
+    if (communityName) {
+      return communityName;
+    }
+
+    const communityId =
+      post?.fk_Comunidade_idComunidade ||
+      post?.idComunidade ||
+      post?.comunidade?.idComunidade;
+
+    if (communityId) {
       return "Comunidade";
     }
 
@@ -171,12 +276,41 @@ export default function PostCard({
 
       if (liked) {
         await unlikePost(post.idPost);
+
         setLiked(false);
         setLikeTotal((prev) => Math.max(prev - 1, 0));
+
+        setLikedUsers((prev) =>
+          prev.filter(
+            (usuario) =>
+              String(usuario?.idUsuario || "") !==
+              String(currentUser?.idUsuario || "")
+          )
+        );
       } else {
         await likePost(post.idPost);
+
         setLiked(true);
         setLikeTotal((prev) => prev + 1);
+
+        setLikedUsers((prev) => {
+          const alreadyInList = prev.some(
+            (usuario) =>
+              String(usuario?.idUsuario || "") ===
+              String(currentUser?.idUsuario || "")
+          );
+
+          if (alreadyInList) return prev;
+
+          return [
+            ...prev,
+            {
+              idUsuario: currentUser?.idUsuario,
+              nomeUsuario: currentUser?.nomeUsuario,
+              fotoUrl: currentUser?.fotoUrl,
+            },
+          ];
+        });
       }
     } catch (error) {
       if (error.message?.toLowerCase().includes("já curtiu")) {
@@ -189,7 +323,35 @@ export default function PostCard({
     }
   }
 
+  async function handleToggleEventParticipation() {
+    if (!event?.idEvento) return;
+
+    if (isEventFinished) {
+      setError("Este evento já foi finalizado.");
+      return;
+    }
+
+    try {
+      setIsEventActionLoading(true);
+      setError("");
+
+      if (isParticipatingEvent) {
+        await sairEvento(event.idEvento);
+        setIsParticipatingEvent(false);
+      } else {
+        await participarEvento(event.idEvento);
+        setIsParticipatingEvent(true);
+      }
+    } catch (error) {
+      setError(error.message || "Não foi possível atualizar sua participação.");
+    } finally {
+      setIsEventActionLoading(false);
+    }
+  }
+
   async function handleDoubleClick() {
+    if (isEventPost) return;
+
     if (!liked) {
       await handleToggleLike();
     }
@@ -233,26 +395,75 @@ export default function PostCard({
       setIsSavingEdit(false);
     }
   }
+
+  async function handleSaveEventEdit(payload) {
+    if (!event?.idEvento) return;
+
+    try {
+      setIsSavingEventEdit(true);
+      setError("");
+
+      const response = await updateEvento(event.idEvento, payload);
+      const updatedEvent = response?.dados || response;
+
+      onPostUpdated({
+        ...post,
+        evento: {
+          ...event,
+          ...updatedEvent,
+        },
+        conteudo: updatedEvent?.descricaoEvento || post.conteudo,
+      });
+
+      setIsEventEditModalOpen(false);
+    } catch (error) {
+      setError(error.message || "Não foi possível atualizar o evento.");
+    } finally {
+      setIsSavingEventEdit(false);
+    }
+  }
+
   async function handleDelete() {
     try {
       setIsDeleting(true);
       setError("");
 
-      await deletePost(post.idPost);
+      if (isEventPost && event?.idEvento) {
+        await deleteEvento(event.idEvento);
+      } else {
+        await deletePost(post.idPost);
+      }
+
       onPostDeleted(post.idPost);
       setIsDeleteModalOpen(false);
     } catch (error) {
-      setError(error.message || "Não foi possível excluir o post.");
+      setError(
+        error.message ||
+          (isEventPost
+            ? "Não foi possível excluir o evento."
+            : "Não foi possível excluir o post.")
+      );
     } finally {
       setIsDeleting(false);
     }
+  }
+
+  function getCommentButtonLabel() {
+    const totalText =
+      commentTotal === 1 ? "1 comentário" : `${commentTotal} comentários`;
+
+    return showComments
+      ? `Ocultar comentários (${totalText})`
+      : `Mostrar comentários (${totalText})`;
   }
 
   return (
     <>
       <article
         onDoubleClick={handleDoubleClick}
-        className="mx-auto w-full max-w-[680px] rounded-[22px] bg-white p-4 shadow-sm"
+        className={`mx-auto w-full max-w-[680px] rounded-[24px] bg-white p-4 shadow-sm ${
+          isEventPost ? "border border-[#d8f0e4]" : ""
+        }`}
       >
         <header className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -288,44 +499,86 @@ export default function PostCard({
             </div>
           </div>
 
-          {isOwner && (
+          {canManagePost && (
             <PostActionMenu
-              onEdit={() => setIsEditModalOpen(true)}
+              onEdit={
+                isOwner
+                  ? () => {
+                      if (isEventPost) {
+                        setIsEventEditModalOpen(true);
+                      } else {
+                        setIsEditModalOpen(true);
+                      }
+                    }
+                  : undefined
+              }
               onDelete={() => setIsDeleteModalOpen(true)}
+              canEdit={isOwner}
             />
           )}
         </header>
-
         <div className="mt-4">
-          {post.conteudo && (
-            <p className="whitespace-pre-line text-sm leading-relaxed text-[#343434]">
-              {post.conteudo}
-            </p>
+          {isEventPost ? (
+            <EventPostContent
+              event={event}
+              formatDate={formatDate}
+            />
+          ) : (
+            <>
+              {post.conteudo && (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-[#343434]">
+                  {post.conteudo}
+                </p>
+              )}
+
+              <PostImages
+                fotos={post.fotosPost || []}
+                post={post}
+                currentUser={currentUser}
+              />
+            </>
           )}
-          <PostImages
-            fotos={post.fotosPost || []}
-            post={post}
-            currentUser={currentUser}
-          />
         </div>
 
         {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
 
         <footer className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            <LikeButton
-              liked={liked}
-              total={likeTotal}
-              onClick={handleToggleLike}
-              disabled={isLikeLoading}
-            />
+            {isEventPost ? (
+              <button
+                type="button"
+                onClick={handleToggleEventParticipation}
+                disabled={isEventActionLoading || isEventFinished}
+                className={`rounded-full px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                  isEventFinished
+                    ? "bg-[#c7eadc] text-[#089464]"
+                    : isParticipatingEvent
+                      ? "border border-red-200 text-red-500 hover:bg-red-50"
+                      : "bg-[#089464] text-white hover:bg-[#067f57]"
+                }`}
+              >
+                {isEventFinished
+                  ? "Evento finalizado"
+                  : isParticipatingEvent
+                    ? "Sair do evento"
+                    : "Participar"}
+              </button>            
+            ) : (
+              <LikeButton
+                liked={liked}
+                total={likeTotal}
+                onClick={handleToggleLike}
+                onTotalClick={() => setIsLikesModalOpen(true)}
+                disabled={isLikeLoading}
+              />
+            )}
 
             <button
               type="button"
               onClick={() => setShowComments((prev) => !prev)}
               className="rounded-full bg-[#f1f1f1] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-[#e5e5e5]"
             >
-              {showComments ? "Ocultar comentários" : "Mostrar comentários"}
+              {getCommentButtonLabel()}
             </button>
             
           </div>
@@ -335,7 +588,11 @@ export default function PostCard({
         </footer>
 
         {showComments && (
-          <CommentSection postId={post.idPost} currentUser={currentUser} />
+          <CommentSection
+            postId={post.idPost}
+            currentUser={currentUser}
+            onCountChange={setCommentTotal}
+          />
         )}
       </article>
 
@@ -350,6 +607,18 @@ export default function PostCard({
         />
       )}
 
+      {isEventEditModalOpen && (
+        <EventFormModal
+          key={event?.idEvento}
+          isOpen={isEventEditModalOpen}
+          event={event}
+          communities={[]}
+          isSaving={isSavingEventEdit}
+          onClose={() => setIsEventEditModalOpen(false)}
+          onSubmit={handleSaveEventEdit}
+        />
+      )}
+
       {isDeleteModalOpen && (
         <div
           className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/55 px-4"
@@ -357,12 +626,14 @@ export default function PostCard({
           aria-modal="true"
         >
           <div className="w-full max-w-[420px] rounded-[24px] bg-white p-6 shadow-xl">
-            <h2 className="text-lg font-bold text-[#202020]">
-              Excluir publicação?
+           <h2 className="text-lg font-bold text-[#202020]">
+              {isEventPost ? "Excluir evento?" : "Excluir publicação?"}
             </h2>
 
             <p className="mt-2 text-sm leading-relaxed text-[#666]">
-              Essa ação não poderá ser desfeita. O post será removido do feed.
+              {isEventPost
+                ? "Essa ação não poderá ser desfeita. O evento será removido do feed e da página de eventos."
+                : "Essa ação não poderá ser desfeita. O post será removido."}
             </p>
 
             <div className="mt-6 flex justify-end gap-3">
@@ -381,11 +652,18 @@ export default function PostCard({
                 disabled={isDeleting}
                 className="rounded-full bg-red-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
               >
-                {isDeleting ? "Excluindo..." : "Excluir"}
+                {isDeleting ? "Excluindo..." : isEventPost ? "Excluir evento" : "Excluir"}
               </button>
             </div>
           </div>
         </div>
+      )}
+      {!isEventPost && (
+        <PostLikesModal
+          isOpen={isLikesModalOpen}
+          onClose={() => setIsLikesModalOpen(false)}
+          users={likedUsers}
+        />
       )}
     </>
   );

@@ -5,9 +5,10 @@ import { EventoController } from './evento.controller';
 import { Evento } from '../entities/evento.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { Comunidade } from '../entities/comunidade.entity';
+import { Post } from '../entities/post.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Evento, Usuario, Comunidade])],
+  imports: [TypeOrmModule.forFeature([Evento, Usuario, Comunidade, Post])],
   controllers: [EventoController],
   providers: [EventoService],
 })

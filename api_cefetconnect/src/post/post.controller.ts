@@ -40,8 +40,9 @@ export class PostController {
   @ApiOperation({ summary: 'Listar todos os posts', description: 'Retorna todos os posts com suas fotos. Requer autenticação.' })
   @ApiResponse({ status: 200, description: '[SUSR00015] Posts retornados com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
-  async findAll() { 
-    const dados = await this.postService.findAll(); 
+  async findAll(@Request() req: any) { 
+    const dados = await this.postService.findAll(req.user.idUsuario); 
+
     return {
       codigo: 'SUSR00015',
       mensagem: SuccessMessages.SUSR00015.mensagem,

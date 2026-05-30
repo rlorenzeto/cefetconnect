@@ -25,7 +25,7 @@ export class PinService {
   ) {}
 
   private toDto(pp: PossuiPin) {
-    return { id: pp.id, idPin: pp.pin.idPin, nomePin: pp.pin.nomePin, origem: pp.origem };
+    return { idPin: pp.pin.idPin, nomePin: pp.pin.nomePin, origem: pp.origem };
   }
 
   private async findOrCreatePin(nomePin: string): Promise<Pin> {

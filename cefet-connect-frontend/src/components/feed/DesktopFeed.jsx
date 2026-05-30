@@ -2,10 +2,15 @@ import ProfileSidebar from "../profile/ProfileSidebar";
 import CreatePostCard from "./CreatePostCard";
 import PostCard from "./PostCard";
 
+const GRADMENT_URL = "https://gradment.com.br"; //MUDAR COM A UTL DO GRADMENT, VER COM OS MENINOS
+
+
 export default function DesktopFeed({
   user,
   userImageUrl,
   posts,
+  communities = [],
+  events = [],
   isLoading,
   error,
   isCreating,
@@ -13,7 +18,22 @@ export default function DesktopFeed({
   onPostDeleted,
   onPostUpdated,
   onLogout,
+  onOpenEvents,
+  onOpenEventDetails,
 }) {
+  
+  function formatEventDate(date) {
+    if (!date) return "";
+
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(date));
+  }
+
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
       <div className="flex min-h-screen w-full bg-[#f1f1f1]">
@@ -48,6 +68,7 @@ export default function DesktopFeed({
                   userImageUrl={userImageUrl}
                   onCreatePost={onCreatePost}
                   isCreating={isCreating}
+                  communities={communities}
                 />
 
                 {error && (
@@ -81,39 +102,119 @@ export default function DesktopFeed({
             </section>
 
             <aside className="space-y-5">
+              <section className="overflow-hidden rounded-[8px] bg-white shadow-sm">
+                <div className="flex h-[54px] items-center justify-center border-b border-[#d9d9d9]">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src="/images/gradment-logo.svg"
+                      alt="GradMent"
+                      className="h-7 w-auto object-contain"
+                    />
+
+                    <span className="text-[22px] font-extrabold text-[#39b02f]">
+                      GradMent
+                    </span>
+                  </div>
+                </div>
+
+                <div className="px-5 py-4 text-center">
+                  <h2 className="text-[21px] font-extrabold leading-tight text-[#39b02f]">
+                    A sua jornada acadêmica começa Aqui
+                  </h2>
+
+                  <button
+                    type="button"
+                    onClick={() => window.open(GRADMENT_URL, "_blank", "noreferrer")}
+                    className="mt-4 h-10 rounded-[9px] bg-[#3dae21] px-5 text-[16px] font-extrabold text-white transition hover:bg-[#319219]"
+                  >
+                    conheça !
+                  </button>
+                </div>
+              </section>
               <section className="rounded-[28px] bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-bold text-[#202020]">
-                  Próximos eventos
-                </h2>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-bold text-[#202020]">
+                    Próximos eventos
+                  </h2>
+
+                  <button
+                    type="button"
+                    onClick={onOpenEvents}
+                    className="text-xs font-bold text-[#089464] hover:underline"
+                  >
+                    Ver todos
+                  </button>
+                </div>
 
                 <div className="mt-4 space-y-3 text-sm text-[#343434]">
-                  <p className="rounded-2xl bg-[#f1f1f1] p-3">
-                    Semana acadêmica de Computação
-                  </p>
+                  {events.slice(0, 3).map((event) => (
+                    <button
+                      key={event.idEvento}
+                      type="button"
+                      onClick={() => onOpenEventDetails(event)}
+                      className="block w-full rounded-2xl bg-[#f1f1f1] p-3 text-left transition hover:bg-[#e8f7ef]"
+                    >
+                      <p className="truncate font-semibold text-[#202020]">
+                        {event.titulo}
+                      </p>
+                      <p className="mt-1 truncate text-xs font-semibold text-[#089464]">
+                        {formatEventDate(event.dataEvento)}
+                      </p>
 
-                  <p className="rounded-2xl bg-[#f1f1f1] p-3">
-                    Workshop de Currículo e LinkedIn
-                  </p>
+                      <p className="mt-1 truncate text-xs text-[#777]">
+                        {event?.comunidade?.nomeComunidade || "Evento público"}
+                      </p>
+                    </button>
+                  ))}
+
+                  {events.length === 0 && (
+                    <p className="rounded-2xl bg-[#f1f1f1] p-3 text-sm text-[#777]">
+                      Nenhum evento disponível.
+                    </p>
+                  )}
                 </div>
               </section>
 
               <section className="rounded-[28px] bg-white p-5 shadow-sm">
-                <h2 className="text-lg font-bold text-[#202020]">
-                  Comunidades em destaque
-                </h2>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-bold text-[#202020]">
+                    Minhas comunidades
+                  </h2>
+
+                  <button
+                    type="button"
+                    onClick={() => window.location.assign("/comunidades")}
+                    className="text-xs font-bold text-[#089464] hover:underline"
+                  >
+                    Ver todas
+                  </button>
+                </div>
 
                 <div className="mt-4 space-y-3 text-sm text-[#343434]">
-                  <p className="rounded-2xl bg-[#f1f1f1] p-3">
-                    Programação
-                  </p>
+                  {communities.slice(0, 3).map((community) => (
+                    <button
+                      key={community.idComunidade}
+                      type="button"
+                      onClick={() =>
+                        window.location.assign(`/comunidades/${community.idComunidade}`)
+                      }
+                      className="block w-full rounded-2xl bg-[#f1f1f1] p-3 text-left transition hover:bg-[#e8f7ef]"
+                    >
+                      <p className="truncate font-semibold text-[#202020]">
+                        {community.nomeComunidade}
+                      </p>
 
-                  <p className="rounded-2xl bg-[#f1f1f1] p-3">
-                    Monitorias
-                  </p>
+                      <p className="mt-1 text-xs text-[#777]">
+                        {Number(community.totalMembros || 0)} membros
+                      </p>
+                    </button>
+                  ))}
 
-                  <p className="rounded-2xl bg-[#f1f1f1] p-3">
-                    Estágios
-                  </p>
+                  {communities.length === 0 && (
+                    <p className="rounded-2xl bg-[#f1f1f1] p-3 text-sm text-[#777]">
+                      Você ainda não participa de comunidades.
+                    </p>
+                  )}
                 </div>
               </section>
             </aside>

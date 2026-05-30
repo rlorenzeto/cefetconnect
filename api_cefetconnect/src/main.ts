@@ -29,6 +29,7 @@ async function bootstrap() {
     .setDescription('API para alunos do Cefet')
     .setVersion('1.0')
     .addTag('alunos')
+    //.addBearerAuth()
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);

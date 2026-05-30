@@ -137,7 +137,7 @@ export default function RegisterForm({ onGoToLogin }) {
       console.log("Resposta cadastro:", response);
 
       const pendingVerification = {
-        matricula: response?.dados?.matricula || formData.registration,
+        idUsuario: response?.dados?.idUsuario,
         email: response?.dados?.email || formData.email,
       };
 
