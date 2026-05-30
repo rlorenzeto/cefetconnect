@@ -58,19 +58,65 @@ export class ComunidadeService {
     return comunidadeCriada;
   }
 
-  async findAll() {
-    return await this.comunidadeRepository.find({
-      relations: ['criador'],
-      select: { 
-        idComunidade: true,
-        nomeComunidade: true,
-        descricaoComunidade: true,
-        capaComunidade: true,
-        fotoUrlComunidade: true,
-        gradmentDisciplinaId: true,
-        criador: { nomeUsuario: true },
-      },
-    });
+  async findAll(idUsuario?: number) {
+    const comunidades = await this.dataSource.query(
+      `
+      SELECT 
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+        c.gradmentDisciplinaId,
+
+        criador.idUsuario AS idCriador,
+        criador.nomeUsuario AS nomeCriador,
+
+        COUNT(DISTINCT p.usuarioIdUsuario) AS totalMembros,
+        COUNT(DISTINCT post.idPost) AS totalPosts,
+
+        CASE 
+          WHEN minhaParticipacao.usuarioIdUsuario IS NULL THEN 0
+          ELSE 1
+        END AS isMembro
+
+      FROM comunidade c
+
+      LEFT JOIN usuario criador
+        ON criador.idUsuario = c.fk_Usuario_idUsuario
+
+      LEFT JOIN participa p
+        ON p.comunidadeIdComunidade = c.idComunidade
+
+      LEFT JOIN post
+        ON post.fk_Comunidade_idComunidade = c.idComunidade
+
+      LEFT JOIN participa minhaParticipacao
+        ON minhaParticipacao.comunidadeIdComunidade = c.idComunidade
+        AND minhaParticipacao.usuarioIdUsuario = ?
+
+      GROUP BY 
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+        c.gradmentDisciplinaId,
+        criador.idUsuario,
+        criador.nomeUsuario,
+        minhaParticipacao.usuarioIdUsuario
+
+      ORDER BY c.nomeComunidade ASC
+      `,
+      [idUsuario || 0],
+    );
+
+    return comunidades.map((comunidade) => ({
+      ...comunidade,
+      isMembro: Boolean(Number(comunidade.isMembro)),
+      totalMembros: Number(comunidade.totalMembros || 0),
+      totalPosts: Number(comunidade.totalPosts || 0),
+    }));
   }
 
   async findMinhasDisciplinas(email: string) {
@@ -325,40 +371,59 @@ export class ComunidadeService {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
     }
 
-    return await this.dataSource.query(
-      ` 
+    const comunidades = await this.dataSource.query(
+      `
       SELECT 
-        c.idComunidade, 
-        c.nomeComunidade, 
-        c.descricaoComunidade, 
-        c.capaComunidade, 
-        c.fotoUrlComunidade, 
-        criador.idUsuario AS idCriador, 
-        criador.nomeUsuario AS nomeCriador, 
-        COUNT(DISTINCT p2.usuarioIdUsuario) AS totalMembros, 
-        COUNT(DISTINCT post.idPost) AS totalPosts 
-      FROM participa p 
-      INNER JOIN comunidade c 
-        ON c.idComunidade = p.comunidadeIdComunidade 
-      LEFT JOIN usuario criador 
-        ON criador.idUsuario = c.fk_Usuario_idUsuario 
-      LEFT JOIN participa p2 
-        ON p2.comunidadeIdComunidade = c.idComunidade 
-      LEFT JOIN post 
-        ON post.fk_Comunidade_idComunidade = c.idComunidade 
-      WHERE p.usuarioIdUsuario = ? 
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+        c.gradmentDisciplinaId,
+
+        criador.idUsuario AS idCriador,
+        criador.nomeUsuario AS nomeCriador,
+
+        COUNT(DISTINCT p2.usuarioIdUsuario) AS totalMembros,
+        COUNT(DISTINCT post.idPost) AS totalPosts
+
+      FROM participa p
+
+      INNER JOIN comunidade c
+        ON c.idComunidade = p.comunidadeIdComunidade
+
+      LEFT JOIN usuario criador
+        ON criador.idUsuario = c.fk_Usuario_idUsuario
+
+      LEFT JOIN participa p2
+        ON p2.comunidadeIdComunidade = c.idComunidade
+
+      LEFT JOIN post
+        ON post.fk_Comunidade_idComunidade = c.idComunidade
+
+      WHERE p.usuarioIdUsuario = ?
+
       GROUP BY 
-        c.idComunidade, 
-        c.nomeComunidade, 
-        c.descricaoComunidade, 
-        c.capaComunidade, 
-        c.fotoUrlComunidade, 
-        criador.idUsuario, 
-        criador.nomeUsuario 
-      ORDER BY c.nomeComunidade ASC 
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+        c.gradmentDisciplinaId,
+        criador.idUsuario,
+        criador.nomeUsuario
+
+      ORDER BY c.nomeComunidade ASC
       `,
       [idUsuario],
     );
+
+    return comunidades.map((comunidade) => ({
+      ...comunidade,
+      isMembro: true,
+      totalMembros: Number(comunidade.totalMembros || 0),
+      totalPosts: Number(comunidade.totalPosts || 0),
+    }));
   }
 
   async findPosts(idComunidade: string, idUsuario: number) {

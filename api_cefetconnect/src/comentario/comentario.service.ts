@@ -31,7 +31,7 @@ export class ComentarioService {
       this.postRepository.findOne({ where: { idPost } }), // Vai no banco procurar o post onde o aluno quer comentar
       this.usuarioRepository.findOne({
         where: { idUsuario },
-        select: { idUsuario: true, nomeUsuario: true },
+        select: { idUsuario: true, nomeUsuario: true, fotoUrl: true },
       }),
     ]);
 

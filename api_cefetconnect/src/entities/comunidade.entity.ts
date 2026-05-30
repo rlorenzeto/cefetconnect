@@ -23,8 +23,8 @@ export class Comunidade {
   @Column({ type: 'int', nullable: true })
   gradmentDisciplinaId?: number | null;
 
-  // FK Usuario (criador da comunidade) -> ON DELETE CASCADE
-  @ManyToOne(() => Usuario, { onDelete: 'CASCADE', nullable: true })
+  // FK Usuario (criador da comunidade) -> ON DELETE SET NULL
+  @ManyToOne(() => Usuario, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'fk_Usuario_idUsuario' })
   criador?: Usuario;
 

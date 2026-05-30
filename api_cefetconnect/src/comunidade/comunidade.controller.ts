@@ -1,4 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, Query, ParseIntPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  UseInterceptors,
+  UploadedFiles,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerComunidadeConfig } from '../uploads/multer.config';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -77,6 +90,42 @@ export class ComunidadeController {
     return {
       codigo: 'SCOM00007',
       mensagem: SuccessMessages.SCOM00007.mensagem,
+      dados,
+    };
+  }
+
+  @Get('usuario/minhas')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Listar comunidades do usuário logado',
+    description:
+      'Retorna todas as comunidades em que o usuário autenticado participa.',
+  })
+  async findMinhas(@Request() req: any) {
+    const dados = await this.comunidadeService.findByUsuario(req.user.idUsuario);
+
+    return {
+      codigo: 'SCOM00008',
+      mensagem: 'Comunidades do usuário retornadas com sucesso.',
+      dados,
+    };
+  }
+
+  @Get(':id/membros')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiParam({ name: 'id', description: 'ID da comunidade' })
+  @ApiOperation({
+    summary: 'Listar membros de uma comunidade',
+    description: 'Retorna os usuários que participam da comunidade.',
+  })
+  async findMembros(@Param('id') id: string) {
+    const dados = await this.comunidadeService.findMembros(id);
+
+    return {
+      codigo: 'SCOM00011',
+      mensagem: 'Membros da comunidade retornados com sucesso.',
       dados,
     };
   }

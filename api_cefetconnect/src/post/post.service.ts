@@ -105,54 +105,141 @@ export class PostService {
   // Parte de Leitura 
 
   // Essa função que retorna todos os posts com suas respectivas fotos e usuários, possibilitando o feed funcionar
-  async findAll() {
-    return await this.postRepository
+  async findAll(idUsuario: number) {
+    return this.postRepository
       .createQueryBuilder('post')
-      .leftJoin('post.usuario', 'usuario')
-      .leftJoin('post.fotosPost', 'foto')
+      .leftJoinAndSelect('post.usuario', 'usuario')
+      .leftJoinAndSelect('post.fotosPost', 'foto')
+      .leftJoinAndSelect('post.comunidade', 'comunidade')
+      .leftJoinAndSelect('post.evento', 'evento')
+      .leftJoinAndSelect('evento.comunidade', 'eventoComunidade')
+      .leftJoinAndSelect('evento.participantes', 'eventoParticipante')
       .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
+      .where(
+        `
+        post.fk_Comunidade_idComunidade IS NULL
+        OR EXISTS (
+          SELECT 1
+          FROM participa participaFeed
+          WHERE participaFeed.comunidadeIdComunidade = post.fk_Comunidade_idComunidade
+            AND participaFeed.usuarioIdUsuario = :idUsuario
+        )
+        `,
+        { idUsuario },
+      )
       .select([
         'post.idPost',
         'post.conteudo',
         'post.dataHoraPublicacao',
+
+        'usuario.idUsuario',
         'usuario.matricula',
         'usuario.nomeUsuario',
         'usuario.fotoUrl',
+
         'foto.idFoto',
         'foto.url',
         'foto.ordem',
         'foto.criadaEm',
+
+        'comunidade.idComunidade',
+        'comunidade.nomeComunidade',
+        'comunidade.capaComunidade',
+        'comunidade.fotoUrlComunidade',
+
+        'evento.idEvento',
+        'evento.titulo',
+        'evento.descricaoEvento',
+        'evento.localEvento',
+        'evento.status',
+        'evento.dataEvento',
+        'evento.capaEvento',
+        'evento.fotoUrlEvento',
+
+        'eventoComunidade.idComunidade',
+        'eventoComunidade.nomeComunidade',
+
+        'eventoParticipante.idUsuario',
       ])
+      .orderBy('post.dataHoraPublicacao', 'DESC')
+      .addOrderBy('foto.ordem', 'ASC')
       .getMany();
   }
 
   async findOne(id: string) {
-    const post = await this.postRepository
-      .createQueryBuilder('post')
-      .leftJoin('post.usuario', 'usuario')
-      .leftJoin('post.fotosPost', 'foto')
-      .leftJoin('post.comentarios', 'comentario')
-      .leftJoin('comentario.usuario', 'autorComentario')
-      .select([
-        'post.idPost',
-        'post.conteudo',
-        'post.dataHoraPublicacao',
-        'usuario.matricula',
-        'usuario.nomeUsuario',
-        'usuario.fotoUrl',
-        'foto.idFoto',
-        'foto.url',
-        'foto.ordem',
-        'foto.criadaEm',
-        'comentario.idComentario',
-        'comentario.texto',
-        'comentario.dataHora',
-        'autorComentario.idUsuario',
-        'autorComentario.nomeUsuario',
-        'autorComentario.fotoUrl',
-      ])
-      .where('post.idPost = :id', { id })
-      .getOne();
+    const post = await this.postRepository.findOne({
+      where: { idPost: id },
+      relations: [
+        'usuario',
+        'fotosPost',
+        'comentarios',
+        'comentarios.usuario',
+        'comunidade',
+        'comunidade.criador',
+        'evento',
+        'evento.comunidade',
+        'evento.participantes',
+      ],
+      select: {
+        idPost: true,
+        conteudo: true,
+        dataHoraPublicacao: true,
+
+        usuario: {
+          idUsuario: true,
+          matricula: true,
+          nomeUsuario: true,
+          fotoUrl: true,
+        },
+
+        comunidade: {
+          idComunidade: true,
+          nomeComunidade: true,
+          capaComunidade: true,
+          fotoUrlComunidade: true,
+          criador: {
+            idUsuario: true,
+            nomeUsuario: true,
+          },
+        },
+
+        fotosPost: {
+          idFoto: true,
+          url: true,
+          ordem: true,
+          criadaEm: true,
+        },
+
+        comentarios: {
+          idComentario: true,
+          texto: true,
+          dataHora: true,
+          usuario: {
+            idUsuario: true,
+            nomeUsuario: true,
+            fotoUrl: true,
+          },
+        },
+
+        evento: {
+          idEvento: true,
+          titulo: true,
+          descricaoEvento: true,
+          localEvento: true,
+          status: true,
+          dataEvento: true,
+          capaEvento: true,
+          fotoUrlEvento: true,
+          comunidade: {
+            idComunidade: true,
+            nomeComunidade: true,
+          },
+          participantes: {
+            idUsuario: true,
+          },
+        },
+      },
+    });
 
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
@@ -497,7 +584,11 @@ export class PostService {
       this.postRepository.findOne({ where: { idPost } }),
       this.usuarioRepository.findOne({
         where: { idUsuario },
-        select: { idUsuario: true, nomeUsuario: true },
+        select: {         
+          idUsuario: true,
+          nomeUsuario: true,
+          fotoUrl: true, 
+        },
       }),
     ]);
 
