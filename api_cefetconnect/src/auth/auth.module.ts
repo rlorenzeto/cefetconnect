@@ -7,11 +7,13 @@ import { AuthController } from './auth.controller.js';
 import { UsuarioModule } from '../aluno/usuario.module.js';
 import { JwtStrategy } from './jwt.strategy.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { GradmentModule } from '../gradment/gradment.module.js';
 
 @Module({
   imports: [
     UsuarioModule,
     PassportModule,
+    GradmentModule,
     JwtModule.registerAsync({
       imports: [ConfigModule], 
       inject: [ConfigService], 

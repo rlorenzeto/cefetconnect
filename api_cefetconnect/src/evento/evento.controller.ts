@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerEventoConfig } from '../uploads/multer.config';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -80,7 +80,7 @@ export class EventoController {
     @Param('id') id: string,
     @Body() updateEventoDto: UpdateEventoDto,
     @Request() req: any,
-    @UploadedFiles(new ParseFilePipe({ fileIsRequired: false, validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 })] }))
+    @UploadedFiles()
     files?: { capaEvento?: Express.Multer.File[]; fotoUrlEvento?: Express.Multer.File[] },
   ) {
     const capaFile = files?.capaEvento?.[0];

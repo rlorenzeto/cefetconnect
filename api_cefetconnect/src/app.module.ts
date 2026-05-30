@@ -14,6 +14,7 @@ import { ComunidadeModule } from './comunidade/comunidade.module';
 import { EventoModule } from './evento/evento.module';
 import { SearchModule } from './search/search.module';
 import { PinModule } from './pin/pin.module';
+import { GradmentModule } from './gradment/gradment.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { PinModule } from './pin/pin.module';
     EventoModule,
     SearchModule,
     PinModule,
+    GradmentModule,
   ],
   controllers: [AppController],
   providers: [

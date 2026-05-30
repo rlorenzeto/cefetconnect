@@ -27,15 +27,17 @@ export class ComentarioService {
   ) {}
 
   async create(idPost: string, idUsuario: number, createComentarioDto: CreateComentarioDto) {
-    const post = await this.postRepository.findOne({ where: { idPost } }); // Vai no banco procurar o post onde o aluno quer comentar
+    const [post, usuario] = await Promise.all([
+      this.postRepository.findOne({ where: { idPost } }), // Vai no banco procurar o post onde o aluno quer comentar
+      this.usuarioRepository.findOne({
+        where: { idUsuario },
+        select: { idUsuario: true, nomeUsuario: true },
+      }),
+    ]);
+
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
-
-    const usuario = await this.usuarioRepository.findOne({
-      where: { idUsuario },
-      select: { idUsuario: true, nomeUsuario: true },
-    });
     if (!usuario) {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
     }

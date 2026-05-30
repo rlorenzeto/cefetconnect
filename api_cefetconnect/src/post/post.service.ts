@@ -96,30 +96,53 @@ export class PostService {
 
   // Essa função que retorna todos os posts com suas respectivas fotos e usuários, possibilitando o feed funcionar
   async findAll() {
-    return await this.postRepository.find({
-      relations: ['usuario', 'fotosPost'],
-      select: {
-        idPost: true,
-        conteudo: true,
-        dataHoraPublicacao: true,
-        usuario: { matricula: true, nomeUsuario: true, fotoUrl: true },
-        fotosPost: true,
-      },
-    });
+    return await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin('post.usuario', 'usuario')
+      .leftJoin('post.fotosPost', 'foto')
+      .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
+      .select([
+        'post.idPost',
+        'post.conteudo',
+        'post.dataHoraPublicacao',
+        'usuario.matricula',
+        'usuario.nomeUsuario',
+        'usuario.fotoUrl',
+        'foto.idFoto',
+        'foto.url',
+        'foto.ordem',
+        'foto.criadaEm',
+      ])
+      .getMany();
   }
 
   async findOne(id: string) {
-    const post = await this.postRepository.findOne({
-      where: { idPost: id },
-      relations: ['usuario', 'fotosPost', 'comentarios', 'comentarios.usuario'],
-      select: {
-        idPost: true,
-        conteudo: true,
-        dataHoraPublicacao: true,
-        usuario: { matricula: true, nomeUsuario: true, fotoUrl: true },
-        fotosPost: true,
-      },
-    });
+    const post = await this.postRepository
+      .createQueryBuilder('post')
+      .leftJoin('post.usuario', 'usuario')
+      .leftJoin('post.fotosPost', 'foto')
+      .leftJoin('post.comentarios', 'comentario')
+      .leftJoin('comentario.usuario', 'autorComentario')
+      .select([
+        'post.idPost',
+        'post.conteudo',
+        'post.dataHoraPublicacao',
+        'usuario.matricula',
+        'usuario.nomeUsuario',
+        'usuario.fotoUrl',
+        'foto.idFoto',
+        'foto.url',
+        'foto.ordem',
+        'foto.criadaEm',
+        'comentario.idComentario',
+        'comentario.texto',
+        'comentario.dataHora',
+        'autorComentario.idUsuario',
+        'autorComentario.nomeUsuario',
+        'autorComentario.fotoUrl',
+      ])
+      .where('post.idPost = :id', { id })
+      .getOne();
 
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
@@ -411,15 +434,17 @@ export class PostService {
   // Comentários 
 
   async comentarPost(idPost: string, idUsuario: number, texto: string) {
-    const post = await this.postRepository.findOne({ where: { idPost } });
+    const [post, usuario] = await Promise.all([
+      this.postRepository.findOne({ where: { idPost } }),
+      this.usuarioRepository.findOne({
+        where: { idUsuario },
+        select: { idUsuario: true, nomeUsuario: true },
+      }),
+    ]);
+
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
-
-    const usuario = await this.usuarioRepository.findOne({
-      where: { idUsuario },
-      select: { idUsuario: true, nomeUsuario: true },
-    });
     if (!usuario) {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
     }

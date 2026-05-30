@@ -8,6 +8,7 @@ import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ErrorMessages } from '../common/constants/messages.errors';
 import { Comunidade } from '../entities/comunidade.entity';
+import { GradmentService } from '../gradment/gradment.service';
 
 @Injectable()
 export class ComunidadeService {
@@ -18,6 +19,7 @@ export class ComunidadeService {
     private comunidadeRepository: Repository<Comunidade>,
     @InjectDataSource()
     private dataSource: DataSource,
+    private gradmentService: GradmentService,
   ) {}
     
   async create(
@@ -41,6 +43,7 @@ export class ComunidadeService {
       criador: criadorComunidade,
       capaComunidade: capaFile ? capaFile.path.replace(/\\/g, '/') : null,
       fotoUrlComunidade: fotoFile ? fotoFile.path.replace(/\\/g, '/') : null,
+      gradmentDisciplinaId: createComunidadeDto.gradmentDisciplinaId ?? null,
     });
 
     return await this.comunidadeRepository.save(novaComunidade);
@@ -55,6 +58,33 @@ export class ComunidadeService {
         descricaoComunidade: true,
         capaComunidade: true,
         fotoUrlComunidade: true,
+        gradmentDisciplinaId: true,
+        criador: { nomeUsuario: true },
+      },
+    });
+  }
+
+  async findMinhasDisciplinas(email: string) {
+    const dadosGradment = await this.gradmentService.buscarDadosUsuario(email);
+    if (!dadosGradment) return [];
+
+    return await this.gradmentService.obterMateriasAprovadas(
+      dadosGradment.usuario.id,
+      dadosGradment.sessionToken,
+    );
+  }
+
+  async findPorDisciplina(disciplinaId: number) {
+    return await this.comunidadeRepository.find({
+      where: { gradmentDisciplinaId: disciplinaId },
+      relations: ['criador'],
+      select: {
+        idComunidade: true,
+        nomeComunidade: true,
+        descricaoComunidade: true,
+        capaComunidade: true,
+        fotoUrlComunidade: true,
+        gradmentDisciplinaId: true,
         criador: { nomeUsuario: true },
       },
     });

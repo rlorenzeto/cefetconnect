@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, Query, ParseIntPipe } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerComunidadeConfig } from '../uploads/multer.config';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -54,6 +54,33 @@ export class ComunidadeController {
     };
   }
 
+  @Get('minhas-disciplinas')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Listar disciplinas do usuário no Gradment', description: 'Retorna as matérias aprovadas do usuário logado no Gradment. Usado para popular o dropdown ao criar uma comunidade vinculada.' })
+  @ApiResponse({ status: 200, description: 'Lista de disciplinas retornada com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  async findMinhasDisciplinas(@Request() req: any) {
+    const dados = await this.comunidadeService.findMinhasDisciplinas(req.user.email);
+    return { dados };
+  }
+
+  @Get('disciplina/:disciplinaId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiParam({ name: 'disciplinaId', description: 'ID da disciplina do Gradment (materia_id)' })
+  @ApiOperation({ summary: 'Listar comunidades por disciplina do Gradment', description: 'Retorna comunidades vinculadas a uma disciplina específica do Gradment.' })
+  @ApiResponse({ status: 200, description: '[SCOM00007] Comunidades retornadas com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  async findPorDisciplina(@Param('disciplinaId', ParseIntPipe) disciplinaId: number) {
+    const dados = await this.comunidadeService.findPorDisciplina(disciplinaId);
+    return {
+      codigo: 'SCOM00007',
+      mensagem: SuccessMessages.SCOM00007.mensagem,
+      dados,
+    };
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -78,19 +105,20 @@ export class ComunidadeController {
     { name: 'fotoUrlComunidade', maxCount: 1 },
   ], multerComunidadeConfig))
   @ApiOperation({ summary: 'Atualizar comunidade', description: 'Atualiza dados da comunidade. Aceita multipart/form-data com campos opcionais capaComunidade e fotoUrlComunidade.' })
-  @ApiResponse({ status: 200, description: '[SCOM00002] Comunidade atualizada com sucesso.' })
+  @ApiResponse({ status: 200, description: '[SCOM00005] Comunidade atualizada com sucesso.' })
   @ApiResponse({ status: 403, description: '[ECOM00002] Sem permissão para modificar esta comunidade.' })
   @ApiResponse({ status: 404, description: '[ECOM00001] Comunidade não encontrada.' })
   async update(
     @Param('id') id: string,
     @Body() updateComunidadeDto: UpdateComunidadeDto,
     @Request() req: any,
-    @UploadedFiles(new ParseFilePipe({ fileIsRequired: false, validators: [new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 })] }))
+    @UploadedFiles()
     files?: { capaComunidade?: Express.Multer.File[]; fotoUrlComunidade?: Express.Multer.File[] },
   ) {
     const capaFile = files?.capaComunidade?.[0];
     const fotoFile = files?.fotoUrlComunidade?.[0];
-    return this.comunidadeService.update(id, updateComunidadeDto, req.user.idUsuario, capaFile, fotoFile);
+    const dados = await this.comunidadeService.update(id, updateComunidadeDto, req.user.idUsuario, capaFile, fotoFile);
+    return { codigo: 'SCOM00005', mensagem: SuccessMessages.SCOM00005.mensagem, dados };
   }
 
 @Delete(':id')
