@@ -64,7 +64,6 @@ export default function DesktopFeed({
     
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-      <div className="flex min-h-screen w-full bg-[#f1f1f1]">
         <ProfileSidebar activePage="home" />
 
         <main className="relative flex-1 px-12 py-10">
@@ -240,7 +239,6 @@ export default function DesktopFeed({
             </aside>
           </div>
         </main>
-      </div>
     </div>
   );
 }

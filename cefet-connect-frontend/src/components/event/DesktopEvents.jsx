@@ -15,7 +15,6 @@ export default function DesktopEvents({
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-      <div className="flex min-h-screen">
         <ProfileSidebar activePage="events" />
 
         <main className="flex-1 px-12 py-10">
@@ -73,6 +72,5 @@ export default function DesktopEvents({
           </div>
         </main>
       </div>
-    </div>
   );
 }

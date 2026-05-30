@@ -114,7 +114,7 @@ export default function ProfileSidebar({ activePage = "profile" }) {
   const navigate = useNavigate();
 
   return (
-    <aside className="sticky top-0 hidden h-screen w-[132px] shrink-0 flex-col items-center border-r border-[#e3e3e3] bg-white py-10 lg:flex">
+    <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[132px] flex-col items-center border-r border-[#e3e3e3] bg-white py-10 lg:flex">
       <div className="group relative mb-20">
         <button
           type="button"

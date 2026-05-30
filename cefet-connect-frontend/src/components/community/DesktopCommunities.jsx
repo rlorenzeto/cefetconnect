@@ -16,7 +16,6 @@ export default function DesktopCommunities({
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-      <div className="flex min-h-screen">
         <ProfileSidebar activePage="community" />
 
         <main className="flex-1 px-12 py-10">
@@ -75,7 +74,6 @@ export default function DesktopCommunities({
             )}
           </div>
         </main>
-      </div>
     </div>
   );
 }

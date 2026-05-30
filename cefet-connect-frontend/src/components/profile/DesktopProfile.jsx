@@ -22,7 +22,6 @@ export default function DesktopProfile({
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-      <div className="flex min-h-screen w-full bg-[#f1f1f1]">
         <ProfileSidebar />
 
         <main className="flex-1 px-16 py-12">
@@ -151,7 +150,6 @@ export default function DesktopProfile({
             </div>
           </section>
         </main>
-      </div>
     </div>
   );
 }

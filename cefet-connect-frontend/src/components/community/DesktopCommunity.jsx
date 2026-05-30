@@ -27,7 +27,6 @@ export default function DesktopCommunity({
   const totalMembers = Number(community?.totalMembros || members.length || 0);
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-      <div className="flex min-h-screen">
         <ProfileSidebar activePage="community" />
 
         <main className="flex-1 px-12 py-10">
@@ -164,7 +163,6 @@ export default function DesktopCommunity({
             )}
           </div>
         </main>
-      </div>
 
       <CommunityMembersModal
         isOpen={isMembersModalOpen}
