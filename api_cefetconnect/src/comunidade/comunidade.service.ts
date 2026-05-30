@@ -8,6 +8,7 @@ import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ErrorMessages } from '../common/constants/messages.errors';
 import { Comunidade } from '../entities/comunidade.entity';
+import { GradmentService } from '../gradment/gradment.service';
 
 @Injectable()
 export class ComunidadeService {
@@ -18,6 +19,7 @@ export class ComunidadeService {
     private comunidadeRepository: Repository<Comunidade>,
     @InjectDataSource()
     private dataSource: DataSource,
+    private gradmentService: GradmentService,
   ) {}
     
   async create(
@@ -41,6 +43,7 @@ export class ComunidadeService {
       criador: criadorComunidade,
       capaComunidade: capaFile ? capaFile.path.replace(/\\/g, '/') : null,
       fotoUrlComunidade: fotoFile ? fotoFile.path.replace(/\\/g, '/') : null,
+      gradmentDisciplinaId: createComunidadeDto.gradmentDisciplinaId ?? null,
     });
 
     const comunidadeCriada = await this.comunidadeRepository.save(novaComunidade);
@@ -55,53 +58,45 @@ export class ComunidadeService {
     return comunidadeCriada;
   }
 
-  async findAll(idUsuario?: number) { 
-    const comunidades = await this.dataSource.query(
-      ` 
-      SELECT 
-        c.idComunidade, 
-        c.nomeComunidade, 
-        c.descricaoComunidade, 
-        c.capaComunidade, 
-        c.fotoUrlComunidade, 
-        criador.idUsuario AS idCriador, 
-        criador.nomeUsuario AS nomeCriador, 
-        COUNT(DISTINCT p.usuarioIdUsuario) AS totalMembros, 
-        COUNT(DISTINCT post.idPost) AS totalPosts, 
-        CASE 
-          WHEN minhaParticipacao.usuarioIdUsuario IS NULL THEN 0 
-          ELSE 1 
-        END AS isMembro 
-      FROM comunidade c 
-      LEFT JOIN usuario criador 
-        ON criador.idUsuario = c.fk_Usuario_idUsuario 
-      LEFT JOIN participa p 
-        ON p.comunidadeIdComunidade = c.idComunidade 
-      LEFT JOIN post 
-        ON post.fk_Comunidade_idComunidade = c.idComunidade 
-      LEFT JOIN participa minhaParticipacao 
-        ON minhaParticipacao.comunidadeIdComunidade = c.idComunidade 
-        AND minhaParticipacao.usuarioIdUsuario = ? 
-      GROUP BY 
-        c.idComunidade, 
-        c.nomeComunidade, 
-        c.descricaoComunidade, 
-        c.capaComunidade, 
-        c.fotoUrlComunidade, 
-        criador.idUsuario, 
-        criador.nomeUsuario, 
-        minhaParticipacao.usuarioIdUsuario 
-      ORDER BY c.nomeComunidade ASC 
-      `,
-      [idUsuario || 0],
-    );
+  async findAll() {
+    return await this.comunidadeRepository.find({
+      relations: ['criador'],
+      select: { 
+        idComunidade: true,
+        nomeComunidade: true,
+        descricaoComunidade: true,
+        capaComunidade: true,
+        fotoUrlComunidade: true,
+        gradmentDisciplinaId: true,
+        criador: { nomeUsuario: true },
+      },
+    });
+  }
 
-    return comunidades.map((comunidade) => ({
-      ...comunidade,
-      isMembro: Boolean(Number(comunidade.isMembro)),
-      totalMembros: Number(comunidade.totalMembros || 0),
-      totalPosts: Number(comunidade.totalPosts || 0),
-    }));
+  async findMinhasDisciplinas(email: string) {
+    const dadosGradment = await this.gradmentService.buscarDadosUsuario(email);
+    if (!dadosGradment) return [];
+
+    return await this.gradmentService.obterMateriasAprovadas(
+      dadosGradment.usuario.id,
+      dadosGradment.sessionToken,
+    );
+  }
+
+  async findPorDisciplina(disciplinaId: number) {
+    return await this.comunidadeRepository.find({
+      where: { gradmentDisciplinaId: disciplinaId },
+      relations: ['criador'],
+      select: {
+        idComunidade: true,
+        nomeComunidade: true,
+        descricaoComunidade: true,
+        capaComunidade: true,
+        fotoUrlComunidade: true,
+        gradmentDisciplinaId: true,
+        criador: { nomeUsuario: true },
+      },
+    });
   }
 
   async findOne(id: string, idUsuario: number) {
