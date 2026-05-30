@@ -81,7 +81,7 @@ export class EventoService {
 
   async findAll() {
     return await this.eventoRepository.find({
-      relations: ['usuario', 'comunidade'],
+      relations: ['usuario', 'comunidade', 'participantes'],
       select: {
         idEvento: true,
         titulo: true,
@@ -97,6 +97,11 @@ export class EventoService {
           fotoUrl: true,
         },
         comunidade: { idComunidade: true, nomeComunidade: true },
+        participantes: {
+          idUsuario: true,
+          nomeUsuario: true,
+          fotoUrl: true,
+        },
       },
       order: { dataEvento: 'ASC' },
     });
