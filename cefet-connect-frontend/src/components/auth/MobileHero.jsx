@@ -5,7 +5,7 @@ import AuthButton from "./AuthButton";
 export default function MobileHero({ onOpenLogin, onOpenRegister }) {
   return (
     <section className="lg:hidden">
-      <div className="min-h-screen w-full bg-[#f4f4f4]">
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f4f4]">
         <div className="h-55 w-full overflow-hidden">
           <img
             src="/images/campus-cefet.png"

@@ -1,5 +1,6 @@
 import BrandLogo from "../auth/BrandLogo";
 import CommunityCard from "./CommunityCard";
+import MobileBottomNav from "../common/MobileBottomNav";
 import GlobalCreateMenu from "../common/GlobalCreateMenu";
 
 export default function MobileCommunities({
@@ -16,7 +17,7 @@ export default function MobileCommunities({
   onDelete,
 }) {
   return (
-    <div className="min-h-screen bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
       <header className="sticky top-0 z-20 flex h-[60px] items-center justify-between bg-white px-5 shadow-sm">
         <BrandLogo className="h-9 w-auto object-contain" />
 
@@ -29,7 +30,7 @@ export default function MobileCommunities({
         </button>
       </header>
 
-      <main className="px-4 pt-6">
+      <main className="w-full max-w-full overflow-x-hidden px-4 pt-6">
         <div className="mb-6">
           <h1 className="text-[32px] font-bold text-[#202020]">
             Comunidades
@@ -72,34 +73,11 @@ export default function MobileCommunities({
           </div>
         )}
       </main>
-
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-[#e3e3e3] bg-white">
-        <button
-          type="button"
-          onClick={() => window.location.assign("/home")}
-          className="text-sm text-[#777]"
-        >
-          Início
-        </button>
-
-        <button type="button" className="text-sm font-semibold text-[#089464]">
-          Comunidades
-        </button>
-
-        <GlobalCreateMenu />
-
-        <button type="button" className="text-sm text-[#777]">
-          Avisos
-        </button>
-
-        <button
-          type="button"
-          onClick={() => window.location.assign("/profile")}
-          className="text-sm text-[#777]"
-        >
-          Perfil
-        </button>
-      </nav>
+      
+      <MobileBottomNav
+        activePage="community"
+        onCreateCommunity={onOpenCreate}
+      />
     </div>
   );
 }

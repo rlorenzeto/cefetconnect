@@ -2,6 +2,7 @@ import { useState } from "react";
 import BrandLogo from "../auth/BrandLogo";
 import CreatePostCard from "./CreatePostCard";
 import PostCard from "./PostCard";
+import MobileBottomNav from "../common/MobileBottomNav";
 import {
   ChevronDownIcon,
   HeartOutlineIcon,
@@ -9,7 +10,8 @@ import {
 } from "../icons/AppIcons";
 import GlobalCreateMenu from "../common/GlobalCreateMenu";
 
-const GRADMENT_URL = "https://gradment.com.br"; //MUDAR COM A UTL DO GRADMENT, VER COM OS MENINOS
+const GRADMENT_URL =
+  import.meta.env.VITE_GRADMENT_URL || "https://gradment.linceonline.com.br";
 
 export default function MobileFeed({
   user,
@@ -29,13 +31,8 @@ export default function MobileFeed({
   onCreateEventShortcut,
 }) {
   const [isGradmentMenuOpen, setIsGradmentMenuOpen] = useState(false);
-
-  function handleOpenGradment() {
-    window.open(GRADMENT_URL, "_blank", "noreferrer");
-    setIsGradmentMenuOpen(false);
-  }
   return (
-    <div className="min-h-screen bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
       <header className="sticky top-0 z-20 flex h-[60px] items-center justify-between bg-white px-5 shadow-sm">
         <div className="relative">
           <button
@@ -71,9 +68,11 @@ export default function MobileFeed({
                 Comunidades seguidas
               </button>
 
-              <button
-                type="button"
-                onClick={handleOpenGradment}
+              <a
+                href={GRADMENT_URL}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setIsGradmentMenuOpen(false)}
                 className="flex h-8 w-full items-center border-t border-[#d3d3d3] px-3 text-left transition hover:bg-[#f1f1f1]"
               >
                 <span className="flex items-center gap-2">
@@ -87,7 +86,7 @@ export default function MobileFeed({
                     GradMent
                   </span>
                 </span>
-              </button>
+              </a>
             </div>
           )}
         </div>
@@ -119,7 +118,7 @@ export default function MobileFeed({
         </div>
       </header>
 
-      <main className="px-3 pt-5">
+      <main className="w-full max-w-full overflow-x-hidden px-3 pt-5">
         <div className="mb-6">
           <h1 className="text-[32px] font-bold text-[#202020]">
             Feed
@@ -170,42 +169,12 @@ export default function MobileFeed({
           )}
         </div>
       </main>
-
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-[#e3e3e3] bg-white">
-        <button type="button" className="text-sm font-semibold text-[#089464]">
-          Início
-        </button>
-
-        <button
-          type="button"
-          onClick={() => window.location.assign("/comunidades")}
-          className="text-sm text-[#777]"
-        >
-          Comunidades
-        </button>
-
-        <GlobalCreateMenu
-          onCreatePost={onCreatePostShortcut}
-          onCreateCommunity={onCreateCommunityShortcut}
-          onCreateEvent={onCreateEventShortcut}
-        />
-
-        <button
-          type="button"
-          onClick={() => window.location.assign("/eventos")}
-          className="text-sm text-[#777]"
-        >
-          Eventos
-        </button>
-
-        <button
-          type="button"
-          onClick={onGoToProfile}
-          className="text-sm text-[#777]"
-        >
-          Perfil
-        </button>
-      </nav>
+      <MobileBottomNav
+        activePage="home"
+        onCreatePost={onCreatePostShortcut}
+        onCreateCommunity={onCreateCommunityShortcut}
+        onCreateEvent={onCreateEventShortcut}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import CreatePostCard from "../feed/CreatePostCard";
 import PostCard from "../feed/PostCard";
 import CommunityMembersModal from "./CommunityMembersModal";
 import { getCommunityImageUrl } from "../../services/comunidadeService";
+import MobileBottomNav from "../common/MobileBottomNav";
 import GlobalCreateMenu from "../common/GlobalCreateMenu";
 
 export default function MobileCommunity({
@@ -26,8 +27,25 @@ export default function MobileCommunity({
 
   const members = Array.isArray(community?.membros) ? community.membros : [];
   const totalMembers = Number(community?.totalMembros || members.length || 0);
+
+  function handleOpenCommunityPostComposer() {
+    if (!community?.isMembro) {
+      alert("Entre na comunidade para publicar um post.");
+      return;
+    }
+
+    const composer = document.getElementById("community-post-composer");
+
+    if (composer) {
+      composer.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] pb-24 text-[#202020] lg:hidden">
       <header className="sticky top-0 z-20 flex h-[60px] items-center justify-between bg-white px-5 shadow-sm">
         <div className="flex items-center gap-3">
           <button
@@ -61,7 +79,7 @@ export default function MobileCommunity({
           )}
       </header>
 
-      <main className="px-4 pt-5">
+      <main className="w-full max-w-full overflow-x-hidden px-4 pt-5">
         {isLoading ? (
           <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
             Carregando comunidade...
@@ -128,14 +146,16 @@ export default function MobileCommunity({
 
             {community?.isMembro ? (
               <>
-                <CreatePostCard
-                  user={currentUser}
-                  userImageUrl={userImageUrl}
-                  onCreatePost={onCreatePost}
-                  isCreating={isCreating}
-                  communities={currentCommunityAsOption}
-                  fixedCommunity={community}
-                />
+                <div id="community-post-composer">
+                  <CreatePostCard
+                    user={currentUser}
+                    userImageUrl={userImageUrl}
+                    onCreatePost={onCreatePost}
+                    isCreating={isCreating}
+                    communities={currentCommunityAsOption}
+                    fixedCommunity={community}
+                  />
+                </div>
 
                 {posts.map((post) => (
                   <PostCard
@@ -162,37 +182,11 @@ export default function MobileCommunity({
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex h-16 items-center justify-around border-t border-[#e3e3e3] bg-white">
-        <button
-          type="button"
-          onClick={() => window.location.assign("/home")}
-          className="text-sm text-[#777]"
-        >
-          Início
-        </button>
+      <MobileBottomNav
+        activePage="community"
+        onCreatePost={handleOpenCommunityPostComposer}
+      />
 
-        <button
-          type="button"
-          onClick={() => window.location.assign("/comunidades")}
-          className="text-sm font-semibold text-[#089464]"
-        >
-          Comunidades
-        </button>
-
-        <GlobalCreateMenu />
-
-        <button type="button" className="text-sm text-[#777]">
-          Avisos
-        </button>
-
-        <button
-          type="button"
-          onClick={() => window.location.assign("/profile")}
-          className="text-sm text-[#777]"
-        >
-          Perfil
-        </button>
-      </nav>
       <CommunityMembersModal
         isOpen={isMembersModalOpen}
         onClose={() => setIsMembersModalOpen(false)}

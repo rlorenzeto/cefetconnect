@@ -11,7 +11,7 @@ export default function MobileLoginModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/20 lg:hidden">
-      <div className="min-h-screen w-full bg-[#f4f4f4] px-4 pt-6">
+      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f4f4] px-4 pt-6">
         <button
           onClick={onClose}
           className="mb-6 text-3xl leading-none text-black/70"

@@ -2,6 +2,7 @@ import BrandLogo from "../auth/BrandLogo";
 import { BackIcon } from "../icons/AppIcons";
 import ProfileAvatar from "./ProfileAvatar";
 import PostCard from "../feed/PostCard";
+import MobileBottomNav from "../common/MobileBottomNav";
 import ProfileCommunities from "./ProfileCommunities";
 
 export default function MobileProfile({
@@ -21,7 +22,7 @@ export default function MobileProfile({
   onOpenCommunity,
 }) {
   return (
-    <div className="min-h-screen bg-[#f1f1f1] text-[#202020] lg:hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] text-[#202020] lg:hidden">
       <header className="flex h-[60px] items-center justify-between bg-white px-5">
         <div className="flex items-center gap-3">
           <button
@@ -44,7 +45,7 @@ export default function MobileProfile({
         </button>
       </header>
 
-      <main className="px-5 pb-10 pt-8">
+      <main className="w-full max-w-full overflow-x-hidden px-4 pt-6">
         <div className="mb-7 flex items-center justify-between">
           <h1 className="text-[32px] font-bold text-[#202020]">
             Perfil
@@ -150,6 +151,7 @@ export default function MobileProfile({
         </div>
         </section>
       </main>
+      <MobileBottomNav activePage="profile" />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import BrandLogo from "../auth/BrandLogo";
 import PasswordInput from "../auth/PasswordInput";
+import MobileBottomNav from "../common/MobileBottomNav";
 import ProfileAvatar from "./ProfileAvatar";
 
 export default function MobileEditProfile({
@@ -28,7 +29,7 @@ export default function MobileEditProfile({
   onConfirmEmail,
 }) {
   return (
-    <div className="min-h-screen bg-[#f1f1f1] text-[#202020] lg:hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] text-[#202020] lg:hidden">
       <header className="flex h-[60px] items-center justify-between bg-white px-5">
         <BrandLogo className="h-9 w-auto object-contain" />
 
@@ -39,7 +40,7 @@ export default function MobileEditProfile({
         </button>
       </header>
 
-      <main className="px-5 pb-10 pt-8">
+      <main className="w-full max-w-full overflow-x-hidden px-4 pt-6">
         <div className="mb-7 flex items-center justify-between">
           <button
             type="button"
@@ -239,6 +240,7 @@ export default function MobileEditProfile({
           </button>
         </section>
       </main>
+      <MobileBottomNav activePage="profile" />
     </div>
   );
 }

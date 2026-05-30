@@ -49,7 +49,7 @@ export default function CommunityCard({
           <button
             type="button"
             onClick={onOpen}
-            className="rounded-full bg-[#f1f1f1] px-4 py-2 text-xs font-bold text-[#343434] transition hover:bg-[#e8f7ef] hover:text-[#089464]"
+            className="mt-15 rounded-full border border-[#bbbebd] bg-[#f1f1f1] px-4 py-2 text-xs font-bold text-[#343434] transition hover:bg-[#e8f7ef] hover:text-[#089464]"
           >
             Abrir
           </button>
