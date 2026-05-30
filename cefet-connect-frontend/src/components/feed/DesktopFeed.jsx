@@ -67,8 +67,8 @@ export default function DesktopFeed({
       <div className="flex min-h-screen w-full bg-[#f1f1f1]">
         <ProfileSidebar activePage="home" />
 
-        <main className="flex-1 px-12 py-10">
-          <div className="mx-auto grid max-w-[1120px] grid-cols-[minmax(0,680px)_320px] justify-center gap-8">
+        <main className="relative flex-1 px-12 py-10">
+          <div className="mx-auto grid max-w-[1180px] grid-cols-[minmax(0,680px)_320px] justify-center gap-8">
             <section>
               <div className="mb-8 flex items-start justify-between gap-4">
                 <div>
@@ -129,7 +129,7 @@ export default function DesktopFeed({
               </div>
             </section>
 
-            <aside className="sticky top-10 max-h-[calc(100vh-5rem)] self-start space-y-5 overflow-y-auto pr-1">
+            <aside className="fixed right-12 top-10 w-[320px] max-h-[calc(100vh-5rem)] space-y-5 overflow-y-auto pr-1">
               <section className="overflow-hidden rounded-[8px] bg-white shadow-sm">
                 <div className="flex h-[54px] items-center justify-center border-b border-[#d9d9d9]">
                   <div className="flex items-center gap-2">

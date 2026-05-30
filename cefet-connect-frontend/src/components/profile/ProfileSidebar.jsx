@@ -85,18 +85,28 @@ function CalendarIcon({ active }) {
 
 function NavButton({ children, active = false, onClick, label }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
-        active
-          ? "bg-[#089464] text-white"
-          : "text-[#343434] hover:bg-[#f1f1f1]"
-      }`}
-    >
-      {children}
-    </button>
+    <div className="group relative">
+      <button
+        type="button"
+        aria-label={label}
+        onClick={onClick}
+        className={`flex h-11 w-11 items-center justify-center rounded-2xl transition ${
+          active
+            ? "bg-[#089464] text-white"
+            : "text-[#343434] hover:bg-[#f1f1f1]"
+        }`}
+      >
+        {children}
+      </button>
+
+      {label && (
+        <div className="pointer-events-none absolute left-[58px] top-1/2 z-50 -translate-y-1/2 whitespace-nowrap rounded-xl bg-[#202020] px-3 py-2 text-xs font-bold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+          {label}
+
+          <span className="absolute left-[-5px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 bg-[#202020]" />
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -105,10 +115,25 @@ export default function ProfileSidebar({ activePage = "profile" }) {
 
   return (
     <aside className="sticky top-0 hidden h-screen w-[132px] shrink-0 flex-col items-center border-r border-[#e3e3e3] bg-white py-10 lg:flex">
-      <BrandLogo
-        variant="icon"
-        className="mb-20 h-16 w-16 object-contain"
-      />
+      <div className="group relative mb-20">
+        <button
+          type="button"
+          onClick={() => navigate("/home")}
+          className="rounded-3xl transition hover:scale-105"
+          aria-label="Ir para o início"
+        >
+          <BrandLogo
+            variant="icon"
+            className="h-16 w-16 object-contain"
+          />
+        </button>
+
+        <div className="pointer-events-none absolute left-[74px] top-1/2 z-50 -translate-y-1/2 whitespace-nowrap rounded-xl bg-[#202020] px-3 py-2 text-xs font-bold text-white opacity-0 shadow-lg transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100">
+          Início
+
+          <span className="absolute left-[-5px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 bg-[#202020]" />
+        </div>
+      </div>
 
       <nav className="flex flex-1 flex-col items-center gap-7">
         <NavButton
