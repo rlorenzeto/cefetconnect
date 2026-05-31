@@ -347,7 +347,7 @@ export class PinService {
   ) {
     const pin = await this.pinRepository.findOne({
       where: { idPin },
-      relations: ['comunidades'],
+      relations: ["comunidades"],
     });
 
     if (!pin) {
@@ -356,21 +356,18 @@ export class PinService {
 
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade },
-      relations: ['criador'],
+      relations: ["criador"],
     });
 
     if (!comunidade) {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
-    const idCriador =
-      comunidade?.criador?.idUsuario ||
-      comunidade?.usuario?.idUsuario ||
-      comunidade?.fk_Usuario_idUsuario;
+    const idCriador = comunidade.criador?.idUsuario;
 
-    if (String(idCriador || '') !== String(idUsuario || '')) {
+    if (String(idCriador || "") !== String(idUsuario || "")) {
       throw new ForbiddenException(
-        'Apenas o criador da comunidade pode adicionar pins.',
+        "Apenas o criador da comunidade pode adicionar pins.",
       );
     }
 
@@ -388,7 +385,6 @@ export class PinService {
 
     return { idPin, idComunidade };
   }
-
   async removerComunidade(
     idPin: string,
     idComunidade: string,
@@ -396,27 +392,24 @@ export class PinService {
   ) {
     const comunidade = await this.comunidadeRepository.findOne({
       where: { idComunidade },
-      relations: ['criador'],
+      relations: ["criador"],
     });
 
     if (!comunidade) {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
-    const idCriador =
-      comunidade?.criador?.idUsuario ||
-      comunidade?.usuario?.idUsuario ||
-      comunidade?.fk_Usuario_idUsuario;
+    const idCriador = comunidade.criador?.idUsuario;
 
-    if (String(idCriador || '') !== String(idUsuario || '')) {
+    if (String(idCriador || "") !== String(idUsuario || "")) {
       throw new ForbiddenException(
-        'Apenas o criador da comunidade pode remover pins.',
+        "Apenas o criador da comunidade pode remover pins.",
       );
     }
 
     const pin = await this.pinRepository.findOne({
       where: { idPin },
-      relations: ['comunidades'],
+      relations: ["comunidades"],
     });
 
     if (!pin) {
