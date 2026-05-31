@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
 import { PinService } from './pin.service';
 import { CreatePinDto } from './dto/create-pin.dto';
 import { UpdatePinDto } from './dto/update-pin.dto';
@@ -72,6 +72,56 @@ export class PinController {
     return { codigo: 'SPIN00005', mensagem: SuccessMessages.SPIN00005.mensagem, dados };
   }
 
+  @Get('disponiveis')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Listar pins disponíveis',
+    description:'Retorna os pins cadastrados na base para inserção manual no perfil.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '[SPIN00012] Pins disponíveis retornados com sucesso.',
+  })
+  async findDisponiveis(@Query('search') search?: string) {
+    const dados = await this.pinService.findDisponiveis(search);
+
+    return {
+      codigo: 'SPIN00012',
+      mensagem: SuccessMessages.SPIN00012.mensagem,
+      dados,
+    };
+  }
+
+  @Get('comunidade/:idComunidade')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiParam({
+    name: 'idComunidade',
+    description: 'ID da comunidade cujos pins serão listados',
+  })
+  @ApiOperation({
+    summary: 'Listar pins relacionados a uma comunidade',
+    description: 'Retorna os pins acadêmicos relacionados à comunidade informada.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '[SPIN00013] Pins da comunidade retornados com sucesso.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '[ECOM00001] Comunidade não encontrada.',
+  })
+  async findByComunidade(@Param('idComunidade') idComunidade: string) {
+    const dados = await this.pinService.findByComunidade(idComunidade);
+
+    return {
+      codigo: 'SPIN00013',
+      mensagem: SuccessMessages.SPIN00013.mensagem,
+      dados,
+    };
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -117,9 +167,22 @@ export class PinController {
   @ApiResponse({ status: 200, description: '[SPIN00010] Pin relacionado à comunidade com sucesso.' })
   @ApiResponse({ status: 404, description: '[EPIN00001] Pin não encontrado / [ECOM00001] Comunidade não encontrada.' })
   @ApiResponse({ status: 409, description: 'Pin já relacionado a esta comunidade.' })
-  async adicionarComunidade(@Param('id') id: string, @Param('idComunidade') idComunidade: string) {
-    const dados = await this.pinService.adicionarComunidade(id, idComunidade);
-    return { codigo: 'SPIN00010', mensagem: SuccessMessages.SPIN00010.mensagem, dados };
+  async adicionarComunidade(
+    @Param('id') id: string,
+    @Param('idComunidade') idComunidade: string,
+    @Request() req: any,
+  ) {
+    const dados = await this.pinService.adicionarComunidade(
+      id,
+      idComunidade,
+      req.user.idUsuario,
+    );
+
+    return {
+      codigo: 'SPIN00010',
+      mensagem: SuccessMessages.SPIN00010.mensagem,
+      dados,
+    };
   }
 
   @Delete(':id/comunidades/:idComunidade')
@@ -130,9 +193,22 @@ export class PinController {
   @ApiOperation({ summary: 'Remover relacionamento pin-comunidade' })
   @ApiResponse({ status: 200, description: '[SPIN00011] Relacionamento pin-comunidade removido com sucesso.' })
   @ApiResponse({ status: 404, description: '[EPIN00001] Pin não encontrado / relacionamento não existe.' })
-  async removerComunidade(@Param('id') id: string, @Param('idComunidade') idComunidade: string) {
-    const dados = await this.pinService.removerComunidade(id, idComunidade);
-    return { codigo: 'SPIN00011', mensagem: SuccessMessages.SPIN00011.mensagem, dados };
+  async removerComunidade(
+    @Param('id') id: string,
+    @Param('idComunidade') idComunidade: string,
+    @Request() req: any,
+  ) {
+    const dados = await this.pinService.removerComunidade(
+      id,
+      idComunidade,
+      req.user.idUsuario,
+    );
+
+    return {
+      codigo: 'SPIN00011',
+      mensagem: SuccessMessages.SPIN00011.mensagem,
+      dados,
+    };
   }
 
   @Patch(':id')

@@ -47,6 +47,22 @@ export class ComunidadeService {
     });
 
     const comunidadeCriada = await this.comunidadeRepository.save(novaComunidade);
+
+    await this.dataSource.query(
+      `
+      INSERT IGNORE INTO relacionadoa (
+        fk_Pin_idPin,
+        fk_Comunidade_idComunidade
+      )
+      SELECT
+        p.idPin,
+        ?
+      FROM pin p
+      WHERE LOWER(TRIM(p.nomePin)) = LOWER(TRIM(?))
+      `,
+      [comunidadeCriada.idComunidade, comunidadeCriada.nomeComunidade],
+    );
+
     await this.dataSource.query(
       `
       INSERT IGNORE INTO participa (usuarioIdUsuario, comunidadeIdComunidade)

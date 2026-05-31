@@ -5,7 +5,7 @@ import { CreatePinDto } from './dto/create-pin.dto';
 import { UpdatePinDto } from './dto/update-pin.dto';
 import { ImportarPinsDto } from './dto/importar-pins.dto';
 import { SugerirPinsDto } from './dto/sugerir-pins.dto';
-import { Pin, OrigemPin } from '../entities/pin.entity';
+import { CategoriaPin, Pin, OrigemPin } from '../entities/pin.entity';
 import { PossuiPin } from '../entities/possui-pin.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { Comunidade } from '../entities/comunidade.entity';
@@ -25,22 +25,81 @@ export class PinService {
   ) {}
 
   private toDto(pp: PossuiPin) {
-    return { idPin: pp.pin.idPin, nomePin: pp.pin.nomePin, origem: pp.origem };
+    return {
+      idPin: pp.pin.idPin,
+      nomePin: pp.pin.nomePin,
+      categoriaPin: pp.pin.categoriaPin,
+      origem: pp.origem,
+    };
   }
 
-  private async findOrCreatePin(nomePin: string): Promise<Pin> {
-    let pin = await this.pinRepository.findOne({ where: { nomePin } });
+  private async findOrCreatePin(
+    nomePin: string,
+    categoriaPin: CategoriaPin = CategoriaPin.DISCIPLINA,
+  ): Promise<Pin> {
+    const nomeFormatado = nomePin.trim();
+
+    let pin = await this.pinRepository.findOne({
+      where: { nomePin: nomeFormatado },
+    });
+
     if (!pin) {
-      pin = await this.pinRepository.save(this.pinRepository.create({ nomePin }));
+      pin = await this.pinRepository.save(
+        this.pinRepository.create({
+          nomePin: nomeFormatado,
+          categoriaPin,
+        }),
+      );
     }
     return pin;
+  }
+
+  private async relacionarPinComComunidadesPorNome(pin: Pin) {
+    const comunidades = await this.comunidadeRepository
+      .createQueryBuilder('comunidade')
+      .where('LOWER(TRIM(comunidade.nomeComunidade)) = LOWER(TRIM(:nomePin))', {
+        nomePin: pin.nomePin,
+      })
+      .getMany();
+
+    if (comunidades.length === 0) return;
+
+    const pinComComunidades = await this.pinRepository.findOne({
+      where: { idPin: pin.idPin },
+      relations: ['comunidades'],
+    });
+
+    if (!pinComComunidades) return;
+
+    const comunidadesAtuais = pinComComunidades.comunidades ?? [];
+
+    const novasComunidades = comunidades.filter(
+      (comunidade) =>
+        !comunidadesAtuais.some(
+          (atual) => atual.idComunidade === comunidade.idComunidade,
+        ),
+    );
+
+    if (novasComunidades.length === 0) return;
+
+    pinComComunidades.comunidades = [
+      ...comunidadesAtuais,
+      ...novasComunidades,
+    ];
+
+    await this.pinRepository.save(pinComComunidades);
   }
 
   async create(dto: CreatePinDto, idUsuario: number) {
     const usuario = await this.usuarioRepository.findOne({ where: { idUsuario } });
     if (!usuario) throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
 
-    const pin = await this.findOrCreatePin(dto.nomePin);
+    const pin = await this.findOrCreatePin(
+      dto.nomePin,
+      dto.categoriaPin ?? CategoriaPin.DISCIPLINA,
+    );
+
+    await this.relacionarPinComComunidadesPorNome(pin);
 
     const existente = await this.possuiPinRepository.findOne({
       where: { pin: { idPin: pin.idPin }, usuario: { idUsuario } },
@@ -48,8 +107,13 @@ export class PinService {
     if (existente) throw new ConflictException(ErrorMessages.EPIN00003.mensagem);
 
     const saved = await this.possuiPinRepository.save(
-      this.possuiPinRepository.create({ pin, usuario, origem: dto.origem ?? OrigemPin.MANUAL }),
+      this.possuiPinRepository.create({
+        pin,
+        usuario,
+        origem: OrigemPin.MANUAL,
+      }),
     );
+
     return this.toDto(saved);
   }
 
@@ -67,15 +131,29 @@ export class PinService {
     const duplicados: string[] = [];
 
     for (const nomePin of dto.pins) {
-      if (nomesExistentes.has(nomePin.toLowerCase())) {
-        duplicados.push(nomePin);
+      const nomeFormatado = nomePin.trim();
+      const chave = nomeFormatado.toLowerCase();
+
+      if (nomesExistentes.has(chave)) {
+        duplicados.push(nomeFormatado);
       } else {
-        const pin = await this.findOrCreatePin(nomePin);
-        const saved = await this.possuiPinRepository.save(
-          this.possuiPinRepository.create({ pin, usuario, origem: OrigemPin.GRADMENT }),
+        const pin = await this.findOrCreatePin(
+          nomeFormatado,
+          CategoriaPin.DISCIPLINA,
         );
+
+        await this.relacionarPinComComunidadesPorNome(pin);
+
+        const saved = await this.possuiPinRepository.save(
+          this.possuiPinRepository.create({
+            pin,
+            usuario,
+            origem: OrigemPin.GRADMENT,
+          }),
+        );
+
         adicionados.push(this.toDto(saved));
-        nomesExistentes.add(nomePin.toLowerCase());
+        nomesExistentes.add(chave);
       }
     }
 
@@ -89,10 +167,61 @@ export class PinService {
     });
     const nomesExistentes = new Set(existentes.map((pp) => pp.pin.nomePin.toLowerCase()));
 
+    const disciplinasFormatadas = dto.disciplinas.map((disciplina) =>
+      disciplina.trim(),
+    );
+
     return {
-      sugestoes: dto.disciplinas.filter((d) => !nomesExistentes.has(d.toLowerCase())),
-      jaAdicionados: dto.disciplinas.filter((d) => nomesExistentes.has(d.toLowerCase())),
+      sugestoes: disciplinasFormatadas.filter(
+        (disciplina) => !nomesExistentes.has(disciplina.toLowerCase()),
+      ),
+      jaAdicionados: disciplinasFormatadas.filter((disciplina) =>
+        nomesExistentes.has(disciplina.toLowerCase()),
+      ),
     };
+  }
+
+  async findByComunidade(idComunidade: string) {
+    const comunidade = await this.comunidadeRepository.findOne({
+      where: { idComunidade },
+    });
+
+    if (!comunidade) {
+      throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    }
+
+    const pins = await this.pinRepository
+      .createQueryBuilder('pin')
+      .innerJoin('pin.comunidades', 'comunidade')
+      .where('comunidade.idComunidade = :idComunidade', { idComunidade })
+      .orderBy('pin.nomePin', 'ASC')
+      .getMany();
+
+    return pins.map((pin) => ({
+      idPin: pin.idPin,
+      nomePin: pin.nomePin,
+      categoriaPin: pin.categoriaPin,
+    }));
+  }
+
+  async findDisponiveis(search?: string) {
+    const query = this.pinRepository
+      .createQueryBuilder('pin')
+      .orderBy('pin.nomePin', 'ASC');
+
+    if (search?.trim()) {
+      query.where('pin.nomePin LIKE :search', {
+        search: `%${search.trim()}%`,
+      });
+    }
+
+    const pins = await query.getMany();
+
+    return pins.map((pin) => ({
+      idPin: pin.idPin,
+      nomePin: pin.nomePin,
+      categoriaPin: pin.categoriaPin,
+    }));
   }
 
   async findMeus(idUsuario: number) {
@@ -167,10 +296,13 @@ export class PinService {
       idPin: pin.idPin,
       nomePin: pin.nomePin,
       totalUsuarios,
-      comunidades: pin.comunidades?.map((c) => ({
-        idComunidade: c.idComunidade,
-        nomeComunidade: c.nomeComunidade,
-      })) ?? [],
+      comunidades:
+        pin.comunidades?.map((c) => ({
+          idComunidade: c.idComunidade,
+          nomeComunidade: c.nomeComunidade,
+          descricaoComunidade: c.descricaoComunidade,
+          fotoUrlComunidade: c.fotoUrlComunidade,
+        })) ?? [],
     };
   }
 
@@ -198,45 +330,110 @@ export class PinService {
     });
     if (!pin) throw new NotFoundException(ErrorMessages.EPIN00001.mensagem);
 
-    return pin.comunidades?.map((c) => ({
-      idComunidade: c.idComunidade,
-      nomeComunidade: c.nomeComunidade,
-      descricaoComunidade: c.descricaoComunidade,
-    })) ?? [];
+    return (
+      pin.comunidades?.map((c) => ({
+        idComunidade: c.idComunidade,
+        nomeComunidade: c.nomeComunidade,
+        descricaoComunidade: c.descricaoComunidade,
+        fotoUrlComunidade: c.fotoUrlComunidade,
+      })) ?? []
+    );
   }
 
-  async adicionarComunidade(idPin: string, idComunidade: string) {
+  async adicionarComunidade(
+    idPin: string,
+    idComunidade: string,
+    idUsuario: number,
+  ) {
     const pin = await this.pinRepository.findOne({
       where: { idPin },
       relations: ['comunidades'],
     });
-    if (!pin) throw new NotFoundException(ErrorMessages.EPIN00001.mensagem);
 
-    const comunidade = await this.comunidadeRepository.findOne({ where: { idComunidade } });
-    if (!comunidade) throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    if (!pin) {
+      throw new NotFoundException(ErrorMessages.EPIN00001.mensagem);
+    }
 
-    const jaRelacionado = pin.comunidades?.some((c) => c.idComunidade === idComunidade);
-    if (jaRelacionado) throw new ConflictException(ErrorMessages.EPIN00004.mensagem);
+    const comunidade = await this.comunidadeRepository.findOne({
+      where: { idComunidade },
+      relations: ['criador'],
+    });
+
+    if (!comunidade) {
+      throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    }
+
+    const idCriador =
+      comunidade?.criador?.idUsuario ||
+      comunidade?.usuario?.idUsuario ||
+      comunidade?.fk_Usuario_idUsuario;
+
+    if (String(idCriador || '') !== String(idUsuario || '')) {
+      throw new ForbiddenException(
+        'Apenas o criador da comunidade pode adicionar pins.',
+      );
+    }
+
+    const jaRelacionado = pin.comunidades?.some(
+      (c) => c.idComunidade === idComunidade,
+    );
+
+    if (jaRelacionado) {
+      throw new ConflictException(ErrorMessages.EPIN00004.mensagem);
+    }
 
     pin.comunidades = [...(pin.comunidades ?? []), comunidade];
+
     await this.pinRepository.save(pin);
+
     return { idPin, idComunidade };
   }
 
-  async removerComunidade(idPin: string, idComunidade: string) {
+  async removerComunidade(
+    idPin: string,
+    idComunidade: string,
+    idUsuario: number,
+  ) {
+    const comunidade = await this.comunidadeRepository.findOne({
+      where: { idComunidade },
+      relations: ['criador'],
+    });
+
+    if (!comunidade) {
+      throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
+    }
+
+    const idCriador =
+      comunidade?.criador?.idUsuario ||
+      comunidade?.usuario?.idUsuario ||
+      comunidade?.fk_Usuario_idUsuario;
+
+    if (String(idCriador || '') !== String(idUsuario || '')) {
+      throw new ForbiddenException(
+        'Apenas o criador da comunidade pode remover pins.',
+      );
+    }
+
     const pin = await this.pinRepository.findOne({
       where: { idPin },
       relations: ['comunidades'],
     });
-    if (!pin) throw new NotFoundException(ErrorMessages.EPIN00001.mensagem);
+
+    if (!pin) {
+      throw new NotFoundException(ErrorMessages.EPIN00001.mensagem);
+    }
 
     const tamanhoOriginal = pin.comunidades?.length ?? 0;
-    pin.comunidades = pin.comunidades?.filter((c) => c.idComunidade !== idComunidade) ?? [];
 
-    if (pin.comunidades.length === tamanhoOriginal)
+    pin.comunidades =
+      pin.comunidades?.filter((c) => c.idComunidade !== idComunidade) ?? [];
+
+    if (pin.comunidades.length === tamanhoOriginal) {
       throw new NotFoundException(ErrorMessages.EPIN00005.mensagem);
+    }
 
     await this.pinRepository.save(pin);
+
     return { removido: true, idPin, idComunidade };
   }
 }

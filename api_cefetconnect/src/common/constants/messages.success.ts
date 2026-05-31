@@ -71,6 +71,8 @@ export const SuccessMessages = {
   SPIN00009: { mensagem: 'Comunidades relacionadas ao pin retornadas com sucesso.', status: 200 },
   SPIN00010: { mensagem: 'Pin relacionado à comunidade com sucesso.', status: 200 },
   SPIN00011: { mensagem: 'Relacionamento pin-comunidade removido com sucesso.', status: 200 },
+  SPIN00012: { mensagem: 'Pins disponíveis retornados com sucesso.', status: 200},
+  SPIN00013: {mensagem: 'Pins da comunidade retornados com sucesso.', status: 200},
 
   // ── Busca ─────────────────────────────────────────────────────────────────
   SBSC00001: { mensagem: 'Busca realizada com sucesso.', status: 200 },

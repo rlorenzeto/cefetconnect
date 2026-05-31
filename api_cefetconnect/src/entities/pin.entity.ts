@@ -6,19 +6,45 @@ export enum OrigemPin {
   GRADMENT = 'gradment',
 }
 
-@Entity('Pin')
+export enum CategoriaPin {
+  DISCIPLINA = 'disciplina',
+  IC = 'ic',
+  PROJETO = 'projeto',
+  MONITORIA = 'monitoria',
+  EVENTO = 'evento',
+  EXPERIENCIA = 'experiencia',
+  OUTRO = 'outro',
+}
+
+@Entity('pin')
 export class Pin {
   @PrimaryGeneratedColumn('uuid')
   idPin: string;
 
-  @Column({ length: 100 })
+  @Column({
+    type: 'varchar',
+    length: 100,
+  })
   nomePin: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    default: CategoriaPin.DISCIPLINA,
+  })
+  categoriaPin: CategoriaPin;
 
   @ManyToMany(() => Comunidade)
   @JoinTable({
-    name: 'relacionadoA',
-    joinColumn: { name: 'fk_Pin_idPin', referencedColumnName: 'idPin' },
-    inverseJoinColumn: { name: 'fk_Comunidade_idComunidade', referencedColumnName: 'idComunidade' },
+    name: 'relacionadoa',
+    joinColumn: {
+      name: 'fk_Pin_idPin',
+      referencedColumnName: 'idPin',
+    },
+    inverseJoinColumn: {
+      name: 'fk_Comunidade_idComunidade',
+      referencedColumnName: 'idComunidade',
+    },
   })
   comunidades: Comunidade[];
 }
