@@ -13,6 +13,8 @@ import {
   getCurrentUser,
   getProfileImageUrl,
 } from "../../services/authService";
+import { listCommunityPins } from "../../services/pinService";
+
 
 export default function CommunityPage() {
   const navigate = useNavigate();
@@ -24,6 +26,7 @@ export default function CommunityPage() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [communityPins, setCommunityPins] = useState([]);
   const [error, setError] = useState("");
 
   const userImageUrl = useMemo(() => {
@@ -47,9 +50,11 @@ export default function CommunityPage() {
       const communityResponse = await getComunidade(idComunidade);
       const communityData = communityResponse?.dados || communityResponse;
 
-      console.log("COMUNIDADE CARREGADA:", communityData);
-
       setCommunity(communityData);
+
+      const pinsData = await listCommunityPins(idComunidade);
+
+      setCommunityPins(Array.isArray(pinsData) ? pinsData : []);
 
       if (!communityData?.isMembro) {
         setPosts([]);
@@ -158,6 +163,7 @@ export default function CommunityPage() {
   const sharedProps = {
     community,
     posts,
+    pins: communityPins,
     currentUser,
     userImageUrl,
     isLoading,
@@ -170,6 +176,12 @@ export default function CommunityPage() {
     onCreatePost: handleCreatePost,
     onPostDeleted: handlePostDeleted,
     onPostUpdated: handlePostUpdated,
+    onRefreshCommunityPins: async () => {
+      const pinsResponse = await listCommunityPins(idComunidade);
+      const pinsData = pinsResponse?.dados || pinsResponse;
+
+      setCommunityPins(Array.isArray(pinsData) ? pinsData : []);
+    },
   };
 
   return (

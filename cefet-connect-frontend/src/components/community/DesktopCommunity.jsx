@@ -4,12 +4,17 @@ import CreatePostCard from "../feed/CreatePostCard";
 import PostCard from "../feed/PostCard";
 import CommunityMembersModal from "./CommunityMembersModal";
 import { getCommunityImageUrl } from "../../services/comunidadeService";
+import PinBadge from "../pin/PinBadge";
+import PinDetailsModal from "../pin/PinDetailsModal";
+import CommunityPinsManagerModal from "../pin/CommunityPinsManagerModal";
 
 export default function DesktopCommunity({
   community,
   posts = [],
   currentUser,
   userImageUrl,
+  pins = [],
+  onRefreshCommunityPins,
   isLoading,
   isCreating,
   error,
@@ -22,6 +27,22 @@ export default function DesktopCommunity({
   onPostUpdated,
 }) {
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+  const [selectedPin, setSelectedPin] = useState(null);
+  const [isPinDetailsOpen, setIsPinDetailsOpen] = useState(false);
+  const [isPinsManagerOpen, setIsPinsManagerOpen] = useState(false);
+
+  const isCommunityCreator =
+    String(
+      community?.idCriador ||
+        community?.criador?.idUsuario ||
+        community?.usuario?.idUsuario ||
+        ""
+    ) === String(currentUser?.idUsuario || "");
+
+  function handleOpenPin(pin) {
+    setSelectedPin(pin);
+    setIsPinDetailsOpen(true);
+  }
 
   const members = Array.isArray(community?.membros) ? community.membros : [];
   const totalMembers = Number(community?.totalMembros || members.length || 0);
@@ -103,6 +124,29 @@ export default function DesktopCommunity({
                       {community?.descricaoComunidade ||
                         "Comunidade sem descrição."}
                     </p>
+                    {pins.length > 0 && (
+                      <div className="mt-5">
+                        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#777]">
+                          Pins relacionados
+                        </p>
+
+                        <div className="flex flex-wrap gap-2">
+                          {pins.map((pin) => (
+                            <PinBadge key={pin.idPin} pin={pin} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {isCommunityCreator && (
+                      <button
+                        type="button"
+                        onClick={() => setIsPinsManagerOpen(true)}
+                        className="mt-4 rounded-full bg-[#089464] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#067f57]"
+                      >
+                        Gerenciar pins
+                      </button>
+                    )}
                     <div className="mt-5 flex flex-wrap items-center gap-3">
                       <button
                         type="button"
@@ -169,6 +213,19 @@ export default function DesktopCommunity({
         onClose={() => setIsMembersModalOpen(false)}
         members={members}
         communityName={community?.nomeComunidade}
+      />
+
+      <PinDetailsModal
+        pin={selectedPin}
+        isOpen={isPinDetailsOpen}
+        onClose={() => setIsPinDetailsOpen(false)}
+      />
+      <CommunityPinsManagerModal
+        isOpen={isPinsManagerOpen}
+        onClose={() => setIsPinsManagerOpen(false)}
+        community={community}
+        currentPins={pins}
+        onUpdated={onRefreshCommunityPins}
       />
     </div>
   );

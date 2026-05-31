@@ -12,6 +12,7 @@ import {
   updateComunidade,
 } from "../../services/comunidadeService";
 import { getCurrentUser } from "../../services/authService";
+import { listCommunityPins } from "../../services/pinService";
 
 export default function CommunitiesPage() {
   const navigate = useNavigate();
@@ -42,12 +43,37 @@ export default function CommunitiesPage() {
       const response = await listComunidades();
       const dados = response?.dados || response;
 
-      setCommunities(Array.isArray(dados) ? dados : []);
+      const communitiesWithPins = await attachPinsToCommunities(
+        Array.isArray(dados) ? dados : []
+      );
+
+      setCommunities(communitiesWithPins);
     } catch (error) {
       setError(error.message || "Não foi possível carregar as comunidades.");
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function attachPinsToCommunities(communitiesList = []) {
+    return Promise.all(
+      communitiesList.map(async (community) => {
+        try {
+          const response = await listCommunityPins(community.idComunidade);
+          const pinsData = response?.dados || response;
+
+          return {
+            ...community,
+            pins: Array.isArray(pinsData) ? pinsData.slice(0, 2) : [],
+          };
+        } catch {
+          return {
+            ...community,
+            pins: [],
+          };
+        }
+      })
+    );
   }
 
   function handleOpenCreate() {

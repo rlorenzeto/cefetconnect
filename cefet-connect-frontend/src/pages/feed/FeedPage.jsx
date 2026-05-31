@@ -31,6 +31,7 @@ import {
   isEventFinished,
 } from "../../utils/eventFilters";
 import EventDetailsModal from "../../components/event/EventDetailsModal";
+import { listUserPins } from "../../services/pinService";
 
 export default function FeedPage() {
   const navigate = useNavigate();
@@ -164,6 +165,44 @@ export default function FeedPage() {
     }
   }
 
+  async function attachPinsToPosts(postsList = []) {
+    const authorIds = [
+      ...new Set(
+        postsList
+          .map((post) => post?.usuario?.idUsuario)
+          .filter(Boolean)
+          .map(String)
+      ),
+    ];
+
+    const pinsByUser = {};
+
+    await Promise.all(
+      authorIds.map(async (idUsuario) => {
+        try {
+          const response = await listUserPins(idUsuario);
+          const pinsData = response?.dados || response;
+
+          pinsByUser[idUsuario] = Array.isArray(pinsData) ? pinsData : [];
+        } catch {
+          pinsByUser[idUsuario] = [];
+        }
+      })
+    );
+
+    return postsList.map((post) => {
+      const authorId = String(post?.usuario?.idUsuario || "");
+
+      return {
+        ...post,
+        usuario: {
+          ...(post.usuario || {}),
+          pins: pinsByUser[authorId] || [],
+        },
+      };
+    });
+  }
+
   async function loadInitialData() {
     try {
       setIsLoading(true);
@@ -221,7 +260,9 @@ export default function FeedPage() {
             )
         : [];
 
-      setPosts(orderedPosts);
+      const postsWithPins = await attachPinsToPosts(orderedPosts);
+
+      setPosts(postsWithPins);
     } catch (error) {
       setError(error.message || "Não foi possível carregar o feed.");
     } finally {
@@ -237,12 +278,16 @@ export default function FeedPage() {
       const response = await createPost(payload);
       const newPost = response?.dados || response;
 
+      const userPinsResponse = await listUserPins(idUsuario);
+      const userPinsData = userPinsResponse?.dados || userPinsResponse;
+
       const postWithAuthorPhoto = {
         ...newPost,
         usuario: {
           ...user,
           ...(newPost.usuario || {}),
           fotoUrl: newPost.usuario?.fotoUrl || user?.fotoUrl,
+          pins: Array.isArray(userPinsData) ? userPinsData : [],
         },
       };
 

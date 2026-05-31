@@ -3,6 +3,7 @@ import ProfileAvatar from "./ProfileAvatar";
 import ProfileSidebar from "./ProfileSidebar";
 import PostCard from "../feed/PostCard";
 import ProfileCommunities from "./ProfileCommunities";
+import ProfilePins from "../pin/ProfilePins";
 
 export default function DesktopProfile({
   user,
@@ -19,12 +20,15 @@ export default function DesktopProfile({
   showAllCommunities = false,
   onToggleCommunities,
   onOpenCommunity,
+  pins = [],
+  onRefreshPins,
+  onRemovePin,
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
         <ProfileSidebar />
 
-        <main className="flex-1 px-16 py-12">
+        <main className="ml-[132px] px-16 py-12">
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -102,6 +106,13 @@ export default function DesktopProfile({
                       : "Adicione uma descrição acadêmica no seu perfil, como curso, período, interesses, projetos e áreas que você acompanha."}
                   </p>
                 </div>
+
+                <ProfilePins
+                  pins={pins}
+                  isOwnProfile={isOwnProfile}
+                  onRefreshPins={onRefreshPins}
+                  onRemovePin={onRemovePin}
+                />
 
                 {isOwnProfile && (
                   <button

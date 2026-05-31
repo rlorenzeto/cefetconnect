@@ -12,6 +12,10 @@ import {
   listUserPosts,
 } from "../../services/postService";
 import { listMinhasComunidades } from "../../services/comunidadeService";
+import {
+  listUserPins,
+  removePinFromProfile,
+} from "../../services/pinService";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -27,6 +31,7 @@ export default function ProfilePage() {
   const [userPosts, setUserPosts] = useState([]);
   const [error, setError] = useState("");
   const [communities, setCommunities] = useState([]);
+  const [pins, setPins] = useState([]);
   const [showAllCommunities, setShowAllCommunities] = useState(false);
 
   const isOwnProfile =
@@ -54,17 +59,21 @@ export default function ProfilePage() {
         setIsLoading(true);
         setError("");
 
-        const [profileResponse, postsResponse, communitiesResponse] =
+        const [profileResponse, postsResponse, communitiesResponse, pinsResponse] =
           await Promise.all([
             getUserProfile(profileId),
             listUserPosts(profileId),
             listMinhasComunidades(),
+            listUserPins(profileId),
           ]);
         const profile = profileResponse?.dados || profileResponse;
         const postsData = postsResponse?.dados || postsResponse;
 
         const communitiesData = communitiesResponse?.dados || communitiesResponse;
         setCommunities(Array.isArray(communitiesData) ? communitiesData : []);
+
+        const pinsData = pinsResponse?.dados || pinsResponse;
+        setPins(Array.isArray(pinsData) ? pinsData : []);
 
         setUser({
           ...profile,
@@ -150,6 +159,37 @@ export default function ProfilePage() {
     );
   }
 
+  async function refreshPins() {
+    try {
+      const response = await listUserPins(profileId);
+      const pinsData = response?.dados || response;
+
+      setPins(Array.isArray(pinsData) ? pinsData : []);
+    } catch (error) {
+      setError(error.message || "Não foi possível atualizar os pins.");
+    }
+  }
+
+  async function handleRemovePin(pin) {
+    if (!isOwnProfile) return;
+
+    const confirmed = window.confirm(
+      `Remover o pin "${pin.nomePin}" do seu perfil?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await removePinFromProfile(pin.idPin);
+
+      setPins((prev) =>
+        prev.filter((item) => String(item.idPin) !== String(pin.idPin))
+      );
+    } catch (error) {
+      setError(error.message || "Não foi possível remover o pin.");
+    }
+  }
+
   return (
     <>
       <DesktopProfile
@@ -167,6 +207,9 @@ export default function ProfilePage() {
         showAllCommunities={showAllCommunities}
         onToggleCommunities={() => setShowAllCommunities((prev) => !prev)}
         onOpenCommunity={(idComunidade) => navigate(`/comunidades/${idComunidade}`)}
+        pins={pins}
+        onRefreshPins={refreshPins}
+        onRemovePin={handleRemovePin}
       />
 
       <MobileProfile
@@ -184,6 +227,9 @@ export default function ProfilePage() {
         showAllCommunities={showAllCommunities}
         onToggleCommunities={() => setShowAllCommunities((prev) => !prev)}
         onOpenCommunity={(idComunidade) => navigate(`/comunidades/${idComunidade}`)}
+        pins={pins}
+        onRefreshPins={refreshPins}
+        onRemovePin={handleRemovePin}
       />
     </>
   );

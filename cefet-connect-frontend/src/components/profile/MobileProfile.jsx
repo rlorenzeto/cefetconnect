@@ -4,6 +4,7 @@ import ProfileAvatar from "./ProfileAvatar";
 import PostCard from "../feed/PostCard";
 import MobileBottomNav from "../common/MobileBottomNav";
 import ProfileCommunities from "./ProfileCommunities";
+import ProfilePins from "../pin/ProfilePins";
 
 export default function MobileProfile({
   user,
@@ -20,6 +21,9 @@ export default function MobileProfile({
   showAllCommunities = false,
   onToggleCommunities,
   onOpenCommunity,
+  pins = [],
+  onRefreshPins,
+  onRemovePin,
 }) {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] text-[#202020] lg:hidden">
@@ -107,6 +111,12 @@ export default function MobileProfile({
                 : "Adicione uma descrição acadêmica no seu perfil."}
             </p>
           </div>
+          <ProfilePins
+            pins={pins}
+            isOwnProfile={isOwnProfile}
+            onRefreshPins={onRefreshPins}
+            onRemovePin={onRemovePin}
+          />
 
           {isOwnProfile && (
             <button

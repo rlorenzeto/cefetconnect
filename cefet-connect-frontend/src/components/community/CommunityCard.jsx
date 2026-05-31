@@ -1,4 +1,5 @@
 import { getCommunityImageUrl } from "../../services/comunidadeService";
+import PinBadge from "../pin/PinBadge";
 
 export default function CommunityCard({
   community,
@@ -62,6 +63,29 @@ export default function CommunityCard({
         <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[#666]">
           {community.descricaoComunidade || "Comunidade sem descrição."}
         </p>
+        {Array.isArray(community.pins) && community.pins.length > 0 && (
+          <div className="mt-3">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[#777]">
+              Pins principais
+            </p>
+
+            <div className="flex flex-wrap gap-1">
+              {community.pins.slice(0, 2).map((pin) => (
+                <PinBadge
+                  key={pin.idPin}
+                  pin={pin}
+                  compact
+                />
+              ))}
+
+              {community.pins.length > 2 && (
+                <span className="rounded-full bg-[#f1f1f1] px-2 py-0.5 text-[10px] font-bold text-[#777]">
+                  +{community.pins.length - 2}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs text-[#777]">
           <span className="rounded-full bg-[#f1f1f1] px-3 py-1">

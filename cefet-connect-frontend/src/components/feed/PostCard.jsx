@@ -26,6 +26,9 @@ import {
   sairEvento,
   updateEvento,
 } from "../../services/eventoService";
+import PinDetailsModal from "../pin/PinDetailsModal";
+import UserPinsModal from "../pin/UserPinsModal";
+import PinBadge from "../pin/PinBadge";
 
 function PostActionMenu({ onEdit, onDelete, canEdit = true }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -113,6 +116,9 @@ export default function PostCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEventEditModalOpen, setIsEventEditModalOpen] = useState(false);
   const [isSavingEventEdit, setIsSavingEventEdit] = useState(false);
+  const [selectedPin, setSelectedPin] = useState(null);
+  const [isPinDetailsOpen, setIsPinDetailsOpen] = useState(false);
+  const [isUserPinsModalOpen, setIsUserPinsModalOpen] = useState(false);
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
@@ -457,6 +463,17 @@ export default function PostCard({
       : `Mostrar comentários (${totalText})`;
   }
 
+  function handleOpenPin(pin) {
+    setSelectedPin(pin);
+    setIsPinDetailsOpen(true);
+  }
+
+  const authorPins = Array.isArray(post?.usuario?.pins)
+    ? post.usuario.pins
+    : [];
+
+  const visibleAuthorPins = authorPins.slice(0, 3);
+
   return (
     <>
       <article
@@ -467,29 +484,62 @@ export default function PostCard({
       >
         <header className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleGoToUserProfile}
-            className="shrink-0 rounded-full transition hover:opacity-85"
-            aria-label={`Abrir perfil de ${post?.usuario?.nomeUsuario || "usuário"}`}
-          >
-            <ProfileAvatar
-              src={getProfileImageUrl(post?.usuario?.fotoUrl)}
-              name={post?.usuario?.nomeUsuario}
-              size="post"
-            />
-          </button>
-
-          <div>
             <button
               type="button"
               onClick={handleGoToUserProfile}
-              className="block max-w-[220px] truncate text-left text-sm font-bold text-[#202020] transition hover:underline"
+              className="shrink-0 rounded-full transition hover:opacity-85"
+              aria-label={`Abrir perfil de ${post?.usuario?.nomeUsuario || "usuário"}`}
             >
-              {post?.usuario?.nomeUsuario || "Usuário"}
+              <ProfileAvatar
+                src={getProfileImageUrl(post?.usuario?.fotoUrl)}
+                name={post?.usuario?.nomeUsuario}
+                size="post"
+              />
             </button>
 
-              <p className="text-xs text-[#777]">
+            <div className="min-w-0 flex-1">
+              <button
+                type="button"
+                onClick={handleGoToUserProfile}
+                className="block max-w-[220px] truncate text-left text-sm font-bold text-[#202020] transition hover:underline"
+              >
+                {post?.usuario?.nomeUsuario || "Usuário"}
+              </button>
+
+              {authorPins.length > 0 && (
+                <div className="mt-1 flex max-w-full items-center gap-1 overflow-x-auto pb-1">
+                  {visibleAuthorPins.map((pin) => (
+                    <PinBadge
+                      key={pin.idPin}
+                      pin={pin}
+                      compact
+                      onClick={handleOpenPin}
+                    />
+                  ))}
+
+                  {authorPins.length > visibleAuthorPins.length && (
+                    <button
+                      type="button"
+                      onClick={() => setIsUserPinsModalOpen(true)}
+                      className="shrink-0 rounded-full bg-[#f1f1f1] px-2.5 py-1 text-[11px] font-extrabold text-[#555] transition hover:bg-[#e8f7ef] hover:text-[#089464]"
+                    >
+                      +{authorPins.length - visibleAuthorPins.length}
+                    </button>
+                  )}
+
+                  {authorPins.length <= visibleAuthorPins.length && (
+                    <button
+                      type="button"
+                      onClick={() => setIsUserPinsModalOpen(true)}
+                      className="shrink-0 rounded-full bg-[#f1f1f1] px-2.5 py-1 text-[11px] font-extrabold text-[#555] transition hover:bg-[#e8f7ef] hover:text-[#089464]"
+                    >
+                      Ver pins
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <p className="mt-1 text-xs text-[#777]">
                 Publicado em {getPostLocationLabel()}
               </p>
 
@@ -665,6 +715,19 @@ export default function PostCard({
           users={likedUsers}
         />
       )}
+      <PinDetailsModal
+        pin={selectedPin}
+        isOpen={isPinDetailsOpen}
+        onClose={() => setIsPinDetailsOpen(false)}
+      />
+
+      <UserPinsModal
+        isOpen={isUserPinsModalOpen}
+        onClose={() => setIsUserPinsModalOpen(false)}
+        user={post?.usuario}
+        pins={authorPins}
+        onOpenPin={handleOpenPin}
+      />
     </>
   );
 }
