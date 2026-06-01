@@ -100,14 +100,19 @@ export class GradmentService {
         return [];
       }
 
-      const data = await response.json() as GradmentMateriasResponse;
+      const data = await response.json() as any;
+
+      // 🔥 Correção defensiva: aceita tanto o formato do PDF quanto o do simulado do WhatsApp
+      if (data.dados && data.dados.materias_aprovadas) {
+        return data.dados.materias_aprovadas;
+      }
+
       return data.materias_aprovadas ?? [];
     } catch (e) {
       this.logger.error(`[Gradment] Erro de conexão em obterMateriasAprovadas: ${e}`);
       return [];
     }
   }
-
   // Método de conveniência: executa o fluxo completo (token + dados do usuário) em uma chamada só
   async buscarDadosUsuario(email: string): Promise<GradmentDadosUsuario | null> {
     const sessionToken = await this.obterTokenSessao(email);

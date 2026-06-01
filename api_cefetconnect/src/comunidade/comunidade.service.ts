@@ -139,11 +139,27 @@ export class ComunidadeService {
     const dadosGradment = await this.gradmentService.buscarDadosUsuario(email);
     if (!dadosGradment) return [];
 
-    return await this.gradmentService.obterMateriasAprovadas(
+    const materias = await this.gradmentService.obterMateriasAprovadas(
       dadosGradment.usuario.id,
       dadosGradment.sessionToken,
     );
+
+    // 🌟 FILTRO ADICIONADO: Garante que apenas matérias com status "APROVADO" sejam retornadas
+    return materias.filter(materia => materia.status === 'APROVADO');
   }
+ /* async findMinhasDisciplinas(email: string) {
+    // Simulando EXATAMENTE a resposta que o dev do GradMent mandou no grupo.
+    return [
+      {
+        materia_id: 1,
+        codigo: "INT101",
+        nome: "Integrações Distribuídas",
+        media_final: 8.5,
+        status: "APROVADO",
+        aprovado_em: "2026-05-28"
+      }
+    ];
+  }*/
 
   async findPorDisciplina(disciplinaId: number) {
     return await this.comunidadeRepository.find({
