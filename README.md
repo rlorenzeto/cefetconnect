@@ -18,7 +18,7 @@ O projeto utiliza uma stack moderna focada em escalabilidade e performance:
 - **Front-end:** [React](https://reactjs.org/)
 - **Back-end:** [Node.js](https://nodejs.org/) com [TypeScript](https://www.typescriptlang.org/)
 - **Banco de Dados:** MySQL
-- **Arquitetura:** Planejada para suportar módulos independentes e escaláveis.
+- **Arquitetura:** (Monolito em Camadas) single-server com containers Docker
 
 ## 📋 Módulos do MVP (Mínimo Produto Viável)
 
