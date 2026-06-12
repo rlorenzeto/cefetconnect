@@ -1,0 +1,155 @@
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { BadRequestException } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
+
+// O código guarda o caminho relativo no banco, tipo uploads/posts/abc123.jpg.
+
+export const UPLOADS_DEST = 'uploads/perfil';
+export const UPLOADS_POSTS_DEST = 'uploads/posts';
+export const UPLOADS_COMUNIDADE_DEST = 'uploads/comunidade';
+export const UPLOADS_EVENTO_DEST = 'uploads/evento';
+
+// Upload de fotos de posts
+export const multerPostFotosConfig = {
+  storage: diskStorage({
+    destination: UPLOADS_POSTS_DEST,
+    filename: (_req, file, callback) => {
+      const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+      callback(null, uniqueName);
+    },
+  }),
+  fileFilter: (
+    _req: Express.Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      callback(null, true);
+    } else {
+      callback(
+        new BadRequestException(
+          'Apenas imagens são aceitas (jpeg, png, gif, webp).',
+        ),
+        false,
+      );
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB por arquivo
+  },
+};
+
+// Upload de fotos de perfil
+export const multerPerfilConfig = {
+  storage: diskStorage({
+    destination: UPLOADS_DEST,
+    filename: (_req, file, callback) => {
+      const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+      callback(null, uniqueName);
+    },
+  }),
+  fileFilter: (
+    _req: Express.Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      callback(null, true);
+    } else {
+      callback(
+        new BadRequestException(
+          'Apenas imagens são aceitas (jpeg, png, gif, webp).',
+        ),
+        false,
+      );
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB
+  },
+};
+
+// Upload de fotos de comunidade (capa e perfil)
+export const multerComunidadeConfig = {
+  storage: diskStorage({
+    destination: UPLOADS_COMUNIDADE_DEST,
+    filename: (_req, file, callback) => {
+      const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+      callback(null, uniqueName);
+    },
+  }),
+  fileFilter: (
+    _req: Express.Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      callback(null, true);
+    } else {
+      callback(
+        new BadRequestException(
+          'Apenas imagens são aceitas (jpeg, png, gif, webp).',
+        ),
+        false,
+      );
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB
+  },
+};
+
+// Upload de fotos de evento (capa e perfil)
+export const multerEventoConfig = {
+  storage: diskStorage({
+    destination: UPLOADS_EVENTO_DEST,
+    filename: (_req, file, callback) => {
+      const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
+      callback(null, uniqueName);
+    },
+  }),
+  fileFilter: (
+    _req: Express.Request,
+    file: Express.Multer.File,
+    callback: (error: Error | null, acceptFile: boolean) => void,
+  ) => {
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      callback(null, true);
+    } else {
+      callback(
+        new BadRequestException(
+          'Apenas imagens são aceitas (jpeg, png, gif, webp).',
+        ),
+        false,
+      );
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5 MB
+  },
+};

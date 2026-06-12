@@ -1,0 +1,62 @@
+import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+import { UsuarioService } from '../aluno/usuario.service.js';
+import { LoginUsuarioDto } from '../aluno/dto/login-usuario.dto.js';
+import { ErrorMessages } from '../common/constants/messages.errors.js';
+import { GradmentService } from '../gradment/gradment.service.js';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private usuarioService: UsuarioService,
+    private jwtService: JwtService,
+    private gradmentService: GradmentService,
+  ) {}
+
+  async login(loginDto: LoginUsuarioDto) { //Recebe os dados do login do aluno
+    const usuario = await this.usuarioService.findByEmail(loginDto.email);
+    
+    if (!usuario) {
+      throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
+    }
+
+    //Compara a senha que o aluno digitou com o salvo no banco
+    const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
+
+    if (!senhaValida) {
+      throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
+    }
+
+    if (!usuario.emailVerificado) {
+      throw new ForbiddenException(ErrorMessages.EAUT00002.mensagem);
+    }
+
+    // Se o usuário e a senha estiverem corretos, gera o token JWT
+    const payload = { email: usuario.email, sub: usuario.idUsuario};
+
+    // Busca dados do Gradment de forma não bloqueante
+    // Se o Gradment estiver fora do ar ou não configurado, o login continua normalmente
+    const gradmentDados = await this.gradmentService.buscarDadosUsuario(usuario.email);
+
+    // Devolve o Token gerado e alguns dados básicos para o frontend exibir na tela
+    return {
+      access_token: this.jwtService.sign(payload),
+      usuario: {
+        idUsuario: usuario.idUsuario,
+        matricula: usuario.matricula,
+        nomeUsuario: usuario.nomeUsuario,
+        email: usuario.email,
+        fotoUrl: usuario.fotoUrl ?? null,
+        ...(gradmentDados && { // Se os dados do Gradment foram encontrados, inclui-os no response
+          gradment: {
+            id: gradmentDados.usuario.id,
+            cursoId: gradmentDados.usuario.curso_id,
+            faculdadeId: gradmentDados.usuario.faculdade_id,
+          },
+        }),
+      },
+    };
+  }
+}

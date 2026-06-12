@@ -1,0 +1,63 @@
+import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { UsuarioModule } from './aluno/usuario.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from './auth/auth.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EmailModule } from './email/email.module';
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
+import { PostModule } from './post/post.module';
+import { ComentarioModule } from './comentario/comentario.module';
+import { ComunidadeModule } from './comunidade/comunidade.module';
+import { EventoModule } from './evento/evento.module';
+import { SearchModule } from './search/search.module';
+import { PinModule } from './pin/pin.module';
+import { GradmentModule } from './gradment/gradment.module';
+import { RankingModule } from './ranking/ranking.module';
+import { IconeModule } from './icone/icone.module';
+import { InteracaoModule } from './interacao/interacao.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get('DB_HOST', 'localhost'),
+        port: configService.get('DB_PORT', 3306),
+        username: configService.get('DB_USER', 'root'),
+        password: configService.get('DB_PASSWORD', ''),
+        database: configService.get('DB_NAME', 'cefetconnect'),
+        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
+      }),
+    }),
+    EmailModule,
+    UsuarioModule,
+    AuthModule,
+    PostModule,
+    ComentarioModule,
+    ComunidadeModule,
+    EventoModule,
+    SearchModule,
+    PinModule,
+    GradmentModule,
+    RankingModule,
+    IconeModule,
+    InteracaoModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD, // Garante que o JwtAuthGuard seja aplicado a todas as rotas
+      useClass: JwtAuthGuard,
+    },
+  ],
+})
+export class AppModule {}
