@@ -6,6 +6,9 @@ import { UsuarioService } from '../aluno/usuario.service.js';
 import { LoginUsuarioDto } from '../aluno/dto/login-usuario.dto.js';
 import { ErrorMessages } from '../common/constants/messages.errors.js';
 import { GradmentService } from '../gradment/gradment.service.js';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Usuario } from '../entities/usuario.entity.js';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +16,8 @@ export class AuthService {
     private usuarioService: UsuarioService,
     private jwtService: JwtService,
     private gradmentService: GradmentService,
+    @InjectRepository(Usuario)
+    private usuarioRepository: Repository<Usuario>,
   ) {}
 
   async login(loginDto: LoginUsuarioDto) { //Recebe os dados do login do aluno
@@ -34,7 +39,25 @@ export class AuthService {
     }
 
     // Se o usuário e a senha estiverem corretos, gera o token JWT
-    const payload = { email: usuario.email, sub: usuario.idUsuario};
+    const payload = { email: usuario.email, sub: usuario.idUsuario };
+
+    // 1. Gera o access_token normal do sistema (curta duração)
+    const accessToken = this.jwtService.sign(payload);
+
+    // 2. Gera o token de integração (longa duração, representa o usuário)
+    // Esse token vai ser guardado pelo Gradment para linkar as contas
+    const tokenIntegracao = this.jwtService.sign(
+      { sub: usuario.idUsuario, type: 'link_gradment' },
+      { expiresIn: '365d' },
+    );
+
+    // 3. Se o Gradment enviou o token deles, salva no usuário
+    if (loginDto.tokenGradment) {
+      await this.usuarioRepository.update(
+        { idUsuario: usuario.idUsuario },
+        { tokenIntegracao: loginDto.tokenGradment },
+      );
+    }
 
     // Busca dados do Gradment de forma não bloqueante
     // Se o Gradment estiver fora do ar ou não configurado, o login continua normalmente
@@ -42,7 +65,8 @@ export class AuthService {
 
     // Devolve o Token gerado e alguns dados básicos para o frontend exibir na tela
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
+      token_integracao: tokenIntegracao,
       usuario: {
         idUsuario: usuario.idUsuario,
         matricula: usuario.matricula,
