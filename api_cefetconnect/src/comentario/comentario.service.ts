@@ -12,6 +12,7 @@ import { Comentario } from '../entities/comentario.entity';
 import { Post } from '../entities/post.entity';
 import { Usuario } from '../entities/usuario.entity';
 import { ErrorMessages } from '../common/constants/messages.errors';
+import { InteracaoService } from '../interacao/interacao.service';
 
 @Injectable()
 export class ComentarioService {
@@ -24,6 +25,7 @@ export class ComentarioService {
     private usuarioRepository: Repository<Usuario>,
     @InjectDataSource()
     private dataSource: DataSource,
+    private interacaoService: InteracaoService,
   ) {}
 
   async create(idPost: string, idUsuario: number, createComentarioDto: CreateComentarioDto) {
@@ -49,7 +51,20 @@ export class ComentarioService {
       dataHora: new Date(),
     });
 
-    return await this.comentarioRepository.save(comentario);
+    const comentarioSalvo = await this.comentarioRepository.save(comentario);
+
+    // Verifica se é o primeiro comentário do usuário neste post
+    const comentariosDoUsuarioNoPost = await this.comentarioRepository.count({
+      where: {
+        post: { idPost: post.idPost },
+        usuario: { idUsuario: idUsuario },
+      },
+    });
+    if (comentariosDoUsuarioNoPost === 1) {
+      await this.interacaoService.incrementarContador(idUsuario, 1);
+    }
+
+    return comentarioSalvo;
   }
 
   // Função responsável por retornar os comentários quando estamos vendo um post.
@@ -120,7 +135,7 @@ export class ComentarioService {
   async remove(id: string, idUsuario: number) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario: id },
-      relations: ['usuario'],
+      relations: ['usuario', 'post'],
     });
 
     if (!comentario) {
@@ -129,6 +144,17 @@ export class ComentarioService {
 
     if (comentario.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
+    }
+
+    // Conta quantos comentários o usuário tem neste post (incluindo o atual)
+    const totalComentariosNoPost = await this.comentarioRepository.count({
+      where: {
+        post: { idPost: comentario.post.idPost },
+        usuario: { idUsuario: idUsuario },
+      },
+    });
+    if (totalComentariosNoPost === 1) {
+      await this.interacaoService.decrementarContador(idUsuario, 1);
     }
 
     return await this.comentarioRepository.remove(comentario);
@@ -155,11 +181,30 @@ export class ComentarioService {
       throw new ConflictException(ErrorMessages.EUSR00021.mensagem);
     }
 
+    // Busca o comentário para obter o ID do post
+    const comentarioComPost = await this.comentarioRepository.findOne({
+      where: { idComentario },
+      relations: ['post'],
+    });
+
+    // Conta quantas curtidas o usuário já deu em comentários deste post
+    const curtidasNoPost: { total: number }[] = await this.dataSource.query(
+      `SELECT COUNT(*) as total FROM likeComentario lc
+       INNER JOIN Comentario c ON c.idComentario = lc.comentarioIdComentario
+       WHERE lc.usuarioIdUsuario = ? AND c.fk_Post_idPost = ?`,
+      [idUsuario, comentarioComPost?.post?.idPost],
+    );
+
     // Insere a curtida
     await this.dataSource.query(
       'INSERT INTO likeComentario (usuarioIdUsuario, comentarioIdComentario) VALUES (?, ?)',
       [idUsuario, idComentario],
     );
+
+    // Incrementa contador apenas na primeira curtida de comentário do usuário no post
+    if (!curtidasNoPost[0] || curtidasNoPost[0].total === 0) {
+      await this.interacaoService.incrementarContador(idUsuario, 1);
+    }
 
     return { curtido: true };
   }
@@ -181,10 +226,29 @@ export class ComentarioService {
       throw new NotFoundException(ErrorMessages.EUSR00022.mensagem);
     }
 
+    // Busca o comentário para obter o ID do post
+    const comentarioComPostDes = await this.comentarioRepository.findOne({
+      where: { idComentario },
+      relations: ['post'],
+    });
+
+    // Conta quantas curtidas o usuário tem em comentários deste post (antes de deletar)
+    const curtidasNoPostAntes: { total: number }[] = await this.dataSource.query(
+      `SELECT COUNT(*) as total FROM likeComentario lc
+       INNER JOIN Comentario c ON c.idComentario = lc.comentarioIdComentario
+       WHERE lc.usuarioIdUsuario = ? AND c.fk_Post_idPost = ?`,
+      [idUsuario, comentarioComPostDes?.post?.idPost],
+    );
+
     await this.dataSource.query(
       'DELETE FROM likeComentario WHERE usuarioIdUsuario = ? AND comentarioIdComentario = ?',
       [idUsuario, idComentario],
     );
+
+    // Decrementa contador apenas se era a única curtida de comentário do usuário no post
+    if (curtidasNoPostAntes[0]?.total === 1) {
+      await this.interacaoService.decrementarContador(idUsuario, 1);
+    }
 
     return { curtido: false };
   }

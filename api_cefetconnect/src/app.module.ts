@@ -15,6 +15,9 @@ import { EventoModule } from './evento/evento.module';
 import { SearchModule } from './search/search.module';
 import { PinModule } from './pin/pin.module';
 import { GradmentModule } from './gradment/gradment.module';
+import { RankingModule } from './ranking/ranking.module';
+import { IconeModule } from './icone/icone.module';
+import { InteracaoModule } from './interacao/interacao.module';
 
 @Module({
   imports: [
@@ -44,6 +47,9 @@ import { GradmentModule } from './gradment/gradment.module';
     SearchModule,
     PinModule,
     GradmentModule,
+    RankingModule,
+    IconeModule,
+    InteracaoModule,
   ],
   controllers: [AppController],
   providers: [
