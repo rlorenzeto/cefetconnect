@@ -4,6 +4,7 @@ import { Repository, Like } from 'typeorm';
 import { Usuario } from '../entities/usuario.entity';
 import { Evento } from '../entities/evento.entity';
 import { Post } from '../entities/post.entity';
+import { Comunidade } from '../entities/comunidade.entity';
 
 @Injectable()
 export class SearchService {
@@ -14,12 +15,14 @@ export class SearchService {
     private eventoRepository: Repository<Evento>,
     @InjectRepository(Post)
     private postRepository: Repository<Post>,
+    @InjectRepository(Comunidade)
+    private comunidadeRepository: Repository<Comunidade>,
   ) {}
 
   async search(q: string) {
     const termo = `%${q}%`;
 
-    const [usuarios, eventos, posts] = await Promise.all([
+    const [usuarios, eventos, posts, comunidades] = await Promise.all([
       this.usuarioRepository.find({
         where: { nomeUsuario: Like(termo) },
         select: {
@@ -62,8 +65,24 @@ export class SearchService {
         },
         take: 10,
       }),
+
+      this.comunidadeRepository.find({
+        where: [
+          { nomeComunidade: Like(termo) },
+          { descricaoComunidade: Like(termo) },
+        ],
+        relations: ['criador'],
+        select: {
+          idComunidade: true,
+          nomeComunidade: true,
+          descricaoComunidade: true,
+          fotoUrlComunidade: true,
+          criador: { nomeUsuario: true },
+        },
+        take: 10,
+      }),
     ]);
 
-    return { usuarios, eventos, posts };
+    return { usuarios, eventos, posts, comunidades };
   }
 }

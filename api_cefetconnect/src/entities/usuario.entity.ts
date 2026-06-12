@@ -11,6 +11,7 @@ import { Post } from './post.entity.js';
 import { Evento } from './evento.entity.js';
 import { Comentario } from './comentario.entity.js';
 import { Comunidade } from './comunidade.entity.js';
+import { PossuiIcone } from '../icone/entities/possui-icone.entity.js';
 
 @Entity('Usuario')
 export class Usuario {
@@ -41,6 +42,12 @@ export class Usuario {
   @Column({ type: 'varchar', length: 6, nullable: true })
   codigoVerificacao!: string | null;
 
+  @Column({ type: 'int', default: 0 })
+  contadorInteracaoUsuario!: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'token_integracao' })
+  tokenIntegracao?: string | null;
+
   // Relacionamentos 1:N
   @OneToMany(() => Post, (post) => post.usuario)
   posts!: Post[];
@@ -56,6 +63,9 @@ export class Usuario {
 
   @OneToMany(() => PossuiPin, (pp) => pp.usuario)
   pinsAssociados!: PossuiPin[];
+
+  @OneToMany(() => PossuiIcone, (pi) => pi.usuario)
+  iconesPossuidos!: PossuiIcone[];
 
   @OneToMany(() => Comunidade, (comunidade) => comunidade.criador)
   comunidadesCriadas!: Comunidade[];

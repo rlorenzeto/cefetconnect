@@ -14,6 +14,7 @@ import { FotoPost } from '../entities/foto-post.entity';
 import { Comentario } from '../entities/comentario.entity';
 import { Comunidade } from '../entities/comunidade.entity';
 import { ErrorMessages } from '../common/constants/messages.errors';
+import { InteracaoService } from '../interacao/interacao.service';
 
 @Injectable()
 export class PostService {
@@ -30,6 +31,7 @@ export class PostService {
     private comunidadeRepository: Repository<Comunidade>,
     @InjectDataSource() //executar queries SQL manuais
     private dataSource: DataSource,
+    private interacaoService: InteracaoService,
   ) {}
 
   async create(createPostDto: CreatePostDto, idUsuario: number, files?: Express.Multer.File[]) {
@@ -73,6 +75,9 @@ export class PostService {
     });
 
     const postCriado = await this.postRepository.save(criarPost);
+
+    // Incrementa contador de interação do autor (+1 por post criado)
+    await this.interacaoService.incrementarContador(idUsuario, 1);
 
     if (files && files.length > 0) {
       // mapeia os arquivos para criar os registros de fotos, preservando a ordem e associando ao post criado
@@ -388,6 +393,9 @@ export class PostService {
       await this.fotoPostRepository.remove(post.fotosPost);
     }
 
+    // Decrementa contador do autor do post (-1 por post removido)
+    await this.interacaoService.decrementarContador(post.usuario.idUsuario, 1);
+
     // Por fim, deleta o post
     return await this.postRepository.remove(post);
   }
@@ -530,6 +538,9 @@ export class PostService {
       [idUsuario, idPost],
     );
 
+    // Incrementa contador do usuário que curtiu (+1 por post curtido)
+    await this.interacaoService.incrementarContador(idUsuario, 1);
+
     return { curtido: true };
   }
 
@@ -552,6 +563,9 @@ export class PostService {
       'DELETE FROM likePost WHERE usuarioIdUsuario = ? AND postIdPost = ?',
       [idUsuario, idPost],
     );
+
+    // Decrementa contador do usuário que descurtiu (-1 por curtida removida)
+    await this.interacaoService.decrementarContador(idUsuario, 1);
 
     return { curtido: false };
   }
@@ -600,13 +614,26 @@ export class PostService {
     }
 
     const comentario = this.comentarioRepository.create({ texto, post, usuario, dataHora: new Date() });
-    return await this.comentarioRepository.save(comentario);
+    const comentarioSalvo = await this.comentarioRepository.save(comentario);
+
+    // Verifica se é o primeiro comentário do usuário neste post
+    const totalComentariosNoPost = await this.comentarioRepository.count({
+      where: {
+        post: { idPost: post.idPost },
+        usuario: { idUsuario },
+      },
+    });
+    if (totalComentariosNoPost === 1) {
+      await this.interacaoService.incrementarContador(idUsuario, 1);
+    }
+
+    return comentarioSalvo;
   }
 
   async removerComentario(idComentario: string, idUsuario: number) {
     const comentario = await this.comentarioRepository.findOne({
       where: { idComentario },
-      relations: ['usuario'],
+      relations: ['usuario', 'post'],
     });
 
     if (!comentario) {
@@ -615,6 +642,17 @@ export class PostService {
 
     if (comentario.usuario.idUsuario !== idUsuario) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
+    }
+
+    // Decrementa contador apenas se for o único comentário do usuário neste post
+    const totalComentariosNoPost = await this.comentarioRepository.count({
+      where: {
+        post: { idPost: comentario.post.idPost },
+        usuario: { idUsuario },
+      },
+    });
+    if (totalComentariosNoPost === 1) {
+      await this.interacaoService.decrementarContador(idUsuario, 1);
     }
 
     return await this.comentarioRepository.remove(comentario);

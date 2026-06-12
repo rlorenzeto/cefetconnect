@@ -74,8 +74,17 @@ export const SuccessMessages = {
   SPIN00012: { mensagem: 'Pins disponíveis retornados com sucesso.', status: 200},
   SPIN00013: {mensagem: 'Pins da comunidade retornados com sucesso.', status: 200},
 
+  // ── Ícone ───────────────────────────────────────────────────────────────────
+  SICO00001: { mensagem: 'ícone(s) importado(s) com sucesso.', status: 200 },
+  SICO00002: { mensagem: 'Nenhum ícone novo para importar.', status: 200 },
+  SICO00003: { mensagem: 'Ícones retornados com sucesso.', status: 200 },
+
   // ── Busca ─────────────────────────────────────────────────────────────────
   SBSC00001: { mensagem: 'Busca realizada com sucesso.', status: 200 },
+
+  // ── Ranking ───────────────────────────────────────────────────────────────
+  SRAN00001: { mensagem: 'Preview do ranking retornado com sucesso.', status: 200 },
+  SRAN00002: { mensagem: 'Ranking completo retornado com sucesso.', status: 200 },
 
   // ── Autenticação ──────────────────────────────────────────────────────────
   SAUT00001: { mensagem: 'Login realizado com sucesso.', status: 200 },
