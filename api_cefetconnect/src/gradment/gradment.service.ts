@@ -113,6 +113,44 @@ export class GradmentService {
       return [];
     }
   }
+  // Busca os eixos/matérias aprovadas do usuário usando o token de integração do Gradment
+  // O tokenIntegracao é o token que o Gradment nos forneceu e está salvo no campo token_integracao do usuário
+  async obterEixosCompletados(tokenIntegracao: string): Promise<any[]> {
+    if (!this.baseUrl) return [];
+
+    try {
+      const response = await fetch(`${this.baseUrl}/api/integracao/materias-aprovadas`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Integration-Token': tokenIntegracao,
+        },
+      });
+
+      if (!response.ok) {
+        this.logger.warn(`[Gradment] obterEixosCompletados falhou: HTTP ${response.status}`);
+        return [];
+      }
+
+      const data = await response.json() as any;
+
+      // Aceita diferentes formatos de resposta da API do Gradment
+      if (data.dados && Array.isArray(data.dados.materias_aprovadas)) {
+        return data.dados.materias_aprovadas;
+      }
+      if (Array.isArray(data.materias_aprovadas)) {
+        return data.materias_aprovadas;
+      }
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      return [];
+    } catch (e) {
+      this.logger.error(`[Gradment] Erro em obterEixosCompletados: ${e}`);
+      return [];
+    }
+  }
+
   // Método de conveniência: executa o fluxo completo (token + dados do usuário) em uma chamada só
   async buscarDadosUsuario(email: string): Promise<GradmentDadosUsuario | null> {
     const sessionToken = await this.obterTokenSessao(email);

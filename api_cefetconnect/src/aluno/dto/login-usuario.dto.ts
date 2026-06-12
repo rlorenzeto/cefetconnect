@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsStrongPassword, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, IsStrongPassword, MaxLength } from 'class-validator';
 
 export class LoginUsuarioDto {
   @ApiProperty({
@@ -25,4 +25,12 @@ export class LoginUsuarioDto {
     message: 'A senha deve conter obrigatoriamente pelo menos um número, um caractere especial e uma letra maiúscula.' 
   })
   senha!: string;
+
+  @ApiPropertyOptional({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'Token de integração enviado pelo Gradment para vincular as contas. Opcional.',
+  })
+  @IsOptional()
+  @IsString()
+  tokenGradment?: string;
 }

@@ -47,6 +47,10 @@ export const ErrorMessages = {
   EPIN00004: { mensagem: 'Este pin já está relacionado a esta comunidade.', status: 409 },
   EPIN00005: { mensagem: 'Relacionamento pin-comunidade não encontrado.', status: 404 },
 
+  // ── Ícone ──────────────────────────────────────────────────────────────────
+  EICO00001: { mensagem: 'Conta não conectada ao Gradment. Faça login enviando o tokenGradment para vincular as contas.', status: 400 },
+  EICO00002: { mensagem: 'Erro ao conectar com o Gradment.', status: 502 },
+
   // ── Autenticação ──────────────────────────────────────────────────────────
   EAUT00001: { mensagem: 'Email ou senha incorretos.', status: 401 },
   EAUT00002: { mensagem: 'E-mail não verificado. Verifique seu e-mail antes de fazer login.', status: 403 },
