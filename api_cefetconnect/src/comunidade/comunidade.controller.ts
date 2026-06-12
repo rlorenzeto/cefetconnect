@@ -18,9 +18,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ComunidadeService } from './comunidade.service';
 import { CreateComunidadeDto } from './dto/create-comunidade.dto';
 import { UpdateComunidadeDto } from './dto/update-comunidade.dto';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
+@ApiTags('Comunidades')
 @Controller('comunidade')
 export class ComunidadeController {
   constructor(private readonly comunidadeService: ComunidadeService) {}
@@ -32,8 +33,10 @@ export class ComunidadeController {
     { name: 'capaComunidade', maxCount: 1 },
     { name: 'fotoUrlComunidade', maxCount: 1 },
   ], multerComunidadeConfig))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Criar comunidade', description: 'Usuário autenticado pode criar uma comunidade. Aceita multipart/form-data com campos opcionais capaComunidade e fotoUrlComunidade.' })
   @ApiResponse({ status: 201, description: '[SCOM00001] Comunidade criada com sucesso.' })
+  @ApiResponse({ status: 400, description: '[EUSR00001] Dados inválidos.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   async create(
@@ -94,6 +97,23 @@ export class ComunidadeController {
     };
   }
 
+  @Get('buscar-por-nome/:nomeDisciplina')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiParam({ name: 'nomeDisciplina', description: 'Nome da disciplina (ex: Cálculo I, Algoritmos)' })
+  @ApiOperation({ summary: 'Buscar comunidades por nome da disciplina', description: 'Busca comunidades cujo nome coincida exatamente com o nome da disciplina fornecido. Usado no Gradment para mostrar "O que estão falando sobre X".' })
+  @ApiResponse({ status: 200, description: '[SCOM00012] Comunidades da disciplina retornadas com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  async findPorNomeDisciplina(@Param('nomeDisciplina') nomeDisciplina: string) {
+    const dados = await this.comunidadeService.findPorNomeDisciplina(nomeDisciplina);
+    return {
+      codigo: 'SCOM00012',
+      mensagem: dados.length > 0 ? SuccessMessages.SCOM00012.mensagem : 'Nenhuma comunidade encontrada. Você pode criar uma!',
+      dados,
+      totalComunidades: dados.length,
+    };
+  }
+
   @Get('usuario/minhas')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -102,6 +122,8 @@ export class ComunidadeController {
     description:
       'Retorna todas as comunidades em que o usuário autenticado participa.',
   })
+  @ApiResponse({ status: 200, description: '[SCOM00008] Comunidades do usuário retornadas com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   async findMinhas(@Request() req: any) {
     const dados = await this.comunidadeService.findByUsuario(req.user.idUsuario);
 
@@ -120,6 +142,9 @@ export class ComunidadeController {
     summary: 'Listar membros de uma comunidade',
     description: 'Retorna os usuários que participam da comunidade.',
   })
+  @ApiResponse({ status: 200, description: '[SCOM00011] Membros da comunidade retornados com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[ECOM00001] Comunidade não encontrada.' })
   async findMembros(@Param('id') id: string) {
     const dados = await this.comunidadeService.findMembros(id);
 
@@ -154,6 +179,7 @@ export class ComunidadeController {
     { name: 'capaComunidade', maxCount: 1 },
     { name: 'fotoUrlComunidade', maxCount: 1 },
   ], multerComunidadeConfig))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Atualizar comunidade', description: 'Atualiza dados da comunidade. Aceita multipart/form-data com campos opcionais capaComunidade e fotoUrlComunidade.' })
   @ApiResponse({ status: 200, description: '[SCOM00005] Comunidade atualizada com sucesso.' })
   @ApiResponse({ status: 403, description: '[ECOM00002] Sem permissão para modificar esta comunidade.' })
@@ -200,6 +226,10 @@ export class ComunidadeController {
     summary: 'Listar posts de uma comunidade',
     description: 'Retorna os posts da comunidade se o usuário for membro.',
   })
+  @ApiResponse({ status: 200, description: '[SCOM00009] Posts da comunidade retornados com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 403, description: '[ECOM00003] Você precisa ser membro para ver os posts.' })
+  @ApiResponse({ status: 404, description: '[ECOM00001] Comunidade não encontrada.' })
   async findPosts(@Param('id') id: string, @Request() req: any) {
     const dados = await this.comunidadeService.findPosts(id, req.user.idUsuario);
     return {

@@ -48,7 +48,9 @@ export const SuccessMessages = {
   SCOM00008: { mensagem: 'Comunidade não encontrada.', status: 404 },
   SCOM00009: { mensagem: 'Você não tem autorização para deletar essa comunidade.', status: 403 },
   SCOM00010: { mensagem: 'Eventos da comunidade retornados com sucesso.', status: 200 },
-  
+  SCOM00011: { mensagem: 'Membros da comunidade retornados com sucesso.', status: 200 },
+  SCOM00012: { mensagem: 'Comunidades da disciplina retornadas com sucesso.', status: 200 },
+
   // ── Evento ────────────────────────────────────────────────────────────────
   SEVT00001: { mensagem: 'Evento criado com sucesso.', status: 201 },
   SEVT00002: { mensagem: 'Eventos retornados com sucesso.', status: 200 },

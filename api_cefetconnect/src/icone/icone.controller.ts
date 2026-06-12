@@ -1,9 +1,10 @@
 import { Controller, Get, Post, Param, UseGuards, Request } from '@nestjs/common';
 import { IconeService } from './icone.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success.js';
 
+@ApiTags('Ícones')
 @Controller('icone')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()

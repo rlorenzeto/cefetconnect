@@ -1,10 +1,10 @@
 import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SearchService } from './search.service';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
-//Esse controller é responsável por realizar buscas globais na aplicação, buscando usuários, eventos e posts pelo termo informado.
+@ApiTags('Busca')
 @Controller('search')
 export class SearchController {
   constructor(private readonly searchService: SearchService) {}
