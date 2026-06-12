@@ -89,7 +89,8 @@ export function updateUserProfile(idUsuario, payload) {
   const formData = new FormData();
 
   if (payload.nomeUsuario) formData.append("nomeUsuario", payload.nomeUsuario);
-  if (payload.biografia !== undefined) formData.append("biografia", payload.biografia);
+  if (payload.biografia !== undefined)
+    formData.append("biografia", payload.biografia);
   if (payload.fotoUrl) formData.append("fotoUrl", payload.fotoUrl);
 
   return apiFetch(`/usuario/${idUsuario}`, {
