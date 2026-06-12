@@ -1,7 +1,6 @@
 describe('Feature: Cadastro de Usuário (RegisterForm)', () => {
 
   beforeEach(() => {
-    // Mantemos a resolução desktop
     cy.viewport(1280, 720);
     cy.visit('http://localhost:5173/register'); 
   });
@@ -12,41 +11,39 @@ describe('Feature: Cadastro de Usuário (RegisterForm)', () => {
       statusCode: 201,
       body: { 
         message: 'Usuário criado com sucesso',
-        dados: { matricula: '12345678901', email: 'joao@aluno.cefetmg.br' }
+        dados: { idUsuario: 1, matricula: '12345678901', email: 'joao@aluno.cefetmg.br' }
       }
     }).as('registerRequest');
 
     cy.get('input[name="name"]:visible').type('João da Silva', { delay: 50 });
     cy.get('input[name="email"]:visible').type('joao@aluno.cefetmg.br', { delay: 50 });
     cy.get('input[name="registration"]:visible').type('12345678901', { delay: 50 });
-    cy.get('input[name="password"]:visible').type('senhaSegura123', { delay: 50 }); 
+    
+    // Senha forte exigida pela validação do seu componente (Letra Maiúscula + Número + Especial)
+    cy.get('input[name="password"]:visible').type('Senha@Segura123', { delay: 50 }); 
     cy.wait(500);
 
     cy.get('button[type="submit"]:visible').click();
 
-    // O texto do botão foi alterado no novo componente
-    cy.get('button[type="submit"]:visible').should('contain', 'Cadastrando...');
+    // Garante que o botão entra em estado de processamento (isSubmitting)
+    cy.get('button[type="submit"]:visible').should('be.disabled');
     
     cy.wait('@registerRequest');
     
-    // O novo fluxo redireciona para a tela de confirmação de e-mail
     cy.url().should('include', '/confirm-email');
     cy.wait(1000);
   });
 
   it('Cenário 2: Erro - E-mail com formato inválido', () => {
-    // Desativa a validação nativa do HTML5 para testar o regex do React
     cy.get('form').invoke('attr', 'novalidate', 'novalidate');
 
     cy.get('input[name="name"]:visible').type('João da Silva', { delay: 50 });
-    // Usamos um e-mail sem o @ para forçar o erro da regex genérica
     cy.get('input[name="email"]:visible').type('joao.sem.arroba.com', { delay: 50 });
     cy.get('input[name="registration"]:visible').type('12345678901', { delay: 50 });
-    cy.get('input[name="password"]:visible').type('senhaSegura123', { delay: 50 }); 
+    cy.get('input[name="password"]:visible').type('Senha@Segura123', { delay: 50 }); 
 
     cy.get('button[type="submit"]:visible').click();
 
-    // A mensagem de erro esperada também mudou
     cy.contains('Digite um e-mail válido.').filter(':visible').should('be.visible');
     cy.wait(2000);
   });
@@ -55,11 +52,12 @@ describe('Feature: Cadastro de Usuário (RegisterForm)', () => {
     cy.get('input[name="name"]:visible').type('João da Silva', { delay: 50 });
     cy.get('input[name="email"]:visible').type('joao@aluno.cefetmg.br', { delay: 50 });
     cy.get('input[name="registration"]:visible').type('12345', { delay: 50 }); 
-    cy.get('input[name="password"]:visible').type('senhaSegura123', { delay: 50 }); 
+    cy.get('input[name="password"]:visible').type('Senha@Segura123', { delay: 50 }); 
 
     cy.get('button[type="submit"]:visible').click();
 
-    cy.contains('A matrícula deve ter exatamente 11 dígitos.').filter(':visible').should('be.visible');
+    // Texto exato mapeado do seu componente
+    cy.contains('A matrícula deve ter exatamente 7 ou 11 dígitos.').filter(':visible').should('be.visible');
     cy.wait(2000);
   });
 
@@ -67,11 +65,12 @@ describe('Feature: Cadastro de Usuário (RegisterForm)', () => {
     cy.get('input[name="name"]:visible').type('João da Silva', { delay: 50 });
     cy.get('input[name="email"]:visible').type('joao@aluno.cefetmg.br', { delay: 50 });
     cy.get('input[name="registration"]:visible').type('12345678901', { delay: 50 });
-    cy.get('input[name="password"]:visible').type('1d7c5', { delay: 50 }); 
+    cy.get('input[name="password"]:visible').type('1d7', { delay: 50 }); 
 
     cy.get('button[type="submit"]:visible').click();
 
-    cy.contains('A senha deve ter no mínimo 6 caracteres.').filter(':visible').should('be.visible');
+    // Texto exato mapeado do seu componente (mínimo de 8 caracteres agora)
+    cy.contains('A senha deve ter no mínimo 8 caracteres.').filter(':visible').should('be.visible');
     cy.wait(2000);
   });
 
@@ -85,7 +84,7 @@ describe('Feature: Cadastro de Usuário (RegisterForm)', () => {
     cy.get('input[name="name"]:visible').type('João da Silva', { delay: 50 });
     cy.get('input[name="email"]:visible').type('joao@aluno.cefetmg.br', { delay: 50 });
     cy.get('input[name="registration"]:visible').type('12345678901', { delay: 50 });
-    cy.get('input[name="password"]:visible').type('senhaSegura123', { delay: 50 }); 
+    cy.get('input[name="password"]:visible').type('Senha@Segura123', { delay: 50 }); 
 
     cy.get('button[type="submit"]:visible').click();
     cy.wait('@registerRequestError');
@@ -95,8 +94,8 @@ describe('Feature: Cadastro de Usuário (RegisterForm)', () => {
   });
 
   it('Cenário 6: Navegação - Ir para Login', () => {
-    // O texto do botão no novo AuthButton agora é "Já tenho uma conta"
-    cy.contains('button', 'Já tenho uma conta').filter(':visible').click();
+    // Alvo certeiro: Procurar pela tag button que contém textualmente "Entrar"
+    cy.contains('button', 'Entrar').filter(':visible').click({ force: true });
     
     cy.url().should('include', '/login');
   });

@@ -23,8 +23,8 @@ describe("Feature: Autenticação de Usuário (LoginForm)", () => {
     cy.get('button[type="submit"]:visible').should("contain", "Entrando...");
     cy.wait("@loginRequest");
 
-    // Mudança: Agora redireciona para /profile
-    cy.url().should("include", "/profile");
+    // CORREÇÃO: Alterado de /profile para /home para acompanhar o redirecionamento real do seu app!
+    cy.url().should("include", "/home");
     cy.wait(2000);
   });
 
@@ -82,7 +82,7 @@ describe("Feature: Autenticação de Usuário (LoginForm)", () => {
       .should("be.visible");
   });
 
-  it("Cenário 5: Erro - Conta não verificada e redirecionamento (NOVO)", () => {
+  it("Cenário 5: Erro - Conta não verificada e redirecionamento ", () => {
     // Simula a API retornando um erro que contém a palavra "verificado"
     cy.intercept("POST", "**/login", {
       delay: 1000,

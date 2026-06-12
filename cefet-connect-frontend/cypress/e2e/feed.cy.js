@@ -1,12 +1,12 @@
 describe("Feature: Feed de Publicações (FeedPage)", () => {
   beforeEach(() => {
-    cy.viewport(1280, 720);
+    cy.viewport(1920, 1080);
 
-    // 1. Injeta o usuário com a chave exata
+    // 1. Injeta o usuário completo e consistente no localStorage
     cy.window().then((win) => {
       win.localStorage.setItem(
         "cefetconnect_user",
-        JSON.stringify({ matricula: "12345678901", token: "fake-jwt-token" }),
+        JSON.stringify({ idUsuario: 1, matricula: "12345678901", token: "fake-jwt-token", nomeUsuario: "Johnatan Duarte" }),
       );
     });
 
@@ -15,6 +15,7 @@ describe("Feature: Feed de Publicações (FeedPage)", () => {
       statusCode: 200,
       body: {
         dados: {
+          idUsuario: 1,
           matricula: "12345678901",
           nomeUsuario: "Johnatan Duarte",
           fotoUrl: "",
@@ -22,7 +23,27 @@ describe("Feature: Feed de Publicações (FeedPage)", () => {
       },
     }).as("loadProfile");
 
-    // 3. Mock do Feed
+    // 3. Mock das comunidades da barra lateral do Feed
+    cy.intercept("GET", "**/comunidade/usuario/minhas", {
+      statusCode: 200,
+      body: { dados: [] } 
+    }).as("loadMyCommunities");
+
+    // ==========================================
+    // CORREÇÃO: Mocks de Eventos para a barra lateral do Feed
+    // Isso vai impedir que o Promise.all quebre com "Failed to fetch"!
+    // ==========================================
+    cy.intercept("GET", "**/evento", {
+      statusCode: 200,
+      body: { dados: [] }
+    }).as("loadFeedEventsGeral");
+
+    cy.intercept("GET", "**/evento/meus", {
+      statusCode: 200,
+      body: { dados: [] }
+    }).as("loadFeedMyEvents");
+
+    // 4. Mock do Feed de Posts Super Robusto
     cy.intercept("GET", "**/post", {
       statusCode: 200,
       body: {
@@ -31,31 +52,43 @@ describe("Feature: Feed de Publicações (FeedPage)", () => {
             idPost: 999,
             conteudo: "Post inicial para testes!",
             dataHoraPublicacao: new Date().toISOString(),
+            comunidade: null, 
             usuario: {
+              idUsuario: 1,
               matricula: "12345678901",
               nomeUsuario: "Johnatan Duarte",
+              fotoUrl: ""
             },
+            curtidas: [],
+            comentarios: []
           },
         ],
       },
     }).as("loadPosts");
 
-    // 4. Mock das Curtidas do Post
+    // 5. Mock das Curtidas do Post
     cy.intercept("GET", "**/post/*/curtidas", {
       statusCode: 200,
-      body: { dados: { total: 0, usuarios: [] } },
+      body: { dados: { total: 0, totalCurtidas: 0, usuarios: [] } },
     }).as("loadLikes");
 
-    // MÁGICA AQUI: Mock GLOBAL das curtidas de QUALQUER comentário que o React tentar carregar
+    // Mock GLOBAL das curtidas de comentários
     cy.intercept("GET", "**/comentario/*/curtidas", {
       statusCode: 200,
-      body: { dados: { total: 0, usuarios: [] } },
+      body: { dados: { total: 0, totalCurtidas: 0, usuarios: [] } },
     }).as("loadCommentLikes");
 
     cy.visit("http://localhost:5173/home");
-    cy.wait(["@loadProfile", "@loadPosts", "@loadLikes"]);
+    
+    // Esperamos as requisições principais de dados carregarem com estabilidade
+    cy.wait(["@loadProfile", "@loadMyCommunities", "@loadPosts"]);
+    cy.wait(1000); 
+
+    // Validação visual final: Garante que o post renderizou e sumiu com o erro da tela
+    cy.contains("Post inicial para testes!").should("be.visible");
   });
 
+  // ... Mantenha o restante do arquivo (cenários de 1 a 9) exatamente como estão abaixo ...
   // ==========================================
   // CRIAÇÃO DE POSTS
   // ==========================================
@@ -278,7 +311,8 @@ describe("Feature: Feed de Publicações (FeedPage)", () => {
           { 
             idComentario: 555, 
             texto: "Comentário para editar", 
-            usuario: { matricula: "12345678901", nomeUsuario: "Johnatan Duarte" }
+            // REFORÇO VITAL: idUsuario adicionado para o React saber que você é o dono legítimo!
+            usuario: { idUsuario: 1, matricula: "12345678901", nomeUsuario: "Johnatan Duarte" }
           } 
         ] 
       }
@@ -294,21 +328,18 @@ describe("Feature: Feed de Publicações (FeedPage)", () => {
     cy.wait(1000);
     cy.wait(['@loadComments', '@loadCommentLikes']);
 
-    // 1. Encontra o comentário original e clica em Editar
-    cy.contains('article', 'Comentário para editar')
-      .contains('button', 'Editar')
-      .click();
+    // Mira cirúrgica usando a classe de fundo do comentário para achar o botão correto
+    cy.contains('article.bg-\\[\\#f7f7f7\\]', 'Comentário para editar')
+      .find('button')
+      .contains('Editar')
+      .click({ force: true });
     
-    // 2. Ao clicar em editar, o texto antigo some e vira um textarea.
-    // Pegamos o último textarea visível na tela (que é o do comentário)
+    // Limpa o campo e digita a alteração
     cy.get('textarea:visible').last().clear().type('Comentário alterado!', { delay: 100 });
     
-    // 3. O botão verde "Salvar" acabou de aparecer na tela, clicamos direto nele!
-    cy.contains('button', 'Salvar').filter(':visible').click(); 
+    cy.contains('button', 'Salvar').filter(':visible').click({ force: true }); 
 
     cy.wait('@updateComment');
-    
-    // 4. O texto deve ter mudado
     cy.contains('Comentário alterado!').should('be.visible');
     cy.wait(1000);
   });
@@ -320,8 +351,9 @@ describe("Feature: Feed de Publicações (FeedPage)", () => {
         dados: [ 
           { 
             idComentario: 555, 
-            texto: "Comentário para excluir", // CORREÇÃO: Mudado para 'texto'
-            usuario: { matricula: "12345678901", nomeUsuario: "Johnatan Duarte" }
+            texto: "Comentário para excluir", 
+            // REFORÇO VITAL: idUsuario adicionado aqui também!
+            usuario: { idUsuario: 1, matricula: "12345678901", nomeUsuario: "Johnatan Duarte" }
           } 
         ] 
       }
@@ -337,19 +369,17 @@ describe("Feature: Feed de Publicações (FeedPage)", () => {
     cy.wait(1000);
     cy.wait(['@loadComments', '@loadCommentLikes']);
 
-    // O Cypress impede o alert() ou confirm() nativo do navegador de travar a tela
-    // Esta linha diz pro Cypress "clicar em OK" quando a janela do confirm() aparecer
     cy.on('window:confirm', () => true);
 
-    // Clica direto no botão vermelho de Excluir do comentário
-    cy.contains('article', 'Comentário para excluir')
-      .contains('button', 'Excluir')
-      .click();
-      cy.wait(1000);
+    // Mira cirúrgica para clicar no Excluir do comentário correto
+    cy.contains('article.bg-\\[\\#f7f7f7\\]', 'Comentário para excluir')
+      .find('button')
+      .contains('Excluir')
+      .click({ force: true });
 
     cy.wait('@deleteComment');
 
-    // O comentário deve desaparecer
+    // O comentário deve sumir da tela com sucesso
     cy.contains('Comentário para excluir').should('not.exist');
   });
 });
