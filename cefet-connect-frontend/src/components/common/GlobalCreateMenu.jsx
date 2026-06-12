@@ -96,9 +96,9 @@ export default function GlobalCreateMenu({
   }
 
   return (
-    <div ref={menuRef} className="relative">
+    <div ref={menuRef} className="relative flex justify-center">
       {isOpen && (
-        <div className="absolute bottom-[68px] left-1/2 z-50 w-[210px] -translate-x-1/2 overflow-hidden rounded-[22px] border border-[#e3e3e3] bg-white shadow-xl">
+        <div className="absolute bottom-[78px] left-1/2 z-50 w-[210px] -translate-x-1/2 overflow-hidden rounded-[22px] border border-[#e3e3e3] bg-white shadow-xl">
           <button
             type="button"
             onClick={() => handleAction(onCreatePost, "/home?create=post")}
@@ -141,7 +141,7 @@ export default function GlobalCreateMenu({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="Abrir menu de criação"
         aria-expanded={isOpen}
-        className="-mt-8 flex h-14 w-14 items-center justify-center rounded-full bg-[#089464] text-3xl font-light text-white shadow-lg transition hover:bg-[#067f57]"
+        className="mx-auto -mt-10 flex h-16 w-16 items-center justify-center rounded-full bg-[#089464] text-[36px] font-light leading-none text-white shadow-lg ring-4 ring-white transition hover:bg-[#067f57]"
       >
         +
       </button>

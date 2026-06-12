@@ -18,7 +18,7 @@ export default function CommunityCard({
   const isMember = Boolean(community.isMembro);
 
   return (
-    <article className="overflow-hidden rounded-[28px] bg-white shadow-sm">
+    <article className="w-full max-w-full overflow-hidden rounded-[28px] bg-white shadow-sm">
       <div className="h-32 w-full bg-[#d9d9d9]">
         {community.capaComunidade ? (
           <img
@@ -56,7 +56,7 @@ export default function CommunityCard({
           </button>
         </div>
 
-        <h2 className="mt-4 text-lg font-bold text-[#202020]">
+        <h2 className="mt-4 break-words text-lg font-bold leading-tight text-[#202020]">
           {community.nomeComunidade}
         </h2>
 
@@ -69,7 +69,7 @@ export default function CommunityCard({
               Pins principais
             </p>
 
-            <div className="flex flex-wrap gap-1">
+            <div className="flex max-w-full flex-wrap gap-1 overflow-hidden">
               {community.pins.slice(0, 2).map((pin) => (
                 <PinBadge
                   key={pin.idPin}

@@ -14,6 +14,7 @@ import {
   getProfileImageUrl,
 } from "../../services/authService";
 import { listCommunityPins } from "../../services/pinService";
+import { itemMatchesSearch } from "../../utils/searchUtils";
 
 
 export default function CommunityPage() {
@@ -28,10 +29,21 @@ export default function CommunityPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [communityPins, setCommunityPins] = useState([]);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const userImageUrl = useMemo(() => {
     return getProfileImageUrl(currentUser?.fotoUrl);
   }, [currentUser?.fotoUrl]);
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter((post) =>
+      itemMatchesSearch(post, searchTerm, (currentPost) => [
+        currentPost?.conteudo,
+        currentPost?.usuario?.nomeUsuario,
+        currentPost?.comunidade?.nomeComunidade,
+      ])
+    );
+  }, [posts, searchTerm]);
 
   useEffect(() => {
     if (!currentUser?.idUsuario) {
@@ -162,7 +174,9 @@ export default function CommunityPage() {
 
   const sharedProps = {
     community,
-    posts,
+    posts: filteredPosts,
+    searchTerm,
+    onSearchChange: setSearchTerm,
     pins: communityPins,
     currentUser,
     userImageUrl,

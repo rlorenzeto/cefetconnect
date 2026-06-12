@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import DesktopCommunities from "../../components/community/DesktopCommunities";
 import MobileCommunities from "../../components/community/MobileCommunities";
@@ -13,6 +13,7 @@ import {
 } from "../../services/comunidadeService";
 import { getCurrentUser } from "../../services/authService";
 import { listCommunityPins } from "../../services/pinService";
+import { itemMatchesSearch } from "../../utils/searchUtils";
 
 export default function CommunitiesPage() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function CommunitiesPage() {
   const [editingCommunity, setEditingCommunity] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     if (!currentUser?.idUsuario) {
@@ -75,6 +77,20 @@ export default function CommunitiesPage() {
       })
     );
   }
+
+  const filteredCommunities = useMemo(() => {
+    return communities.filter((community) =>
+      itemMatchesSearch(community, searchTerm, (currentCommunity) => [
+        currentCommunity?.nomeComunidade,
+        currentCommunity?.descricaoComunidade,
+        currentCommunity?.usuario?.nomeUsuario,
+        currentCommunity?.criador?.nomeUsuario,
+        ...(Array.isArray(currentCommunity?.pins)
+          ? currentCommunity.pins.map((pin) => pin.nomePin)
+          : []),
+      ])
+    );
+  }, [communities, searchTerm]);
 
   function handleOpenCreate() {
     setEditingCommunity(null);
@@ -162,7 +178,9 @@ export default function CommunitiesPage() {
   }
 
   const sharedProps = {
-    communities,
+    communities: filteredCommunities,
+    searchTerm,
+    onSearchChange: setSearchTerm,
     currentUser,
     isLoading,
     error,

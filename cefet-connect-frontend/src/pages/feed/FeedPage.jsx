@@ -32,6 +32,7 @@ import {
 } from "../../utils/eventFilters";
 import EventDetailsModal from "../../components/event/EventDetailsModal";
 import { listUserPins } from "../../services/pinService";
+import { itemMatchesSearch } from "../../utils/searchUtils";
 
 export default function FeedPage() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ export default function FeedPage() {
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState(null);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const visibleEvents = useMemo(() => {
     return filterVisibleEvents(events, myCommunities);
@@ -60,6 +62,19 @@ export default function FeedPage() {
   const upcomingEvents = useMemo(() => {
     return getUpcomingEvents(visibleEvents);
   }, [visibleEvents]);
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter((post) =>
+      itemMatchesSearch(post, searchTerm, (currentPost) => [
+        currentPost?.conteudo,
+        currentPost?.usuario?.nomeUsuario,
+        currentPost?.comunidade?.nomeComunidade,
+        currentPost?.evento?.titulo,
+        currentPost?.evento?.descricaoEvento,
+        currentPost?.evento?.comunidade?.nomeComunidade,
+      ])
+    );
+  }, [posts, searchTerm]);
 
   const idUsuario = savedUser?.idUsuario || user?.idUsuario;
 
@@ -384,9 +399,11 @@ export default function FeedPage() {
       <DesktopFeed
         user={user}
         userImageUrl={userImageUrl}
-        posts={posts}
+        posts={filteredPosts}
         communities={myCommunities}
         events={upcomingEvents}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         isLoading={isLoading}
         error={error}
         isCreating={isCreating}
@@ -401,8 +418,10 @@ export default function FeedPage() {
       <MobileFeed
         user={user}
         userImageUrl={userImageUrl}
-        posts={posts}
+        posts={filteredPosts}
         communities={myCommunities}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         isLoading={isLoading}
         error={error}
         isCreating={isCreating}

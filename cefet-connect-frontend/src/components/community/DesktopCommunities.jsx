@@ -1,8 +1,11 @@
 import ProfileSidebar from "../profile/ProfileSidebar";
 import CommunityCard from "./CommunityCard";
+import SearchBar from "../common/SearchBar";
 
 export default function DesktopCommunities({
   communities = [],
+  searchTerm = "",
+  onSearchChange,
   currentUser,
   isLoading,
   error,
@@ -40,6 +43,13 @@ export default function DesktopCommunities({
                 Nova comunidade
               </button>
             </header>
+
+            <SearchBar
+              value={searchTerm}
+              onChange={onSearchChange}
+              placeholder="Pesquisar comunidades ..."
+              className="mb-6"
+            />
 
             {error && (
               <div className="mb-5 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">

@@ -9,11 +9,14 @@ import GlobalCreateMenu from "../common/GlobalCreateMenu";
 import PinBadge from "../pin/PinBadge";
 import PinDetailsModal from "../pin/PinDetailsModal";
 import CommunityPinsManagerModal from "../pin/CommunityPinsManagerModal";
+import SearchBar from "../common/SearchBar";
 
 
 export default function MobileCommunity({
   community,
   posts = [],
+  searchTerm = "",
+  onSearchChange,
   currentUser,
   userImageUrl,
   pins = [],
@@ -191,6 +194,13 @@ export default function MobileCommunity({
 
             {community?.isMembro ? (
               <>
+                <SearchBar
+                  value={searchTerm}
+                  onChange={onSearchChange}
+                  placeholder="Pesquisar ..."
+                  className="mb-4"
+                />
+
                 <div id="community-post-composer">
                   <CreatePostCard
                     user={currentUser}

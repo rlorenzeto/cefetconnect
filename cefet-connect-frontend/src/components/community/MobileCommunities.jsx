@@ -1,10 +1,12 @@
 import BrandLogo from "../auth/BrandLogo";
 import CommunityCard from "./CommunityCard";
 import MobileBottomNav from "../common/MobileBottomNav";
-import GlobalCreateMenu from "../common/GlobalCreateMenu";
+import SearchBar from "../common/SearchBar";
 
 export default function MobileCommunities({
   communities = [],
+  searchTerm = "",
+  onSearchChange,
   currentUser,
   isLoading,
   error,
@@ -31,6 +33,12 @@ export default function MobileCommunities({
       </header>
 
       <main className="w-full max-w-full overflow-x-hidden px-4 pt-6">
+        <SearchBar
+          value={searchTerm}
+          onChange={onSearchChange}
+          placeholder="Pesquisar comunidades ..."
+          className="mb-5"
+        />
         <div className="mb-6">
           <h1 className="text-[32px] font-bold text-[#202020]">
             Comunidades

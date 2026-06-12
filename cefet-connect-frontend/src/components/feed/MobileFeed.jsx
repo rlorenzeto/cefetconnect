@@ -9,6 +9,7 @@ import {
   TrophyIcon,
 } from "../icons/AppIcons";
 import GlobalCreateMenu from "../common/GlobalCreateMenu";
+import SearchBar from "../common/SearchBar";
 
 const GRADMENT_URL =
   import.meta.env.VITE_GRADMENT_URL || "https://gradment.linceonline.com.br";
@@ -24,6 +25,8 @@ export default function MobileFeed({
   onPostDeleted,
   onPostUpdated,
   communities = [],
+  searchTerm = "",
+  onSearchChange,
   onGoToProfile,
   onLogout,
   onCreatePostShortcut,
@@ -128,6 +131,12 @@ export default function MobileFeed({
             Acompanhe as novidades do Cefet.
           </p>
         </div>
+        <SearchBar
+          value={searchTerm}
+          onChange={onSearchChange}
+          placeholder="Pesquisar ..."
+          className="mb-3"
+        />
 
         <div className="space-y-5">
           <div id="post-composer">

@@ -9,9 +9,9 @@ export default function ProfileCommunities({
   const visibleCommunities = showAll ? communities : communities.slice(0, 3);
 
   return (
-    <section className="mt-8 rounded-[28px] bg-[#f7f7f7] px-5 py-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
+    <section className="mt-8 w-full max-w-full overflow-hidden rounded-[28px] bg-[#f7f7f7] px-4 py-5">
+      <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
+        <div className="min-w-0">
           <h3 className="text-lg font-bold text-[#202020]">
             Principais comunidades
           </h3>
@@ -39,7 +39,7 @@ export default function ProfileCommunities({
               key={community.idComunidade}
               type="button"
               onClick={() => onOpenCommunity(community.idComunidade)}
-              className="flex items-center gap-3 rounded-2xl bg-white p-3 text-left shadow-sm transition hover:bg-[#e8f7ef]"
+              className="flex w-full max-w-full min-w-0 items-center gap-3 overflow-hidden rounded-2xl bg-white p-3 text-left shadow-sm transition hover:bg-[#e8f7ef]"
             >
               <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#d9d9d9] text-sm font-bold text-[#777]">
                 {community.fotoUrlComunidade ? (
@@ -53,7 +53,7 @@ export default function ProfileCommunities({
                 )}
               </div>
 
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1 overflow-hidden">
                 <p className="truncate text-sm font-bold text-[#202020]">
                   {community.nomeComunidade}
                 </p>

@@ -21,6 +21,7 @@ import {
   isEventFinished,
   sortEventsWithFinishedLast,
 } from "../../utils/eventFilters";
+import { itemMatchesSearch } from "../../utils/searchUtils";
 
 export default function EventsPage() {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ export default function EventsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState(null);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const myEventIds = useMemo(() => {
     return new Set(myEvents.map((event) => String(event.idEvento)));
@@ -58,6 +60,18 @@ export default function EventsPage() {
 
     return sortEventsWithFinishedLast(normalized);
   }, [visibleEvents, myEventIds]);
+
+  const filteredEvents = useMemo(() => {
+    return normalizedEvents.filter((event) =>
+      itemMatchesSearch(event, searchTerm, (currentEvent) => [
+        currentEvent?.titulo,
+        currentEvent?.descricaoEvento,
+        currentEvent?.localEvento,
+        currentEvent?.usuario?.nomeUsuario,
+        currentEvent?.comunidade?.nomeComunidade,
+      ])
+    );
+  }, [normalizedEvents, searchTerm]);
 
   useEffect(() => {
     if (!currentUser?.idUsuario) {
@@ -247,7 +261,9 @@ export default function EventsPage() {
   }
 
   const sharedProps = {
-    events: normalizedEvents,
+    events: filteredEvents,
+    searchTerm,
+    onSearchChange: setSearchTerm,
     currentUser,
     isLoading,
     error,

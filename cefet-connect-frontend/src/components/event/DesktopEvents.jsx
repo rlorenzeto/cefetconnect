@@ -1,8 +1,11 @@
 import ProfileSidebar from "../profile/ProfileSidebar";
 import EventCard from "./EventCard";
+import SearchBar from "../common/SearchBar";
 
 export default function DesktopEvents({
   events = [],
+  searchTerm = "",
+  onSearchChange,
   currentUser,
   isLoading,
   error,
@@ -38,6 +41,12 @@ export default function DesktopEvents({
                 Novo evento
               </button>
             </header>
+            <SearchBar
+              value={searchTerm}
+              onChange={onSearchChange}
+              placeholder="Pesquisar eventos ..."
+              className="mb-6"
+            />
 
             {error && (
               <div className="mb-5 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">

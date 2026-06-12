@@ -7,10 +7,13 @@ import { getCommunityImageUrl } from "../../services/comunidadeService";
 import PinBadge from "../pin/PinBadge";
 import PinDetailsModal from "../pin/PinDetailsModal";
 import CommunityPinsManagerModal from "../pin/CommunityPinsManagerModal";
+import SearchBar from "../common/SearchBar";
 
 export default function DesktopCommunity({
   community,
   posts = [],
+  searchTerm = "",
+  onSearchChange,
   currentUser,
   userImageUrl,
   pins = [],
@@ -169,9 +172,16 @@ export default function DesktopCommunity({
                       {error}
                     </div>
                   )}
-
                   {community?.isMembro ? (
                     <>
+                    <SearchBar
+                      value={searchTerm}
+                      onChange={onSearchChange}
+                      placeholder="Pesquisar ..."
+                      className="mb-6"
+                    />
+
+                    <div id="community-post-composer">
                       <CreatePostCard
                         user={currentUser}
                         userImageUrl={userImageUrl}
@@ -196,6 +206,7 @@ export default function DesktopCommunity({
                           Nenhum post publicado nesta comunidade ainda.
                         </div>
                       )}
+                      </div>
                     </>
                   ) : (
                     <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">

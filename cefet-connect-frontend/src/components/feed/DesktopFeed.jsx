@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import ProfileSidebar from "../profile/ProfileSidebar";
 import CreatePostCard from "./CreatePostCard";
 import PostCard from "./PostCard";
+import SearchBar from "../common/SearchBar";
 
 
 const GRADMENT_URL =
@@ -13,6 +14,8 @@ export default function DesktopFeed({
   posts,
   communities = [],
   events = [],
+  searchTerm = "",
+  onSearchChange,
   isLoading,
   error,
   isCreating,
@@ -88,6 +91,13 @@ export default function DesktopFeed({
                   Sair
                 </button>
               </div>
+
+              <SearchBar
+                value={searchTerm}
+                onChange={onSearchChange}
+                placeholder="Pesquisar posts ..."
+                className="mb-6"
+              />
 
               <div className="space-y-6">
                 <CreatePostCard

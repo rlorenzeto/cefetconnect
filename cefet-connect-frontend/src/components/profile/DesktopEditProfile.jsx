@@ -31,7 +31,7 @@ export default function DesktopEditProfile({
   <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
       <ProfileSidebar />
 
-      <main className="ml-[132px] px-16 py-12">
+      <main className="ml-[112px] px-16 py-12">
           <div className="mb-8 flex items-center justify-between">
             <h1 className="text-[42px] font-bold text-[#202020]">
               Editar perfil
