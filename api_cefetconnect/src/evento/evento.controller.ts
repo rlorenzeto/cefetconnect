@@ -5,9 +5,10 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EventoService } from './evento.service';
 import { CreateEventoDto } from './dto/create-evento.dto';
 import { UpdateEventoDto } from './dto/update-evento.dto';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
+@ApiTags('Eventos')
 @Controller('evento')
 export class EventoController {
   constructor(private readonly eventoService: EventoService) {}

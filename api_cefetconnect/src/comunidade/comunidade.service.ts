@@ -177,6 +177,49 @@ export class ComunidadeService {
     });
   }
 
+  async findPorNomeDisciplina(nomeDisciplina: string) {
+    const comunidades = await this.dataSource.query(
+      `
+      SELECT 
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+        c.gradmentDisciplinaId,
+        criador.idUsuario AS idCriador,
+        criador.nomeUsuario AS nomeCriador,
+        COUNT(DISTINCT p.usuarioIdUsuario) AS totalMembros,
+        COUNT(DISTINCT post.idPost) AS totalPosts
+      FROM comunidade c
+      LEFT JOIN usuario criador
+        ON criador.idUsuario = c.fk_Usuario_idUsuario
+      LEFT JOIN participa p
+        ON p.comunidadeIdComunidade = c.idComunidade
+      LEFT JOIN post
+        ON post.fk_Comunidade_idComunidade = c.idComunidade
+      WHERE LOWER(TRIM(c.nomeComunidade)) = LOWER(TRIM(?))
+      GROUP BY 
+        c.idComunidade,
+        c.nomeComunidade,
+        c.descricaoComunidade,
+        c.capaComunidade,
+        c.fotoUrlComunidade,
+        c.gradmentDisciplinaId,
+        criador.idUsuario,
+        criador.nomeUsuario
+      ORDER BY c.nomeComunidade ASC
+      `,
+      [nomeDisciplina],
+    );
+
+    return comunidades.map((comunidade) => ({
+      ...comunidade,
+      totalMembros: Number(comunidade.totalMembros || 0),
+      totalPosts: Number(comunidade.totalPosts || 0),
+    }));
+  }
+
   async findOne(id: string, idUsuario: number) {
     const rows = await this.dataSource.query(
       `

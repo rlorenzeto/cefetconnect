@@ -5,9 +5,10 @@ import { UpdatePinDto } from './dto/update-pin.dto';
 import { ImportarPinsDto } from './dto/importar-pins.dto';
 import { SugerirPinsDto } from './dto/sugerir-pins.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
+@ApiTags('Pins')
 @Controller('pin')
 export class PinController {
   constructor(private readonly pinService: PinService) {}

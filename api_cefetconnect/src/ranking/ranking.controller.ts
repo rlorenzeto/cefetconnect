@@ -1,9 +1,10 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { RankingService } from './ranking.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
+@ApiTags('Ranking')
 @Controller('ranking')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()

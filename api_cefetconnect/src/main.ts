@@ -26,10 +26,22 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Cefet Connect')
-    .setDescription('API para alunos do Cefet')
+    .setDescription('API do sistema Cefet Connect - Rede social para alunos do Cefet')
     .setVersion('1.0')
-    .addTag('alunos')
-    //.addBearerAuth()
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'JWT-auth',
+    )
+    .addTag('Autenticação', 'Login e autenticação de usuários')
+    .addTag('Usuários', 'Cadastro e gestão de usuários')
+    .addTag('Posts', 'Publicações e interações')
+    .addTag('Comentários', 'Usuários podem fazer comentários em posts')
+    .addTag('Comunidades', 'Grupos de discussão por disciplina ou qualquer outro tema')
+    .addTag('Eventos', 'Eventos acadêmicos e sociais')
+    .addTag('Pins', 'Pins de Iniciação Científica/Núcleos/Extensão e afins')
+    .addTag('Ícones', 'Conquistas acadêmicas do Gradment')
+    .addTag('Ranking', 'Gamificação e pontuação')
+    .addTag('Busca', 'Busca global de usuários, eventos e posts')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
