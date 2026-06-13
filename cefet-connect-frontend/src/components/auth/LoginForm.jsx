@@ -47,10 +47,6 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  /*function validateEmail(email) {
-    return /^[^\s@]+@aluno\.cefetmg\.br$/i.test(email.trim());
-  }*/
-
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -78,10 +74,47 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
       setIsSubmitting(true);
       setApiError("");
 
-      await loginUser({
+      // 1. Faz o login normal no Cefet Connect
+      const respostaLogin = await loginUser({
         email: formData.login,
         senha: formData.senha,
       });
+
+      // =================================================================
+      // 2. INÍCIO DA INTEGRAÇÃO SILENCIOSA COM O GRADMENT
+      // =================================================================
+      try {
+        const tokenIntegracao = respostaLogin?.token_integracao || respostaLogin?.dados?.token_integracao;
+
+        if (tokenIntegracao) {
+          const gradmentResponse = await fetch("https://api.gradment.linceonline.com.br/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: formData.login,
+              senha: formData.senha,
+              token_integracao: tokenIntegracao,
+            }),
+          });
+
+          // Se a API do GradMent responder com erros como 401 ou 403 (Cadastro Incompleto)
+          if (!gradmentResponse.ok) {
+            const errorData = await gradmentResponse.json().catch(() => ({}));
+            throw new Error(errorData?.mensagem || `Status ${gradmentResponse.status}`);
+          }
+
+          console.log("[GradMent] Contas linkadas com sucesso!");
+        }
+      } catch (gradmentError) {
+        // Log detalhado do motivo do recuso para te ajudar no console
+        console.warn("[GradMent] Falha silenciosa na integração:", gradmentError.message);
+      }
+      // =================================================================
+      // FIM DA INTEGRAÇÃO
+      // =================================================================
+
       navigate("/home");
     } catch (error) {
       const message = error.message || "Não foi possível entrar.";
