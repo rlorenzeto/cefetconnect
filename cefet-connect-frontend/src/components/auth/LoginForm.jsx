@@ -78,10 +78,54 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
       setIsSubmitting(true);
       setApiError("");
 
-      await loginUser({
+      // 1. Autenticação local no Cefet Connect
+      const respostaLogin = await loginUser({
         email: formData.login,
         senha: formData.senha,
       });
+
+      // =================================================================
+      // 2. INTEGRAÇÃO SILENCIOSA COM O GRADMENT
+      // =================================================================
+      try {
+        const tokenIntegracao =
+          respostaLogin?.token_integracao ||
+          respostaLogin?.dados?.token_integracao;
+
+        if (tokenIntegracao) {
+          const gradmentResponse = await fetch(
+            "https://api.gradment.linceonline.com.br/login",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                email: formData.login,
+                senha: formData.senha,
+                token_integracao: tokenIntegracao,
+              }),
+            },
+          );
+
+          if (!gradmentResponse.ok) {
+            const errorData = await gradmentResponse.json().catch(() => ({}));
+            throw new Error(
+              errorData?.mensagem || `Status ${gradmentResponse.status}`,
+            );
+          }
+
+          console.log("[GradMent] Contas linkadas com sucesso!");
+        }
+      } catch (gradmentError) {
+        // Exibe o comportamento resiliente da integração no console
+        console.warn(
+          "[GradMent] Falha silenciosa na integração:",
+          gradmentError.message,
+        );
+      }
+      // =================================================================
+
       navigate("/home");
     } catch (error) {
       const message = error.message || "Não foi possível entrar.";
@@ -122,7 +166,7 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
 
     localStorage.setItem(
       "cefetconnect_pending_verification",
-      JSON.stringify(pendingVerification)
+      JSON.stringify(pendingVerification),
     );
 
     navigate("/confirm-email", {
@@ -149,7 +193,7 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
 
       <div>
         <PasswordInput
-           name="senha"
+          name="senha"
           value={formData.senha}
           onChange={handleChange}
           placeholder="Digite sua senha"
@@ -160,14 +204,12 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
         )}
       </div>
 
-      {apiError && (
-        <p className="text-sm text-red-500">{apiError}</p>
-      )}
+      {apiError && <p className="text-sm text-red-500">{apiError}</p>}
       {showConfirmEmailHelp && (
         <div className="rounded-xl border border-[#8ad142] bg-[#f7fff1] p-3">
           <p className="text-sm leading-relaxed text-[#3b3b3b]">
-            Esse e-mail ainda não foi confirmado. Para confirmar agora, digite sua
-            matrícula e acesse a tela de confirmação.
+            Esse e-mail ainda não foi confirmado. Para confirmar agora, digite
+            sua matrícula e acesse a tela de confirmação.
           </p>
 
           <input
@@ -176,7 +218,9 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
             maxLength={11}
             value={verificationRegistration}
             onChange={(event) => {
-              const onlyNumbers = event.target.value.replace(/\D/g, "").slice(0, 11);
+              const onlyNumbers = event.target.value
+                .replace(/\D/g, "")
+                .slice(0, 11);
               setVerificationRegistration(onlyNumbers);
               setVerificationError("");
             }}
@@ -198,11 +242,7 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
         </div>
       )}
 
-      <AuthButton
-        type="submit"
-        disabled={isSubmitting}
-        className="mt-7"
-      >
+      <AuthButton type="submit" disabled={isSubmitting} className="mt-7">
         {isSubmitting ? "Entrando..." : "Entrar"}
       </AuthButton>
 
@@ -215,11 +255,7 @@ export default function LoginForm({ onGoToRegister, onGoToForgotPassword }) {
         Esqueceu a senha?
       </AuthButton>
 
-      <AuthButton
-        type="button"
-        onClick={onGoToRegister}
-        className="mt-12"
-      >
+      <AuthButton type="button" onClick={onGoToRegister} className="mt-12">
         Criar nova conta
       </AuthButton>
     </form>
