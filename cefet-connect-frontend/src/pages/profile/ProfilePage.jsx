@@ -20,7 +20,7 @@ import {
   listMyIcons,
   listUserIcons,
   importarIconesDoGradment,
-} from "../../services/iconeService";
+} from "../../services/IconeService1";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
