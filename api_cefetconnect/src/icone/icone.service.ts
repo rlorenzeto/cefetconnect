@@ -30,6 +30,24 @@ export interface ImportarIconesResponseDto {
   erro?: string;
 }
 
+interface EixoGradmentDto {
+  codigo?: string;
+  codigoIcone?: string;
+  nome?: string;
+}
+
+interface RespostaGradmentDto {
+  curso?: {
+    idCurso?: string;
+    nomeCurso?: string;
+  };
+  usuario?: {
+    matricula?: string;
+    nomeUsuario?: string;
+  };
+  eixosFinalizados?: EixoGradmentDto[];
+}
+
 @Injectable()
 export class IconeService {
   constructor(
@@ -68,14 +86,13 @@ export class IconeService {
       throw new BadRequestException(ErrorMessages.EICO00001.mensagem);
     }
 
-    const respostaGradment =
-      await this.gradmentService.obterEixosCompletados(
-        usuario.tokenIntegracao,
-      );
+    const respostaGradment = (await this.gradmentService.obterEixosCompletados(
+      usuario.tokenIntegracao,
+    )) as unknown;
 
-    const eixosFinalizados = respostaGradment?.eixosFinalizados ?? respostaGradment ?? [];
+    const eixosFinalizados = this.extrairEixosFinalizados(respostaGradment);
 
-    if (!Array.isArray(eixosFinalizados) || eixosFinalizados.length === 0) {
+    if (eixosFinalizados.length === 0) {
       return {
         adicionados: [],
         duplicados: [],
@@ -98,7 +115,9 @@ export class IconeService {
     const ignorados: string[] = [];
 
     for (const eixo of eixosFinalizados) {
-      const codigo = this.normalizarCodigoEixo(eixo.codigo ?? eixo.codigoIcone ?? eixo.nome);
+      const codigo = this.normalizarCodigoEixo(
+        eixo.codigo ?? eixo.codigoIcone ?? eixo.nome ?? '',
+      );
 
       if (!codigo || !(codigo in ICONES_PPC_ENG_COMP)) {
         ignorados.push(eixo.nome ?? eixo.codigo ?? 'Eixo sem identificação');
@@ -155,6 +174,28 @@ export class IconeService {
       relations: ['icone'],
       order: { dataConquistaIcone: 'DESC' },
     });
+  }
+
+  private extrairEixosFinalizados(
+    respostaGradment: unknown,
+  ): EixoGradmentDto[] {
+    if (Array.isArray(respostaGradment)) {
+      return respostaGradment as EixoGradmentDto[];
+    }
+
+    if (
+      respostaGradment &&
+      typeof respostaGradment === 'object' &&
+      'eixosFinalizados' in respostaGradment
+    ) {
+      const resposta = respostaGradment as RespostaGradmentDto;
+
+      if (Array.isArray(resposta.eixosFinalizados)) {
+        return resposta.eixosFinalizados;
+      }
+    }
+
+    return [];
   }
 
   private normalizarCodigoEixo(valor: string): CodigoIconePpc | null {
