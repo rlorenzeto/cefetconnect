@@ -15,6 +15,8 @@ import {
   saveCurrentUser,
   updateUserProfile,
 } from "../../services/authService";
+import { getRankingCompleto } from "../../services/rankingService";
+import RankingModal from "../../components/ranking/RankingModal";
 
 export default function EditProfilePage() {
   const navigate = useNavigate();
@@ -52,6 +54,9 @@ export default function EditProfilePage() {
   const [isDeleteCardOpen, setIsDeleteCardOpen] = useState(false);
   const [isPasswordCardOpen, setIsPasswordCardOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [rankingCompleto, setRankingCompleto] = useState([]);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [isRankingLoading, setIsRankingLoading] = useState(false);
 
   const idUsuario = savedUser?.idUsuario || user?.idUsuario;
 
@@ -315,6 +320,22 @@ async function handleSaveEmail(event) {
     }
   }
 
+  async function handleOpenFullRanking() {
+    try {
+      setIsRankingModalOpen(true);
+      setIsRankingLoading(true);
+
+      const response = await getRankingCompleto();
+      const dados = response?.dados || response;
+
+      setRankingCompleto(Array.isArray(dados) ? dados : []);
+    } catch {
+      setRankingCompleto([]);
+    } finally {
+      setIsRankingLoading(false);
+    }
+  }
+
   const sharedProps = {
     user,
     currentPhotoUrl,
@@ -339,12 +360,20 @@ async function handleSaveEmail(event) {
     onSavePassword: handleSavePassword,
     onOpenDelete: () => setIsDeleteCardOpen(true),
     onConfirmEmail: () => navigate("/confirm-email"),
+    onOpenFullRanking: handleOpenFullRanking,
   };
   
   return (
     <>
       <DesktopEditProfile {...sharedProps} />
       <MobileEditProfile {...sharedProps} />
+
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        ranking={rankingCompleto}
+        isLoading={isRankingLoading}
+        onClose={() => setIsRankingModalOpen(false)}
+      />
 
       {isPasswordCardOpen && (
         <PasswordChangedCard onClose={() => setIsPasswordCardOpen(false)} />

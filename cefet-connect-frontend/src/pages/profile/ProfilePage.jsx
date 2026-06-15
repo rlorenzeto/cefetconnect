@@ -22,6 +22,9 @@ import {
   importarIconesDoGradment,
 } from "../../services/IconeService1";
 
+import { getRankingCompleto } from "../../services/rankingService";
+import RankingModal from "../../components/ranking/RankingModal";
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { idUsuarioPerfil } = useParams();
@@ -40,6 +43,9 @@ export default function ProfilePage() {
   const [icones, setIcones] = useState([]);
   const [isRefreshingIcones, setIsRefreshingIcones] = useState(false);
   const [showAllCommunities, setShowAllCommunities] = useState(false);
+  const [rankingCompleto, setRankingCompleto] = useState([]);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [isRankingLoading, setIsRankingLoading] = useState(false);
 
   const isOwnProfile =
     loggedUserId &&
@@ -149,6 +155,22 @@ export default function ProfilePage() {
           : post
       )
     );
+  }
+
+  async function handleOpenFullRanking() {
+    try {
+      setIsRankingModalOpen(true);
+      setIsRankingLoading(true);
+
+      const response = await getRankingCompleto();
+      const dados = response?.dados || response;
+
+      setRankingCompleto(Array.isArray(dados) ? dados : []);
+    } catch {
+      setRankingCompleto([]);
+    } finally {
+      setIsRankingLoading(false);
+    }
   }
 
   if (isLoading) {
@@ -273,6 +295,7 @@ export default function ProfilePage() {
         icones={icones}
         isRefreshingIcones={isRefreshingIcones}
         onRefreshIcones={handleRefreshIconesFromGradment}
+        onOpenFullRanking={handleOpenFullRanking}
       />
 
       <MobileProfile
@@ -296,6 +319,12 @@ export default function ProfilePage() {
         icones={icones}
         isRefreshingIcones={isRefreshingIcones}
         onRefreshIcones={handleRefreshIconesFromGradment}
+      />
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        ranking={rankingCompleto}
+        isLoading={isRankingLoading}
+        onClose={() => setIsRankingModalOpen(false)}
       />
     </>
   );

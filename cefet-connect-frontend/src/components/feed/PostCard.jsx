@@ -481,7 +481,7 @@ export default function PostCard({
     <>
       <article
         onDoubleClick={handleDoubleClick}
-        className={`mx-auto w-full max-w-[680px] rounded-[24px] bg-white p-4 shadow-sm ${
+        className={`w-full rounded-[24px] bg-white p-4 shadow-sm ${
           isEventPost ? "border border-[#d8f0e4]" : ""
         }`}
       >

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import ProfileSidebar from "../profile/ProfileSidebar";
 import CreatePostCard from "./CreatePostCard";
 import PostCard from "./PostCard";
@@ -68,10 +69,71 @@ export default function DesktopFeed({
         Number(b?.totalMembros || 0) - Number(a?.totalMembros || 0)
     )
     .slice(0, 3);
+
+  const rightSidebarRef = useRef(null);
+  const [rightSidebarOffset, setRightSidebarOffset] = useState(0);
+
+  useEffect(() => {
+    const TOP_DISTANCE = 40; // equivale ao top-10 do Tailwind
+    const BOTTOM_DISTANCE = 24; // folga para não cortar no fim da tela
+    let frameId = null;
+
+    function updateSidebarPosition() {
+      const sidebar = rightSidebarRef.current;
+
+      if (!sidebar) return;
+
+      const sidebarHeight = sidebar.offsetHeight;
+      const visibleHeight = window.innerHeight - TOP_DISTANCE - BOTTOM_DISTANCE;
+
+      const maxOffset = Math.max(0, sidebarHeight - visibleHeight);
+      const nextOffset = Math.min(window.scrollY, maxOffset);
+
+      setRightSidebarOffset((currentOffset) =>
+        currentOffset === nextOffset ? currentOffset : nextOffset
+      );
+    }
+
+    function requestUpdate() {
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+
+      frameId = requestAnimationFrame(updateSidebarPosition);
+    }
+
+    updateSidebarPosition();
+
+    window.addEventListener("scroll", requestUpdate, { passive: true });
+    window.addEventListener("resize", requestUpdate);
+
+    let resizeObserver = null;
+
+    if (typeof ResizeObserver !== "undefined" && rightSidebarRef.current) {
+      resizeObserver = new ResizeObserver(requestUpdate);
+      resizeObserver.observe(rightSidebarRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", requestUpdate);
+      window.removeEventListener("resize", requestUpdate);
+
+      if (frameId) {
+        cancelAnimationFrame(frameId);
+      }
+
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+      }
+    };
+  }, []);
     
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-        <ProfileSidebar activePage="home" />
+        <ProfileSidebar
+          activePage="home"
+          onOpenFullRanking={onOpenFullRanking}
+        />
 
           <main className="ml-[100px] min-h-screen bg-[#f1f1f1] pb-10 pt-5 pl-8 pr-[460px]">
             <section className="mx-auto w-full max-w-[790px]">
@@ -165,7 +227,13 @@ export default function DesktopFeed({
               </div>
             </section>
 
-              <aside className="fixed right-8 top-10 z-20 w-[400px] space-y-5">
+              <aside
+                ref={rightSidebarRef}
+                style={{
+                  transform: `translateY(-${rightSidebarOffset}px)`,
+                }}
+                className="fixed right-8 top-10 z-20 w-[400px] space-y-5"
+              >
                 <RankingCard
                   ranking={rankingPreview}
                   onOpenFullRanking={onOpenFullRanking}

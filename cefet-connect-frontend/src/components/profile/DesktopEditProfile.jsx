@@ -26,10 +26,16 @@ export default function DesktopEditProfile({
   onSavePassword,
   onOpenDelete,
   onConfirmEmail,
+  onOpenFullRanking,
+  onOpenNotifications,
 }) {
   return (
   <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-      <ProfileSidebar />
+    <ProfileSidebar
+      activePage="profile"
+      onOpenFullRanking={onOpenFullRanking}
+      onOpenNotifications={onOpenNotifications}
+    />
 
       <main className="ml-[112px] px-16 py-12">
           <div className="mb-8 flex items-center justify-between">

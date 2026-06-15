@@ -104,6 +104,7 @@ export default function MobileFeed({
             onClick={onOpenFullRanking}
             className="transition hover:text-[#089464]"
             aria-label="Ranking"
+            title="Ranking"
           >
             <TrophyIcon className="h-6 w-6" />
           </button>
@@ -111,7 +112,8 @@ export default function MobileFeed({
           <button
             type="button"
             className="transition hover:text-[#089464]"
-            aria-label="Favoritos"
+            aria-label="Notificações"
+            title="Notificações"
           >
             <HeartOutlineIcon className="h-6 w-6" />
           </button>

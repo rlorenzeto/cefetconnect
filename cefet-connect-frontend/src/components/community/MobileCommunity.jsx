@@ -194,13 +194,15 @@ export default function MobileCommunity({
 
             {community?.isMembro ? (
               <>
-                <SearchBar
-                  value={searchTerm}
-                  onChange={onSearchChange}
-                  placeholder="Pesquisar ..."
-                  className="mb-4"
-                />
+                <div className="pb-5">
+                  <SearchBar
+                    value={searchTerm}
+                    onChange={onSearchChange}
+                    placeholder="Pesquisar ..."
+                  />
+                </div>
 
+              <div className="space-y-5">
                 <div id="community-post-composer">
                   <CreatePostCard
                     user={currentUser}
@@ -227,6 +229,7 @@ export default function MobileCommunity({
                     Nenhum post publicado nesta comunidade ainda.
                   </div>
                 )}
+              </div>
               </>
             ) : (
               <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
