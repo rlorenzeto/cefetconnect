@@ -6,7 +6,12 @@ import { getProfileImageUrl } from "../../services/authService";
 import CommentSection from "./CommentSection";
 
 
-export default function PostImages({ fotos = [], post, currentUser }) {
+export default function PostImages({
+  fotos = [],
+  post,
+  currentUser,
+  onRankingChanged,
+}) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -308,7 +313,11 @@ export default function PostImages({ fotos = [], post, currentUser }) {
                 {formatDate(post?.dataHoraPublicacao)}
               </p>
             </div>
-            <CommentSection postId={post.idPost} currentUser={currentUser} />
+            <CommentSection
+              postId={post.idPost}
+              currentUser={currentUser}
+              onRankingChanged={onRankingChanged}
+            />
             
             {hasMultipleImages && (
               <div className="border-t border-[#eeeeee] pt-3 text-center text-xs font-semibold text-[#777]">

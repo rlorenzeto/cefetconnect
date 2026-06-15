@@ -4,6 +4,7 @@ import ProfileSidebar from "./ProfileSidebar";
 import PostCard from "../feed/PostCard";
 import ProfileCommunities from "./ProfileCommunities";
 import ProfilePins from "../pin/ProfilePins";
+import ProfileAcademicIcons from "./ProfileAcademicIcons";
 
 export default function DesktopProfile({
   user,
@@ -23,6 +24,9 @@ export default function DesktopProfile({
   pins = [],
   onRefreshPins,
   onRemovePin,
+  icones = [],
+  isRefreshingIcones = false,
+  onRefreshIcones,
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
@@ -112,6 +116,13 @@ export default function DesktopProfile({
                   isOwnProfile={isOwnProfile}
                   onRefreshPins={onRefreshPins}
                   onRemovePin={onRemovePin}
+                />
+
+                <ProfileAcademicIcons
+                  icones={icones}
+                  isOwnProfile={isOwnProfile}
+                  isRefreshing={isRefreshingIcones}
+                  onRefreshIcones={onRefreshIcones}
                 />
 
                 {isOwnProfile && (

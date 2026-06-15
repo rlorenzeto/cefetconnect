@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Icone } from './entities/icone.entity';
@@ -7,6 +11,10 @@ import { Usuario } from '../entities/usuario.entity';
 import { GradmentService } from '../gradment/gradment.service';
 import { InteracaoService } from '../interacao/interacao.service';
 import { ErrorMessages } from '../common/constants/messages.errors.js';
+import {
+  ICONES_PPC_ENG_COMP,
+  CodigoIconePpc,
+} from './icone-catalog';
 
 export interface IconeImportadoDto {
   idIcone: number;
@@ -18,28 +26,38 @@ export interface IconeImportadoDto {
 export interface ImportarIconesResponseDto {
   adicionados: IconeImportadoDto[];
   duplicados: string[];
+  ignorados: string[];
   erro?: string;
 }
 
 @Injectable()
 export class IconeService {
-  private readonly logger = new Logger(IconeService.name);
-
   constructor(
     @InjectRepository(Icone)
     private iconeRepository: Repository<Icone>,
+
     @InjectRepository(PossuiIcone)
     private possuiIconeRepository: Repository<PossuiIcone>,
+
     @InjectRepository(Usuario)
     private usuarioRepository: Repository<Usuario>,
+
     private gradmentService: GradmentService,
+
     private interacaoService: InteracaoService,
   ) {}
 
-  async importarIconesDoGradment(idUsuario: number): Promise<ImportarIconesResponseDto> {
+  async importarIconesDoGradment(
+    idUsuario: number,
+  ): Promise<ImportarIconesResponseDto> {
     const usuario = await this.usuarioRepository.findOne({
       where: { idUsuario },
-      select: { idUsuario: true, email: true, nomeUsuario: true, tokenIntegracao: true },
+      select: {
+        idUsuario: true,
+        email: true,
+        nomeUsuario: true,
+        tokenIntegracao: true,
+      },
     });
 
     if (!usuario) {
@@ -50,50 +68,57 @@ export class IconeService {
       throw new BadRequestException(ErrorMessages.EICO00001.mensagem);
     }
 
-    const eixosCompletados = await this.gradmentService.obterEixosCompletados(
-      usuario.tokenIntegracao,
-    );
+    const respostaGradment =
+      await this.gradmentService.obterEixosCompletados(
+        usuario.tokenIntegracao,
+      );
 
-    if (!eixosCompletados || eixosCompletados.length === 0) {
+    const eixosFinalizados = respostaGradment?.eixosFinalizados ?? respostaGradment ?? [];
+
+    if (!Array.isArray(eixosFinalizados) || eixosFinalizados.length === 0) {
       return {
         adicionados: [],
         duplicados: [],
+        ignorados: [],
         erro: 'Nenhum eixo completado encontrado no Gradment.',
       };
     }
 
-    const iconesExistentes = await this.possuiIconeRepository.find({
+    const iconesDoUsuario = await this.possuiIconeRepository.find({
       where: { usuario: { idUsuario } },
       relations: ['icone'],
     });
-    const nomesIconesExistentes = new Set(
-      iconesExistentes.map((pi) => pi.icone.nomeIcone.toLowerCase()),
+
+    const codigosJaPossuidos = new Set(
+      iconesDoUsuario.map((pi) => pi.icone.codigoIcone),
     );
 
     const adicionados: IconeImportadoDto[] = [];
     const duplicados: string[] = [];
+    const ignorados: string[] = [];
 
-    const eixosUnicos = this.agruparPorEixo(eixosCompletados);
+    for (const eixo of eixosFinalizados) {
+      const codigo = this.normalizarCodigoEixo(eixo.codigo ?? eixo.codigoIcone ?? eixo.nome);
 
-    for (const eixo of eixosUnicos) {
-      const nomeEixo = eixo.nome.toLowerCase();
-
-      if (nomesIconesExistentes.has(nomeEixo)) {
-        duplicados.push(eixo.nome);
+      if (!codigo || !(codigo in ICONES_PPC_ENG_COMP)) {
+        ignorados.push(eixo.nome ?? eixo.codigo ?? 'Eixo sem identificação');
         continue;
       }
 
+      if (codigosJaPossuidos.has(codigo)) {
+        duplicados.push(ICONES_PPC_ENG_COMP[codigo].nomeIcone);
+        continue;
+      }
+
+      const dadosIcone = ICONES_PPC_ENG_COMP[codigo];
+
       let icone = await this.iconeRepository.findOne({
-        where: { nomeIcone: eixo.nome },
+        where: { codigoIcone: dadosIcone.codigoIcone },
       });
 
       if (!icone) {
         icone = await this.iconeRepository.save(
-          this.iconeRepository.create({
-            nomeIcone: eixo.nome,
-            descricaoIcone: eixo.descricao,
-            codigoIcone: eixo.codigo,
-          }),
+          this.iconeRepository.create(dadosIcone),
         );
       }
 
@@ -111,14 +136,17 @@ export class IconeService {
         codigoIcone: icone.codigoIcone,
       });
 
-      nomesIconesExistentes.add(nomeEixo);
+      codigosJaPossuidos.add(codigo);
     }
 
     if (adicionados.length > 0) {
-      await this.interacaoService.incrementarContador(idUsuario, adicionados.length * 5);
+      await this.interacaoService.incrementarContador(
+        idUsuario,
+        adicionados.length * 5,
+      );
     }
 
-    return { adicionados, duplicados };
+    return { adicionados, duplicados, ignorados };
   }
 
   async listarIconesDoUsuario(idUsuario: number): Promise<PossuiIcone[]> {
@@ -129,49 +157,37 @@ export class IconeService {
     });
   }
 
-  private agruparPorEixo(materias: any[]): { nome: string; descricao: string; codigo: string }[] {
-    const eixosMap = new Map<string, { nome: string; descricao: string; codigo: string }>();
+  private normalizarCodigoEixo(valor: string): CodigoIconePpc | null {
+    if (!valor) return null;
 
-    for (const materia of materias) {
-      const eixoNome = this.extrairEixoDaMateria(materia.nome || materia.codigo);
-      const codigoIcone = this.gerarCodigoIcone(eixoNome);
+    const texto = valor
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .trim();
 
-      if (!eixosMap.has(eixoNome.toLowerCase())) {
-        eixosMap.set(eixoNome.toLowerCase(), {
-          nome: eixoNome,
-          descricao: eixoNome,
-          codigo: codigoIcone,
-        });
-      }
-    }
-
-    return Array.from(eixosMap.values());
-  }
-
-  private extrairEixoDaMateria(nomeMateria: string): string {
-    const mapeamento: Record<string, string> = {
-      'cálculo': 'Matemática',
-      'álgebra': 'Matemática',
-      'física': 'Física',
-      'química': 'Química',
-      'biologia': 'Biologia',
-      'programação': 'Computação',
-      'banco de dados': 'Computação',
+    const mapa: Record<string, CodigoIconePpc> = {
+      MATEMATICA: 'MATEMATICA',
+      'FISICA E QUIMICA': 'FISICA_QUIMICA',
+      FISICA_QUIMICA: 'FISICA_QUIMICA',
+      HUMANIDADES: 'HUMANIDADES',
+      'HUMANIDADES E CIENCIAS SOCIAIS APLICADAS A ENGENHARIA': 'HUMANIDADES',
+      ELETRICIDADE: 'ELETRICIDADE',
+      ELETRONICA: 'ELETRONICA',
+      'CONTROLE DE PROCESSOS': 'CONTROLE_PROCESSOS',
+      CONTROLE_PROCESSOS: 'CONTROLE_PROCESSOS',
+      'PRATICA PROFISSIONAL E INTEGRACAO CURRICULAR': 'PRATICA_PROFISSIONAL',
+      PRATICA_PROFISSIONAL: 'PRATICA_PROFISSIONAL',
+      'FUNDAMENTOS DE ENGENHARIA DE COMPUTACAO': 'FUNDAMENTOS_COMP',
+      FUNDAMENTOS_COMP: 'FUNDAMENTOS_COMP',
+      'ENGENHARIA DE SOFTWARE E BANCO DE DADOS': 'ENG_SOFTWARE_BD',
+      ENG_SOFTWARE_BD: 'ENG_SOFTWARE_BD',
+      'REDES E SISTEMAS DISTRIBUIDOS': 'REDES_SD',
+      REDES_SD: 'REDES_SD',
+      'SISTEMAS INTELIGENTES': 'SISTEMAS_INTELIGENTES',
+      SISTEMAS_INTELIGENTES: 'SISTEMAS_INTELIGENTES',
     };
 
-    const nomeLower = nomeMateria.toLowerCase();
-    for (const [chave, eixo] of Object.entries(mapeamento)) {
-      if (nomeLower.includes(chave)) {
-        return eixo;
-      }
-    }
-
-    return nomeMateria;
-  }
-
-  private gerarCodigoIcone(eixoNome: string): string {
-    const prefixo = eixoNome.substring(0, 3).toUpperCase();
-    const timestamp = Date.now().toString().slice(-4);
-    return `${prefixo}-${timestamp}`;
+    return mapa[texto] ?? null;
   }
 }

@@ -3,6 +3,7 @@ import ProfileSidebar from "../profile/ProfileSidebar";
 import CreatePostCard from "./CreatePostCard";
 import PostCard from "./PostCard";
 import SearchBar from "../common/SearchBar";
+import RankingCard from "../ranking/RankingCard";
 
 
 const GRADMENT_URL =
@@ -23,6 +24,9 @@ export default function DesktopFeed({
   onPostDeleted,
   onPostUpdated,
   onLogout,
+  rankingPreview = [],
+  onOpenFullRanking,
+  onRankingChanged,
 }) {
   function getEventDate(event) {
     const date = new Date(event?.dataEvento);
@@ -69,24 +73,13 @@ export default function DesktopFeed({
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
         <ProfileSidebar activePage="home" />
 
-        <main className="relative flex-1 px-12 py-10">
-          <div className="mx-auto grid max-w-[1180px] grid-cols-[minmax(0,680px)_320px] justify-center gap-8">
-            <section>
-              <div className="mb-8 flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-[42px] font-bold text-[#202020]">
-                    Feed
-                  </h1>
-
-                  <p className="mt-2 text-sm text-[#666]">
-                    Veja publicações, dúvidas, oportunidades e avisos da comunidade Cefet.
-                  </p>
-                </div>
-
+          <main className="ml-[100px] min-h-screen bg-[#f1f1f1] pb-10 pt-5 pl-8 pr-[460px]">
+            <section className="mx-auto w-full max-w-[790px]">
+              <div className="mb-4 flex justify-end">
                 <button
                   type="button"
                   onClick={onLogout}
-                  className="mt-2 rounded-full bg-white px-5 py-2 text-sm font-bold text-red-500 shadow-sm transition hover:bg-red-50"
+                  className="rounded-full bg-white px-5 py-2 text-sm font-bold text-red-500 shadow-sm transition hover:bg-red-50"
                 >
                   Sair
                 </button>
@@ -96,10 +89,41 @@ export default function DesktopFeed({
                 value={searchTerm}
                 onChange={onSearchChange}
                 placeholder="Pesquisar posts ..."
-                className="mb-6"
+                className="mb-4"
               />
 
               <div className="space-y-6">
+                <section className="overflow-hidden rounded-[8px] bg-white shadow-sm">
+                  <div className="flex h-[54px] items-center justify-center border-b border-[#d9d9d9]">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src="/images/gradment-logo.svg"
+                        alt="GradMent"
+                        className="h-7 w-auto object-contain"
+                      />
+
+                      <span className="text-[22px] font-extrabold text-[#39b02f]">
+                        GradMent
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="px-5 py-4 text-center">
+                    <h2 className="text-[21px] font-extrabold leading-tight text-[#39b02f]">
+                      A sua jornada acadêmica começa Aqui
+                    </h2>
+
+                    <a
+                      href={GRADMENT_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 inline-flex h-10 items-center justify-center rounded-[9px] bg-[#3dae21] px-5 text-[16px] font-extrabold text-white transition hover:bg-[#319219]"
+                    >
+                      conheça !
+                    </a>
+                  </div>
+                </section>
+
                 <CreatePostCard
                   user={user}
                   userImageUrl={userImageUrl}
@@ -126,128 +150,105 @@ export default function DesktopFeed({
                       currentUser={user}
                       onPostDeleted={onPostDeleted}
                       onPostUpdated={onPostUpdated}
+                      onRankingChanged={onRankingChanged}
                     />
                   ))
                 )}
 
                 {!isLoading && posts.length === 0 && (
                   <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
-                    Nenhum post publicado ainda.
+                    {searchTerm?.trim()
+                      ? "Nenhum post encontrado para essa busca."
+                      : "Nenhum post publicado ainda."}
                   </div>
                 )}
               </div>
             </section>
 
-            <aside className="fixed right-12 top-10 w-[320px] max-h-[calc(100vh-5rem)] space-y-5 overflow-y-auto pr-1">
-              <section className="overflow-hidden rounded-[8px] bg-white shadow-sm">
-                <div className="flex h-[54px] items-center justify-center border-b border-[#d9d9d9]">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src="/images/gradment-logo.svg"
-                      alt="GradMent"
-                      className="h-7 w-auto object-contain"
-                    />
+              <aside className="fixed right-8 top-10 z-20 w-[400px] space-y-5">
+                <RankingCard
+                  ranking={rankingPreview}
+                  onOpenFullRanking={onOpenFullRanking}
+                />
 
-                    <span className="text-[22px] font-extrabold text-[#39b02f]">
-                      GradMent
-                    </span>
-                  </div>
-                </div>
+                <section className="rounded-[28px] bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-lg font-bold text-[#202020]">
+                      Próximos eventos
+                    </h2>
 
-                <div className="px-5 py-4 text-center">
-                  <h2 className="text-[21px] font-extrabold leading-tight text-[#39b02f]">
-                    A sua jornada acadêmica começa Aqui
-                  </h2>
-
-                  <a
-                    href={GRADMENT_URL}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 inline-flex h-10 items-center justify-center rounded-[9px] bg-[#3dae21] px-5 text-[16px] font-extrabold text-white transition hover:bg-[#319219]"
-                  >
-                    conheça !
-                  </a>
-                </div>
-              </section>
-              <section className="rounded-[28px] bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-lg font-bold text-[#202020]">
-                    Próximos eventos
-                  </h2>
-
-                  <Link
-                    to="/eventos"
-                    className="text-xs font-bold text-[#089464] hover:underline"
-                  >
-                    Ver todos
-                  </Link>
-                </div>
-
-                <div className="mt-4 space-y-3 text-sm text-[#343434]">
-                  {importantEvents.map((event) => (
                     <Link
-                      key={event.idEvento}
                       to="/eventos"
-                      className="block w-full rounded-2xl bg-[#f1f1f1] p-3 text-left transition hover:bg-[#e8f7ef]"
+                      className="text-xs font-bold text-[#089464] hover:underline"
                     >
-                      <p className="truncate font-semibold text-[#202020]">
-                        {event.titulo}
-                      </p>
-
-                      <p className="mt-1 truncate text-xs text-[#777]">
-                        {event?.comunidade?.nomeComunidade || "Evento público"}
-                      </p>
+                      Ver todos
                     </Link>
-                  ))}
+                  </div>
 
-                  {importantEvents.length === 0 && (
-                    <p className="rounded-2xl bg-[#f1f1f1] p-3 text-sm text-[#777]">
-                      Nenhum evento disponível.
-                    </p>
-                  )}
-                </div>
-              </section>
+                  <div className="mt-4 space-y-3 text-sm text-[#343434]">
+                    {importantEvents.map((event) => (
+                      <Link
+                        key={event.idEvento}
+                        to="/eventos"
+                        className="block w-full rounded-2xl bg-[#f1f1f1] p-3 text-left transition hover:bg-[#e8f7ef]"
+                      >
+                        <p className="truncate font-semibold text-[#202020]">
+                          {event.titulo}
+                        </p>
 
-              <section className="rounded-[28px] bg-white p-5 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-lg font-bold text-[#202020]">
-                    Minhas comunidades
-                  </h2>
+                        <p className="mt-1 truncate text-xs text-[#777]">
+                          {event?.comunidade?.nomeComunidade || "Evento público"}
+                        </p>
+                      </Link>
+                    ))}
 
-                  <Link
-                    to="/comunidades"
-                    className="text-xs font-bold text-[#089464] hover:underline"
-                  >
-                    Ver todas
-                  </Link>
-                </div>
+                    {importantEvents.length === 0 && (
+                      <p className="rounded-2xl bg-[#f1f1f1] p-3 text-sm text-[#777]">
+                        Nenhum evento disponível.
+                      </p>
+                    )}
+                  </div>
+                </section>
 
-                <div className="mt-4 space-y-3 text-sm text-[#343434]">
-                  {importantCommunities.map((community) => (
+                <section className="rounded-[28px] bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-lg font-bold text-[#202020]">
+                      Minhas comunidades
+                    </h2>
+
                     <Link
-                      key={community.idComunidade}
-                      to={`/comunidades/${community.idComunidade}`}
-                      className="block w-full rounded-2xl bg-[#f1f1f1] p-3 text-left transition hover:bg-[#e8f7ef]"
+                      to="/comunidades"
+                      className="text-xs font-bold text-[#089464] hover:underline"
                     >
-                      <p className="truncate font-semibold text-[#202020]">
-                        {community.nomeComunidade}
-                      </p>
-
-                      <p className="mt-1 text-xs text-[#777]">
-                        {Number(community.totalMembros || 0)} membros
-                      </p>
+                      Ver todas
                     </Link>
-                  ))}
+                  </div>
 
-                  {importantCommunities.length === 0 && (
-                    <p className="rounded-2xl bg-[#f1f1f1] p-3 text-sm text-[#777]">
-                      Você ainda não participa de comunidades.
-                    </p>
-                  )}
-                </div>
-              </section>
-            </aside>
-          </div>
+                  <div className="mt-4 space-y-3 text-sm text-[#343434]">
+                    {importantCommunities.map((community) => (
+                      <Link
+                        key={community.idComunidade}
+                        to={`/comunidades/${community.idComunidade}`}
+                        className="block w-full rounded-2xl bg-[#f1f1f1] p-3 text-left transition hover:bg-[#e8f7ef]"
+                      >
+                        <p className="truncate font-semibold text-[#202020]">
+                          {community.nomeComunidade}
+                        </p>
+
+                        <p className="mt-1 text-xs text-[#777]">
+                          {Number(community.totalMembros || 0)} membros
+                        </p>
+                      </Link>
+                    ))}
+
+                    {importantCommunities.length === 0 && (
+                      <p className="rounded-2xl bg-[#f1f1f1] p-3 text-sm text-[#777]">
+                        Você ainda não participa de comunidades.
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </aside>
         </main>
     </div>
   );

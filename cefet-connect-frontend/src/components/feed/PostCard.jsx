@@ -30,7 +30,7 @@ import PinDetailsModal from "../pin/PinDetailsModal";
 import UserPinsModal from "../pin/UserPinsModal";
 import PinBadge from "../pin/PinBadge";
 
-function PostActionMenu({ onEdit, onDelete, canEdit = true }) {
+function PostActionMenu({ onEdit, onDelete, canEdit = true, onRankingChanged, }) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -97,6 +97,7 @@ export default function PostCard({
   currentUser,
   onPostDeleted,
   onPostUpdated,
+  onRankingChanged,
 }) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -293,6 +294,7 @@ export default function PostCard({
               String(currentUser?.idUsuario || "")
           )
         );
+        onRankingChanged?.();
       } else {
         await likePost(post.idPost);
 
@@ -317,6 +319,7 @@ export default function PostCard({
             },
           ];
         });
+        onRankingChanged?.();
       }
     } catch (error) {
       if (error.message?.toLowerCase().includes("já curtiu")) {
@@ -585,6 +588,7 @@ export default function PostCard({
                 fotos={post.fotosPost || []}
                 post={post}
                 currentUser={currentUser}
+                onRankingChanged={onRankingChanged}
               />
             </>
           )}
@@ -618,6 +622,7 @@ export default function PostCard({
                 liked={liked}
                 total={likeTotal}
                 onClick={handleToggleLike}
+                onRankingChanged={onRankingChanged}
                 onTotalClick={() => setIsLikesModalOpen(true)}
                 disabled={isLikeLoading}
               />
@@ -642,6 +647,7 @@ export default function PostCard({
             postId={post.idPost}
             currentUser={currentUser}
             onCountChange={setCommentTotal}
+            onRankingChanged={onRankingChanged}
           />
         )}
       </article>

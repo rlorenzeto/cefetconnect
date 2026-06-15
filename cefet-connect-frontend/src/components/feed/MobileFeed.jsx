@@ -10,6 +10,7 @@ import {
 } from "../icons/AppIcons";
 import GlobalCreateMenu from "../common/GlobalCreateMenu";
 import SearchBar from "../common/SearchBar";
+import RankingCard from "../ranking/RankingCard";
 
 const GRADMENT_URL =
   import.meta.env.VITE_GRADMENT_URL || "https://gradment.linceonline.com.br";
@@ -32,6 +33,9 @@ export default function MobileFeed({
   onCreatePostShortcut,
   onCreateCommunityShortcut,
   onCreateEventShortcut,
+  rankingPreview = [],
+  onOpenFullRanking,
+  onRankingChanged,
 }) {
   const [isGradmentMenuOpen, setIsGradmentMenuOpen] = useState(false);
   return (
@@ -97,6 +101,7 @@ export default function MobileFeed({
         <div className="flex items-center gap-5 text-[#0f172a]">
           <button
             type="button"
+            onClick={onOpenFullRanking}
             className="transition hover:text-[#089464]"
             aria-label="Ranking"
           >
@@ -122,21 +127,50 @@ export default function MobileFeed({
       </header>
 
       <main className="w-full max-w-full overflow-x-hidden px-3 pt-5">
-        <div className="mb-6">
-          <h1 className="text-[32px] font-bold text-[#202020]">
-            Feed
-          </h1>
-
-          <p className="mt-1 text-sm text-[#666]">
-            Acompanhe as novidades do Cefet.
-          </p>
-        </div>
         <SearchBar
           value={searchTerm}
           onChange={onSearchChange}
           placeholder="Pesquisar ..."
           className="mb-3"
         />
+
+        <section className="mb-4 overflow-hidden rounded-[8px] bg-white shadow-sm">
+          <div className="flex h-[54px] items-center justify-center border-b border-[#d9d9d9]">
+            <div className="flex items-center gap-2">
+              <img
+                src="/images/gradment-logo.svg"
+                alt="GradMent"
+                className="h-7 w-auto object-contain"
+              />
+
+              <span className="text-[22px] font-extrabold text-[#39b02f]">
+                GradMent
+              </span>
+            </div>
+          </div>
+
+          <div className="px-5 py-5 text-center">
+            <h2 className="text-[24px] font-extrabold leading-tight text-[#39b02f]">
+              A sua jornada acadêmica começa Aqui
+            </h2>
+
+            <a
+              href={GRADMENT_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 inline-flex h-11 items-center justify-center rounded-[9px] bg-[#3dae21] px-6 text-[17px] font-extrabold text-white transition hover:bg-[#319219]"
+            >
+              conheça !
+            </a>
+          </div>
+        </section>
+
+        <div className="mb-4">
+          <RankingCard
+            ranking={rankingPreview}
+            onOpenFullRanking={onOpenFullRanking}
+          />
+        </div>
 
         <div className="space-y-5">
           <div id="post-composer">
@@ -167,13 +201,16 @@ export default function MobileFeed({
                 currentUser={user}
                 onPostDeleted={onPostDeleted}
                 onPostUpdated={onPostUpdated}
+                onRankingChanged={onRankingChanged}
               />
             ))
           )}
 
           {!isLoading && posts.length === 0 && (
             <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
-              Nenhum post publicado ainda.
+              {searchTerm?.trim()
+                ? "Nenhum post encontrado para essa busca."
+                : "Nenhum post publicado ainda."}
             </div>
           )}
         </div>
