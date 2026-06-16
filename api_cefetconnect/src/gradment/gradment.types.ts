@@ -31,4 +31,6 @@ export interface GradmentMateriasResponse {
 export interface GradmentDadosUsuario {
   usuario: GradmentUsuario;
   sessionToken: string;
+  materiasAprovadas?: GradmentMateria[]; 
+  resumoAcademico?: any;                 
 }

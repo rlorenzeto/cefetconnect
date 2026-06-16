@@ -28,6 +28,8 @@ export default function DesktopCommunity({
   onCreatePost,
   onPostDeleted,
   onPostUpdated,
+  onOpenFullRanking,
+  onOpenNotifications,
 }) {
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
   const [selectedPin, setSelectedPin] = useState(null);
@@ -51,7 +53,11 @@ export default function DesktopCommunity({
   const totalMembers = Number(community?.totalMembros || members.length || 0);
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-        <ProfileSidebar activePage="community" />
+        <ProfileSidebar
+          activePage="community"
+          onOpenFullRanking={onOpenFullRanking}
+          onOpenNotifications={onOpenNotifications}
+        />
 
         <main className="flex-1 px-12 py-10">
           <div className="mx-auto max-w-[920px]">
@@ -174,40 +180,42 @@ export default function DesktopCommunity({
                   )}
                   {community?.isMembro ? (
                     <>
-                    <SearchBar
-                      value={searchTerm}
-                      onChange={onSearchChange}
-                      placeholder="Pesquisar ..."
-                      className="mb-6"
-                    />
-
-                    <div id="community-post-composer">
-                      <CreatePostCard
-                        user={currentUser}
-                        userImageUrl={userImageUrl}
-                        onCreatePost={onCreatePost}
-                        isCreating={isCreating}
-                        communities={currentCommunityAsOption}
-                        fixedCommunity={community}
-                      />
-
-                      {posts.map((post) => (
-                        <PostCard
-                          key={post.idPost}
-                          post={post}
-                          currentUser={currentUser}
-                          onPostDeleted={onPostDeleted}
-                          onPostUpdated={onPostUpdated}
+                      <div className="pb-6">
+                        <SearchBar
+                          value={searchTerm}
+                          onChange={onSearchChange}
+                          placeholder="Pesquisar ..."
                         />
-                      ))}
-
-                      {posts.length === 0 && (
-                        <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
-                          Nenhum post publicado nesta comunidade ainda.
-                        </div>
-                      )}
                       </div>
-                    </>
+
+                      <div className="space-y-6">
+                        <div id="community-post-composer">
+                          <CreatePostCard
+                            user={currentUser}
+                            userImageUrl={userImageUrl}
+                            onCreatePost={onCreatePost}
+                            isCreating={isCreating}
+                            communities={currentCommunityAsOption}
+                            fixedCommunity={community}
+                          />
+                        </div>
+
+                        {posts.map((post) => (
+                          <PostCard
+                            key={post.idPost}
+                            post={post}
+                            currentUser={currentUser}
+                            onPostDeleted={onPostDeleted}
+                            onPostUpdated={onPostUpdated}
+                          />
+                        ))}
+
+                        {posts.length === 0 && (
+                          <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
+                            Nenhum post publicado nesta comunidade ainda.
+                          </div>
+                        )}
+                      </div>                    </>
                   ) : (
                     <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
                       Entre na comunidade para ver e publicar posts.

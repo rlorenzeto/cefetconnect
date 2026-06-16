@@ -14,6 +14,8 @@ import {
 import { getCurrentUser } from "../../services/authService";
 import { listCommunityPins } from "../../services/pinService";
 import { itemMatchesSearch } from "../../utils/searchUtils";
+import { getRankingCompleto } from "../../services/rankingService";
+import RankingModal from "../../components/ranking/RankingModal";
 
 export default function CommunitiesPage() {
   const navigate = useNavigate();
@@ -27,6 +29,9 @@ export default function CommunitiesPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [rankingCompleto, setRankingCompleto] = useState([]);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [isRankingLoading, setIsRankingLoading] = useState(false);
 
   useEffect(() => {
     if (!currentUser?.idUsuario) {
@@ -177,6 +182,22 @@ export default function CommunitiesPage() {
     }
   }
 
+  async function handleOpenFullRanking() {
+    try {
+      setIsRankingModalOpen(true);
+      setIsRankingLoading(true);
+
+      const response = await getRankingCompleto();
+      const dados = response?.dados || response;
+
+      setRankingCompleto(Array.isArray(dados) ? dados : []);
+    } catch {
+      setRankingCompleto([]);
+    } finally {
+      setIsRankingLoading(false);
+    }
+  }
+
   const sharedProps = {
     communities: filteredCommunities,
     searchTerm,
@@ -191,12 +212,20 @@ export default function CommunitiesPage() {
     onLeave: handleLeave,
     onEdit: handleOpenEdit,
     onDelete: handleDelete,
+    onOpenFullRanking: handleOpenFullRanking,
   };
 
   return (
     <>
       <DesktopCommunities {...sharedProps} />
       <MobileCommunities {...sharedProps} />
+
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        ranking={rankingCompleto}
+        isLoading={isRankingLoading}
+        onClose={() => setIsRankingModalOpen(false)}
+      />
 
       <CommunityFormModal
         key={editingCommunity?.idComunidade || "new-community"}

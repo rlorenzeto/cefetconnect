@@ -9,6 +9,7 @@ export default function CommentSection({
   postId,
   currentUser,
   onCountChange,
+  onRankingChanged,
 }) {
   const [comments, setComments] = useState([]);
   const [texto, setTexto] = useState("");
@@ -59,6 +60,9 @@ export default function CommentSection({
         onCountChange?.(next.length);
         return next;
       });
+
+      onRankingChanged?.();
+
       setTexto("");
     } catch (error) {
       setError(error.message || "Não foi possível comentar.");
@@ -76,6 +80,8 @@ export default function CommentSection({
       onCountChange?.(next.length);
       return next;
     });
+
+    onRankingChanged?.();
   }
 
   return (
@@ -114,6 +120,7 @@ export default function CommentSection({
               comment={comment}
               currentUser={currentUser}
               onDeleted={handleDeleted}
+              onRankingChanged={onRankingChanged}
             />
           ))}
 

@@ -22,6 +22,8 @@ import {
   sortEventsWithFinishedLast,
 } from "../../utils/eventFilters";
 import { itemMatchesSearch } from "../../utils/searchUtils";
+import { getRankingCompleto } from "../../services/rankingService";
+import RankingModal from "../../components/ranking/RankingModal";
 
 export default function EventsPage() {
   const navigate = useNavigate();
@@ -42,6 +44,9 @@ export default function EventsPage() {
   const [loadingActionId, setLoadingActionId] = useState(null);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [rankingCompleto, setRankingCompleto] = useState([]);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [isRankingLoading, setIsRankingLoading] = useState(false);
 
   const myEventIds = useMemo(() => {
     return new Set(myEvents.map((event) => String(event.idEvento)));
@@ -260,6 +265,22 @@ export default function EventsPage() {
     }
   }
 
+  async function handleOpenFullRanking() {
+    try {
+      setIsRankingModalOpen(true);
+      setIsRankingLoading(true);
+
+      const response = await getRankingCompleto();
+      const dados = response?.dados || response;
+
+      setRankingCompleto(Array.isArray(dados) ? dados : []);
+    } catch {
+      setRankingCompleto([]);
+    } finally {
+      setIsRankingLoading(false);
+    }
+  }
+
   const sharedProps = {
     events: filteredEvents,
     searchTerm,
@@ -273,6 +294,7 @@ export default function EventsPage() {
     onEdit: handleOpenEdit,
     onDelete: handleDeleteEvent,
     onToggleParticipation: handleToggleParticipation,
+    onOpenFullRanking: handleOpenFullRanking,
   };
 
   return (
@@ -290,6 +312,13 @@ export default function EventsPage() {
           setEditingEvent(null);
         }}
         onSubmit={handleSubmitEvent}
+      />
+
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        ranking={rankingCompleto}
+        isLoading={isRankingLoading}
+        onClose={() => setIsRankingModalOpen(false)}
       />
 
       <EventDetailsModal

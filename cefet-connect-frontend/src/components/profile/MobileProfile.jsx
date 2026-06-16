@@ -5,6 +5,7 @@ import PostCard from "../feed/PostCard";
 import MobileBottomNav from "../common/MobileBottomNav";
 import ProfileCommunities from "./ProfileCommunities";
 import ProfilePins from "../pin/ProfilePins";
+import ProfileAcademicIcons from "./ProfileAcademicIcons";
 
 export default function MobileProfile({
   user,
@@ -24,6 +25,9 @@ export default function MobileProfile({
   pins = [],
   onRefreshPins,
   onRemovePin,
+  icones = [],
+  isRefreshingIcones = false,
+  onRefreshIcones,
 }) {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] text-[#202020] lg:hidden">
@@ -116,6 +120,13 @@ export default function MobileProfile({
             isOwnProfile={isOwnProfile}
             onRefreshPins={onRefreshPins}
             onRemovePin={onRemovePin}
+          />
+
+          <ProfileAcademicIcons
+            icones={icones}
+            isOwnProfile={isOwnProfile}
+            isRefreshing={isRefreshingIcones}
+            onRefreshIcones={onRefreshIcones}
           />
 
           {isOwnProfile && (

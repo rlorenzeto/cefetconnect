@@ -37,7 +37,11 @@ function NavButton({ children, active = false, onClick, label }) {
   );
 }
 
-export default function ProfileSidebar({ activePage = "profile" }) {
+export default function ProfileSidebar({
+  activePage = "profile",
+  onOpenFullRanking,
+  onOpenNotifications,
+}) {
   const navigate = useNavigate();
 
   return (
@@ -77,12 +81,20 @@ export default function ProfileSidebar({ activePage = "profile" }) {
           <PartyIcon />
         </NavButton>
 
-        <NavButton label="Pins">
-          <TrophyIcon />
+        <NavButton
+          label="Ranking"
+          active={activePage === "ranking"}
+          onClick={onOpenFullRanking}
+        >
+          <TrophyIcon active={activePage === "ranking"} />
         </NavButton>
 
-        <NavButton label="Curtidas">
-          <HeartOutlineIcon />
+        <NavButton
+          label="Notificações"
+          active={activePage === "notifications"}
+          onClick={onOpenNotifications}
+        >
+          <HeartOutlineIcon active={activePage === "notifications"} />
         </NavButton>
 
         <NavButton

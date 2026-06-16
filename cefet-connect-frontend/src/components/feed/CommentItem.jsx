@@ -12,7 +12,12 @@ import {
   updateComment,
 } from "../../services/commentService";
 
-export default function CommentItem({ comment, currentUser, onDeleted }) {
+export default function CommentItem({
+  comment,
+  currentUser,
+  onDeleted,
+  onRankingChanged,
+}) {
   const navigate = useNavigate();
 
   const [texto, setTexto] = useState(comment.texto || "");
@@ -115,6 +120,8 @@ export default function CommentItem({ comment, currentUser, onDeleted }) {
               String(currentUser?.idUsuario || "")
           )
         );
+
+        onRankingChanged?.();
       } else {
         await likeComment(comment.idComentario);
 
@@ -139,6 +146,8 @@ export default function CommentItem({ comment, currentUser, onDeleted }) {
             },
           ];
         });
+
+        onRankingChanged?.();
       }
     } catch (error) {
       if (error.message?.toLowerCase().includes("já curtiu")) {

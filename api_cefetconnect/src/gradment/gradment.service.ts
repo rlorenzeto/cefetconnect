@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import {
   GradmentDadosUsuario,
   GradmentMateria,
-  GradmentMateriasResponse,
   GradmentTokenResponse,
   GradmentUsuario,
 } from './gradment.types';
@@ -84,8 +83,8 @@ export class GradmentService {
     userId: string | number,
     sessionToken: string,
     updatedSince?: string,
-  ): Promise<GradmentMateria[]> {
-    if (!this.isConfigurado()) return [];
+  ): Promise<{ materias: GradmentMateria[]; resumo?: any }> {
+    if (!this.isConfigurado()) return { materias: [] };
 
     try {
       const url = new URL(`${this.baseUrl}/api/integracao/users/${userId}/materias-aprovadas`);
@@ -97,26 +96,33 @@ export class GradmentService {
 
       if (!response.ok) {
         this.logger.warn(`[Gradment] Falha em matérias do usuário ${userId}: HTTP ${response.status}`);
-        return [];
+        return { materias: [] };
       }
 
       const data = await response.json() as any;
 
       // aceita tanto o formato do PDF quanto o do simulado do WhatsApp
       if (data.dados && data.dados.materias_aprovadas) {
-        return data.dados.materias_aprovadas;
+        return {
+          materias: data.dados.materias_aprovadas,
+          resumo: data.dados.resumo ?? null,
+        };
       }
 
-      return data.materias_aprovadas ?? [];
+      return {
+        materias: data.materias_aprovadas ?? [],
+        resumo: data.resumo ?? null,
+      };
     } catch (e) {
       this.logger.error(`[Gradment] Erro de conexão em obterMateriasAprovadas: ${e}`);
-      return [];
+      return { materias: [] };
     }
   }
+
   // Busca os eixos/matérias aprovadas do usuário usando o token de integração do Gradment
   // O tokenIntegracao é o token que o Gradment nos forneceu e está salvo no campo token_integracao do usuário
-  async obterEixosCompletados(tokenIntegracao: string): Promise<any[]> {
-    if (!this.baseUrl) return [];
+  async obterEixosCompletados(tokenIntegracao: string): Promise<any> {
+    if (!this.baseUrl) return { materias: [] };
 
     try {
       const response = await fetch(`${this.baseUrl}/api/integracao/materias-aprovadas`, {
@@ -128,30 +134,36 @@ export class GradmentService {
 
       if (!response.ok) {
         this.logger.warn(`[Gradment] obterEixosCompletados falhou: HTTP ${response.status}`);
-        return [];
+        return { materias: [] };
       }
 
       const data = await response.json() as any;
 
-      // Aceita diferentes formatos de resposta da API do Gradment
+      // Garante interceptação dos metadados novos de eixo, periodo e resumo no formato de integração direta
       if (data.dados && Array.isArray(data.dados.materias_aprovadas)) {
-        return data.dados.materias_aprovadas;
+        return {
+          materias: data.dados.materias_aprovadas,
+          resumo: data.dados.resumo ?? null,
+        };
       }
       if (Array.isArray(data.materias_aprovadas)) {
-        return data.materias_aprovadas;
+        return {
+          materias: data.materias_aprovadas,
+          resumo: data.resumo ?? null,
+        };
       }
       if (Array.isArray(data)) {
-        return data;
+        return { materias: data };
       }
 
-      return [];
+      return { materias: [] };
     } catch (e) {
       this.logger.error(`[Gradment] Erro em obterEixosCompletados: ${e}`);
-      return [];
+      return { materias: [] };
     }
   }
 
-  // Método de conveniência: executa o fluxo completo (token + dados do usuário) em uma chamada só
+  // Método de conveniência: executa o fluxo completo (token + dados do usuário + matérias atualizadas)
   async buscarDadosUsuario(email: string): Promise<GradmentDadosUsuario | null> {
     const sessionToken = await this.obterTokenSessao(email);
     if (!sessionToken) return null;
@@ -159,6 +171,14 @@ export class GradmentService {
     const usuario = await this.obterUsuario(sessionToken);
     if (!usuario) return null;
 
-    return { usuario, sessionToken };
+    // Puxa as matérias já contemplando as novas propriedades de eixo e período enviadas no JSON
+    const resultadoMaterias = await this.obterMateriasAprovadas(usuario.id, sessionToken);
+
+    return { 
+      usuario, 
+      sessionToken,
+      materiasAprovadas: resultadoMaterias.materias,
+      resumoAcademico: resultadoMaterias.resumo, // Injeta o resumo novo no login do Cefet Connect
+    };
   }
 }

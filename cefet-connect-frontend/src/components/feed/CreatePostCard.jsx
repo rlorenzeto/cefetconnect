@@ -162,7 +162,7 @@ export default function CreatePostCard({
   }
 
   return (
-    <section className="rounded-[22px] bg-white p-4 shadow-sm">
+    <section className="w-full rounded-[22px] bg-white p-4 shadow-sm">
       <form onSubmit={handleSubmit}>
         <div className="rounded-[18px] border border-[#d9d9d9] bg-white p-4 transition focus-within:border-[#089464]">
           <div className="mb-3 flex items-start gap-3">

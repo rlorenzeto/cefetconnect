@@ -16,10 +16,16 @@ export default function DesktopCommunities({
   onLeave,
   onEdit,
   onDelete,
+  onOpenFullRanking,
+  onOpenNotifications,
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
-        <ProfileSidebar activePage="community" />
+        <ProfileSidebar
+          activePage="community"
+          onOpenFullRanking={onOpenFullRanking}
+          onOpenNotifications={onOpenNotifications}
+        />
 
         <main className="flex-1 px-12 py-10">
           <div className="mx-auto max-w-[1120px]">

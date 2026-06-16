@@ -16,6 +16,14 @@ import {
   listUserPins,
   removePinFromProfile,
 } from "../../services/pinService";
+import {
+  listMyIcons,
+  listUserIcons,
+  importarIconesDoGradment,
+} from "../../services/IconeService1";
+
+import { getRankingCompleto } from "../../services/rankingService";
+import RankingModal from "../../components/ranking/RankingModal";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -32,7 +40,12 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [communities, setCommunities] = useState([]);
   const [pins, setPins] = useState([]);
+  const [icones, setIcones] = useState([]);
+  const [isRefreshingIcones, setIsRefreshingIcones] = useState(false);
   const [showAllCommunities, setShowAllCommunities] = useState(false);
+  const [rankingCompleto, setRankingCompleto] = useState([]);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [isRankingLoading, setIsRankingLoading] = useState(false);
 
   const isOwnProfile =
     loggedUserId &&
@@ -59,13 +72,19 @@ export default function ProfilePage() {
         setIsLoading(true);
         setError("");
 
-        const [profileResponse, postsResponse, communitiesResponse, pinsResponse] =
-          await Promise.all([
-            getUserProfile(profileId),
-            listUserPosts(profileId),
-            listMinhasComunidades(),
-            listUserPins(profileId),
-          ]);
+        const [
+          profileResponse,
+          postsResponse,
+          communitiesResponse,
+          pinsResponse,
+          iconesResponse,
+        ] = await Promise.all([
+          getUserProfile(profileId),
+          listUserPosts(profileId),
+          listMinhasComunidades(),
+          listUserPins(profileId),
+          isOwnProfile ? listMyIcons() : listUserIcons(profileId),
+        ]);
         const profile = profileResponse?.dados || profileResponse;
         const postsData = postsResponse?.dados || postsResponse;
 
@@ -74,6 +93,9 @@ export default function ProfilePage() {
 
         const pinsData = pinsResponse?.dados || pinsResponse;
         setPins(Array.isArray(pinsData) ? pinsData : []);
+
+        const iconesData = iconesResponse?.dados || iconesResponse;
+        setIcones(Array.isArray(iconesData) ? iconesData : []);
 
         setUser({
           ...profile,
@@ -135,6 +157,22 @@ export default function ProfilePage() {
     );
   }
 
+  async function handleOpenFullRanking() {
+    try {
+      setIsRankingModalOpen(true);
+      setIsRankingLoading(true);
+
+      const response = await getRankingCompleto();
+      const dados = response?.dados || response;
+
+      setRankingCompleto(Array.isArray(dados) ? dados : []);
+    } catch {
+      setRankingCompleto([]);
+    } finally {
+      setIsRankingLoading(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f1f1f1] text-[#343434]">
@@ -190,6 +228,50 @@ export default function ProfilePage() {
     }
   }
 
+  async function refreshIcones() {
+    try {
+      const response = isOwnProfile
+        ? await listMyIcons()
+        : await listUserIcons(profileId);
+
+      const iconesData = response?.dados || response;
+      setIcones(Array.isArray(iconesData) ? iconesData : []);
+    } catch (error) {
+      setError(error.message || "Não foi possível atualizar os ícones.");
+    }
+  }
+
+  async function handleRefreshIconesFromGradment() {
+    if (!isOwnProfile) return;
+
+    try {
+      setIsRefreshingIcones(true);
+
+      const response = await importarIconesDoGradment();
+
+      await refreshIcones();
+
+      const adicionados = response?.adicionados?.length ?? response?.dados?.adicionados?.length ?? 0;
+      const duplicados = response?.duplicados?.length ?? response?.dados?.duplicados?.length ?? 0;
+
+      if (adicionados > 0) {
+        alert(`${adicionados} ícone(s) adicionado(s) ao perfil.`);
+        return;
+      }
+
+      if (duplicados > 0) {
+        alert("Seus ícones já estavam atualizados.");
+        return;
+      }
+
+      alert(response?.mensagem || "Nenhum novo ícone encontrado no Gradment.");
+    } catch (error) {
+      alert(error.message || "Não foi possível importar os ícones do Gradment.");
+    } finally {
+      setIsRefreshingIcones(false);
+    }
+  }
+
   return (
     <>
       <DesktopProfile
@@ -210,6 +292,10 @@ export default function ProfilePage() {
         pins={pins}
         onRefreshPins={refreshPins}
         onRemovePin={handleRemovePin}
+        icones={icones}
+        isRefreshingIcones={isRefreshingIcones}
+        onRefreshIcones={handleRefreshIconesFromGradment}
+        onOpenFullRanking={handleOpenFullRanking}
       />
 
       <MobileProfile
@@ -230,6 +316,15 @@ export default function ProfilePage() {
         pins={pins}
         onRefreshPins={refreshPins}
         onRemovePin={handleRemovePin}
+        icones={icones}
+        isRefreshingIcones={isRefreshingIcones}
+        onRefreshIcones={handleRefreshIconesFromGradment}
+      />
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        ranking={rankingCompleto}
+        isLoading={isRankingLoading}
+        onClose={() => setIsRankingModalOpen(false)}
       />
     </>
   );

@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
@@ -6,9 +10,6 @@ import { UsuarioService } from '../aluno/usuario.service.js';
 import { LoginUsuarioDto } from '../aluno/dto/login-usuario.dto.js';
 import { ErrorMessages } from '../common/constants/messages.errors.js';
 import { GradmentService } from '../gradment/gradment.service.js';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Usuario } from '../entities/usuario.entity.js';
 
 @Injectable()
 export class AuthService {
@@ -16,18 +17,16 @@ export class AuthService {
     private usuarioService: UsuarioService,
     private jwtService: JwtService,
     private gradmentService: GradmentService,
-    @InjectRepository(Usuario)
-    private usuarioRepository: Repository<Usuario>,
   ) {}
 
-  async login(loginDto: LoginUsuarioDto) { //Recebe os dados do login do aluno
+  async login(loginDto: LoginUsuarioDto) {
     const usuario = await this.usuarioService.findByEmail(loginDto.email);
-    
+
     if (!usuario) {
       throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
     }
 
-    //Compara a senha que o aluno digitou com o salvo no banco
+    // Compara a senha que o aluno digitou com o salvo no banco
     const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
 
     if (!senhaValida) {
@@ -38,42 +37,35 @@ export class AuthService {
       throw new ForbiddenException(ErrorMessages.EAUT00002.mensagem);
     }
 
-    // Se o usuário e a senha estiverem corretos, gera o token JWT
-    const payload = { email: usuario.email, sub: usuario.idUsuario };
-
     // 1. Gera o access_token normal do sistema (curta duração)
+    const payload = { email: usuario.email, sub: usuario.idUsuario };
     const accessToken = this.jwtService.sign(payload);
 
-    // 2. Gera o token de integração (longa duração, representa o usuário)
-    // Esse token vai ser guardado pelo Gradment para linkar as contas
+    // 2. GERA O TOKEN DE INTEGRAÇÃO (longa duração, representa o usuário no GradMent)
+    // Esse token serve como a chave de ligação entre as duas contas
     const tokenIntegracao = this.jwtService.sign(
       { sub: usuario.idUsuario, type: 'link_gradment' },
-      { expiresIn: '365d' },
+      { expiresIn: '365d' }, // Validade longa de 1 ano
     );
 
-    // 3. Se o Gradment enviou o token deles, salva no usuário
-    if (loginDto.tokenGradment) {
-      await this.usuarioRepository.update(
-        { idUsuario: usuario.idUsuario },
-        { tokenIntegracao: loginDto.tokenGradment },
-      );
-    }
-
-    // Busca dados do Gradment de forma não bloqueante
+    // 3. Busca dados do Gradment de forma não bloqueante
     // Se o Gradment estiver fora do ar ou não configurado, o login continua normalmente
-    const gradmentDados = await this.gradmentService.buscarDadosUsuario(usuario.email);
+    const gradmentDados = await this.gradmentService.buscarDadosUsuario(
+      usuario.email,
+    );
 
-    // Devolve o Token gerado e alguns dados básicos para o frontend exibir na tela
+    // 4. Devolve os DOIS Tokens e alguns dados básicos para o frontend
     return {
       access_token: accessToken,
-      token_integracao: tokenIntegracao,
+      token_integracao: tokenIntegracao, // <-- Novo token enviado para o frontend
       usuario: {
         idUsuario: usuario.idUsuario,
         matricula: usuario.matricula,
         nomeUsuario: usuario.nomeUsuario,
         email: usuario.email,
         fotoUrl: usuario.fotoUrl ?? null,
-        ...(gradmentDados && { // Se os dados do Gradment foram encontrados, inclui-os no response
+        ...(gradmentDados && {
+          // Se os dados do Gradment foram encontrados, inclui-os no response
           gradment: {
             id: gradmentDados.usuario.id,
             cursoId: gradmentDados.usuario.curso_id,

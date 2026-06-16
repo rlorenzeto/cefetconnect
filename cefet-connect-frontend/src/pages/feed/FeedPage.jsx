@@ -33,6 +33,12 @@ import {
 import EventDetailsModal from "../../components/event/EventDetailsModal";
 import { listUserPins } from "../../services/pinService";
 import { itemMatchesSearch } from "../../utils/searchUtils";
+import {
+  getRankingPreview,
+  getRankingCompleto,
+} from "../../services/rankingService";
+
+import RankingModal from "../../components/ranking/RankingModal";
 
 export default function FeedPage() {
   const navigate = useNavigate();
@@ -54,6 +60,10 @@ export default function FeedPage() {
   const [loadingActionId, setLoadingActionId] = useState(null);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [rankingPreview, setRankingPreview] = useState([]);
+  const [rankingCompleto, setRankingCompleto] = useState([]);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [isRankingLoading, setIsRankingLoading] = useState(false);
 
   const visibleEvents = useMemo(() => {
     return filterVisibleEvents(events, myCommunities);
@@ -228,11 +238,13 @@ export default function FeedPage() {
         postsResponse,
         communitiesResponse,
         eventsResponse,
+        rankingResponse,
       ] = await Promise.all([
         getUserProfile(idUsuario),
         listPosts(),
         listMinhasComunidades(),
         listEventos(),
+        getRankingPreview(),
       ]);
 
       const profile = profileResponse?.dados || profileResponse;
@@ -249,6 +261,8 @@ export default function FeedPage() {
 
       const eventsData = eventsResponse?.dados || eventsResponse;
       setEvents(Array.isArray(eventsData) ? eventsData : []);
+
+      setRankingPreview(Array.isArray(rankingResponse) ? rankingResponse : []);
 
       setUser(normalizedProfile);
 
@@ -307,6 +321,8 @@ export default function FeedPage() {
       };
 
       setPosts((prev) => [postWithAuthorPhoto, ...prev]);
+      const updatedRanking = await getRankingPreview();
+      setRankingPreview(Array.isArray(updatedRanking) ? updatedRanking : []);
     } catch (error) {
       setError(error.message || "Não foi possível criar o post.");
     } finally {
@@ -394,6 +410,30 @@ export default function FeedPage() {
     navigate("/login");
   }
 
+  async function handleOpenFullRanking() {
+    try {
+      setIsRankingModalOpen(true);
+      setIsRankingLoading(true);
+
+      const rankingData = await getRankingCompleto();
+
+      setRankingCompleto(Array.isArray(rankingData) ? rankingData : []);
+    } catch (error) {
+      setRankingCompleto([]);
+    } finally {
+      setIsRankingLoading(false);
+    }
+  }
+
+  async function refreshRankingPreview() {
+    try {
+      const rankingData = await getRankingPreview();
+      setRankingPreview(Array.isArray(rankingData) ? rankingData : []);
+    } catch {
+      setRankingPreview([]);
+    }
+  }
+
   return (
     <>
       <DesktopFeed
@@ -411,28 +451,37 @@ export default function FeedPage() {
         onPostDeleted={handlePostDeleted}
         onPostUpdated={handlePostUpdated}
         onLogout={handleLogout}
-        onOpenEvents={() => navigate("/eventos")}
-        onOpenEventDetails={handleOpenEventDetails}
+        rankingPreview={rankingPreview}
+        onOpenFullRanking={handleOpenFullRanking}
+        onRankingChanged={refreshRankingPreview}
       />
 
       <MobileFeed
         user={user}
         userImageUrl={userImageUrl}
         posts={filteredPosts}
-        communities={myCommunities}
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
         isLoading={isLoading}
         error={error}
         isCreating={isCreating}
         onCreatePost={handleCreatePost}
         onPostDeleted={handlePostDeleted}
         onPostUpdated={handlePostUpdated}
-        onGoToProfile={() => navigate("/profile")}
+        communities={myCommunities}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
         onLogout={handleLogout}
         onCreatePostShortcut={handleOpenPostComposer}
         onCreateCommunityShortcut={() => setIsCommunityFormOpen(true)}
         onCreateEventShortcut={() => setIsEventFormOpen(true)}
+        rankingPreview={rankingPreview}
+        onOpenFullRanking={handleOpenFullRanking}
+        onRankingChanged={refreshRankingPreview}
+      />
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        ranking={rankingCompleto}
+        isLoading={isRankingLoading}
+        onClose={() => setIsRankingModalOpen(false)}
       />
 
       <CommunityFormModal

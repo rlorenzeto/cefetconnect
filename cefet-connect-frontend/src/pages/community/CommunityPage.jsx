@@ -15,6 +15,8 @@ import {
 } from "../../services/authService";
 import { listCommunityPins } from "../../services/pinService";
 import { itemMatchesSearch } from "../../utils/searchUtils";
+import { getRankingCompleto } from "../../services/rankingService";
+import RankingModal from "../../components/ranking/RankingModal";
 
 
 export default function CommunityPage() {
@@ -30,6 +32,9 @@ export default function CommunityPage() {
   const [communityPins, setCommunityPins] = useState([]);
   const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [rankingCompleto, setRankingCompleto] = useState([]);
+  const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
+  const [isRankingLoading, setIsRankingLoading] = useState(false);;
 
   const userImageUrl = useMemo(() => {
     return getProfileImageUrl(currentUser?.fotoUrl);
@@ -171,6 +176,22 @@ export default function CommunityPage() {
         },
       ]
     : [];
+    
+  async function handleOpenFullRanking() {
+    try {
+      setIsRankingModalOpen(true);
+      setIsRankingLoading(true);
+
+      const response = await getRankingCompleto();
+      const dados = response?.dados || response;
+
+      setRankingCompleto(Array.isArray(dados) ? dados : []);
+    } catch {
+      setRankingCompleto([]);
+    } finally {
+      setIsRankingLoading(false);
+    }
+  }
 
   const sharedProps = {
     community,
@@ -190,6 +211,7 @@ export default function CommunityPage() {
     onCreatePost: handleCreatePost,
     onPostDeleted: handlePostDeleted,
     onPostUpdated: handlePostUpdated,
+    onOpenFullRanking: handleOpenFullRanking,
     onRefreshCommunityPins: async () => {
       const pinsResponse = await listCommunityPins(idComunidade);
       const pinsData = pinsResponse?.dados || pinsResponse;
@@ -202,6 +224,12 @@ export default function CommunityPage() {
     <>
       <DesktopCommunity {...sharedProps} />
       <MobileCommunity {...sharedProps} />
+      <RankingModal
+        isOpen={isRankingModalOpen}
+        ranking={rankingCompleto}
+        isLoading={isRankingLoading}
+        onClose={() => setIsRankingModalOpen(false)}
+      />
     </>
   );
 }

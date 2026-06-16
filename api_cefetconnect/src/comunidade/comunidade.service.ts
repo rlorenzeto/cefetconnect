@@ -16,7 +16,7 @@ export class ComunidadeService {
     @InjectRepository(Usuario)
     private usuarioRepository: Repository<Usuario>,
     @InjectRepository(Comunidade)
-    private comunidadeRepository: Repository<Comunidade>,
+    private comunidaderepository: Repository<Comunidade>,
     @InjectDataSource()
     private dataSource: DataSource,
     private gradmentService: GradmentService,
@@ -37,7 +37,7 @@ export class ComunidadeService {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
     }
 
-    const novaComunidade = this.comunidadeRepository.create({
+    const novaComunidade = this.comunidaderepository.create({
       nomeComunidade: createComunidadeDto.nomeComunidade,
       descricaoComunidade: createComunidadeDto.descricaoComunidade,
       criador: criadorComunidade,
@@ -46,7 +46,7 @@ export class ComunidadeService {
       gradmentDisciplinaId: createComunidadeDto.gradmentDisciplinaId ?? null,
     });
 
-    const comunidadeCriada = await this.comunidadeRepository.save(novaComunidade);
+    const comunidadeCriada = await this.comunidaderepository.save(novaComunidade);
 
     await this.dataSource.query(
       `
@@ -139,30 +139,18 @@ export class ComunidadeService {
     const dadosGradment = await this.gradmentService.buscarDadosUsuario(email);
     if (!dadosGradment) return [];
 
-    const materias = await this.gradmentService.obterMateriasAprovadas(
+    // 🔥 Desestrutura retornando a propriedade .materias corrigindo o erro TS2339
+    const { materias } = await this.gradmentService.obterMateriasAprovadas(
       dadosGradment.usuario.id,
       dadosGradment.sessionToken,
     );
 
-    // 🌟 FILTRO ADICIONADO: Garante que apenas matérias com status "APROVADO" sejam retornadas
+    // FILTRO ADICIONADO: Garante que apenas matérias com status "APROVADO" sejam retornadas
     return materias.filter(materia => materia.status === 'APROVADO');
   }
- /* async findMinhasDisciplinas(email: string) {
-    // Simulando EXATAMENTE a resposta que o dev do GradMent mandou no grupo.
-    return [
-      {
-        materia_id: 1,
-        codigo: "INT101",
-        nome: "Integrações Distribuídas",
-        media_final: 8.5,
-        status: "APROVADO",
-        aprovado_em: "2026-05-28"
-      }
-    ];
-  }*/
 
   async findPorDisciplina(disciplinaId: number) {
-    return await this.comunidadeRepository.find({
+    return await this.comunidaderepository.find({
       where: { gradmentDisciplinaId: disciplinaId },
       relations: ['criador'],
       select: {
@@ -312,7 +300,7 @@ export class ComunidadeService {
     capaFile?: Express.Multer.File,
     fotoFile?: Express.Multer.File,
   ) {
-    const comunidade = await this.comunidadeRepository.findOne({
+    const comunidade = await this.comunidaderepository.findOne({
       where: { idComunidade: id },
       relations: ['criador'],
       select: {
@@ -357,11 +345,11 @@ export class ComunidadeService {
       comunidade.fotoUrlComunidade = fotoFile.path.replace(/\\/g, '/');
     }
 
-    return await this.comunidadeRepository.save(comunidade);
+    return await this.comunidaderepository.save(comunidade);
   }
 
   async remove(id: string, idUsuario: number) {
-    const comunidade = await this.comunidadeRepository.findOne({
+    const comunidade = await this.comunidaderepository.findOne({
       where: { idComunidade: id },
       relations: ['criador'],
     });
@@ -374,16 +362,16 @@ export class ComunidadeService {
       throw new ForbiddenException(ErrorMessages.ECOM00002.mensagem);
     }
 
-    return await this.comunidadeRepository.remove(comunidade);
+    return await this.comunidaderepository.remove(comunidade);
   }
 
   async findMembros(idComunidade: string) {
-    const comunidade = await this.comunidadeRepository.findOne({
+    const comunidadetarget = await this.comunidaderepository.findOne({
       where: { idComunidade },
       select: { idComunidade: true },
     });
 
-    if (!comunidade) {
+    if (!comunidadetarget) {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
@@ -404,11 +392,11 @@ export class ComunidadeService {
   }
 
   async entrar(idComunidade: string, idUsuario: number) {
-    const comunidade = await this.comunidadeRepository.findOne({
+    const comunidadetarget = await this.comunidaderepository.findOne({
       where: { idComunidade },
     });
 
-    if (!comunidade) {
+    if (!comunidadetarget) {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
@@ -502,11 +490,11 @@ export class ComunidadeService {
   }
 
   async findPosts(idComunidade: string, idUsuario: number) {
-    const comunidade = await this.comunidadeRepository.findOne({
+    const comunidadetarget = await this.comunidaderepository.findOne({
       where: { idComunidade },
     });
 
-    if (!comunidade) {
+    if (!comunidadetarget) {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
@@ -648,7 +636,7 @@ export class ComunidadeService {
   }
 
   async findEventos(idComunidade: string) {
-    const comunidade = await this.comunidadeRepository.findOne({
+    const comunidadetarget = await this.comunidaderepository.findOne({
       where: { idComunidade },
       relations: ['eventos', 'eventos.usuario'],
       select: {
@@ -666,17 +654,17 @@ export class ComunidadeService {
       },
     });
 
-    if (!comunidade)
+    if (!comunidadetarget)
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
-    return comunidade.eventos ?? [];
+    return comunidadetarget.eventos ?? [];
   }
 
   async sair(idComunidade: string, idUsuario: number) {
-    const comunidade = await this.comunidadeRepository.findOne({
+    const comunidadetarget = await this.comunidaderepository.findOne({
       where: { idComunidade },
     });
 
-    if (!comunidade) {
+    if (!comunidadetarget) {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
