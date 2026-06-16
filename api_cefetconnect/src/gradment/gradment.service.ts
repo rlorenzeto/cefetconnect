@@ -101,7 +101,7 @@ export class GradmentService {
 
       const data = await response.json() as any;
 
-      // Mapeamento atualizado contendo o array de matérias e o bloco de resumo (eixo e período) enviado pelo WhatsApp
+      // aceita tanto o formato do PDF quanto o do simulado do WhatsApp
       if (data.dados && data.dados.materias_aprovadas) {
         return {
           materias: data.dados.materias_aprovadas,

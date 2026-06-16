@@ -18,6 +18,8 @@ import { GradmentModule } from './gradment/gradment.module';
 import { RankingModule } from './ranking/ranking.module';
 import { IconeModule } from './icone/icone.module';
 import { InteracaoModule } from './interacao/interacao.module';
+import { ThrottlingModule } from './throttling/throttling.module';
+import { CustomThrottlerGuard } from './throttling/throttling.guard';
 
 @Module({
   imports: [
@@ -50,6 +52,7 @@ import { InteracaoModule } from './interacao/interacao.module';
     RankingModule,
     IconeModule,
     InteracaoModule,
+    ThrottlingModule,
   ],
   controllers: [AppController],
   providers: [
@@ -58,6 +61,7 @@ import { InteracaoModule } from './interacao/interacao.module';
       provide: APP_GUARD, // Garante que o JwtAuthGuard seja aplicado a todas as rotas
       useClass: JwtAuthGuard,
     },
+    CustomThrottlerGuard,
   ],
 })
 export class AppModule {}
