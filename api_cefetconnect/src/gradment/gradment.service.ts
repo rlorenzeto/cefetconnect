@@ -102,7 +102,7 @@ export class GradmentService {
 
       const data = await response.json() as any;
 
-      // 🔥 Correção defensiva: aceita tanto o formato do PDF quanto o do simulado do WhatsApp
+      // aceita tanto o formato do PDF quanto o do simulado do WhatsApp
       if (data.dados && data.dados.materias_aprovadas) {
         return data.dados.materias_aprovadas;
       }

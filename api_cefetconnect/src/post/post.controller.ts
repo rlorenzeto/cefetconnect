@@ -8,6 +8,7 @@ import { RemoverFotosDto } from './dto/remover-fotos.dto';
 import { SuccessMessages } from '../common/constants/messages.success';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PostRateLimitGuard } from '../throttling/post-rate-limit.guard';
 import { multerPostFotosConfig } from '../uploads/multer.config';
 
 @ApiTags('Posts')
@@ -16,7 +17,7 @@ export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PostRateLimitGuard)
   @UseInterceptors(FilesInterceptor('fotos', 10, multerPostFotosConfig))  
   @ApiBearerAuth()
   @ApiConsumes('multipart/form-data')
@@ -24,6 +25,8 @@ export class PostController {
   @ApiBody({ schema: { type: 'object', properties: { conteudo: { type: 'string', example: 'Texto do post' }, fotos: { type: 'array', items: { type: 'string', format: 'binary' } } } } })
   @ApiResponse({ status: 201, description: '[SUSR00012] Post criado com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 400, description: 'O conteúdo do post deve ter pelo menos 20 caracteres.' })
+  @ApiResponse({ status: 403, description: 'Você atingiu o limite de 5 posts por hora. Tente novamente mais tarde.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
   async create(@Body() createPostDto: CreatePostDto, @UploadedFiles() fotos: Express.Multer.File[], @Request() req: any) {
     const dados = await this.postService.create(createPostDto, req.user.idUsuario, fotos);
