@@ -7,14 +7,6 @@ import {
 } from "../../services/pinService";
 import PinBadge from "./PinBadge";
 
-const MOCK_GRADMENT_DISCIPLINAS = [
-  "Cálculo I",
-  "Cálculo II",
-  "Programação Orientada a Objetos",
-  "Estrutura de Dados",
-  "Banco de Dados",
-];
-
 export default function PinManagerModal({
   isOpen,
   onClose,
@@ -103,7 +95,7 @@ export default function PinManagerModal({
       setError("");
       setMessage("");
 
-      const data = await suggestPinsFromGradment(MOCK_GRADMENT_DISCIPLINAS);
+      const data = await suggestPinsFromGradment();
 
       setSuggestions(Array.isArray(data?.sugestoes) ? data.sugestoes : []);
       setDuplicatedPins(Array.isArray(data?.jaAdicionados) ? data.jaAdicionados : []);

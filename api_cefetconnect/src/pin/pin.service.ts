@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { CreatePinDto } from './dto/create-pin.dto';
 import { UpdatePinDto } from './dto/update-pin.dto';
 import { ImportarPinsDto } from './dto/importar-pins.dto';
@@ -22,6 +23,7 @@ export class PinService {
     private usuarioRepository: Repository<Usuario>,
     @InjectRepository(Comunidade)
     private comunidadeRepository: Repository<Comunidade>,
+    private configService: ConfigService,
   ) {}
 
   private toDto(pp: PossuiPin) {
@@ -179,6 +181,41 @@ export class PinService {
         nomesExistentes.has(disciplina.toLowerCase()),
       ),
     };
+  }
+
+  async sugerirDoGradment(idUsuario: number) {
+    const usuario = await this.usuarioRepository.findOne({ where: { idUsuario } });
+    if (!usuario) throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+
+    if (!usuario.tokenIntegracao) {
+      throw new UnauthorizedException('Sua conta não está vinculada ao GradMent.');
+    }
+
+    const gradmentApiUrl = this.configService.get<string>('GRADMENT_API_URL', 'http://localhost:8080');
+
+    let response;
+    try {
+      response = await fetch(`${gradmentApiUrl}/integracao/materias-aprovadas`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${usuario.tokenIntegracao}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (e: any) {
+      throw new Error('Falha na comunicação com o GradMent: ' + e.message);
+    }
+
+    const data = await response.json() as any;
+
+    if (!response.ok || data.status !== 'sucesso') {
+      throw new Error(data.erro || data.mensagem || 'Falha ao recuperar matérias do GradMent.');
+    }
+
+    const materiasAprovadas = data.dados?.materias_aprovadas || [];
+    const disciplinas: string[] = materiasAprovadas.map((m: any) => m.nome);
+
+    return this.sugerir({ disciplinas }, idUsuario);
   }
 
   async findByComunidade(idComunidade: string) {

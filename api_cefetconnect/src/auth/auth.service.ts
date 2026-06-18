@@ -20,17 +20,35 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginUsuarioDto) {
-    const usuario = await this.usuarioService.findByEmail(loginDto.email);
+    let usuario;
 
-    if (!usuario) {
-      throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
-    }
+    if (loginDto.ssoToken) {
+      try {
+        const decoded = this.jwtService.verify(loginDto.ssoToken);
+        if (decoded.type !== 'link_gradment') {
+           throw new UnauthorizedException('SSO Token inválido.');
+        }
+        usuario = await this.usuarioService.findOne(decoded.sub);
+        if (!usuario) throw new UnauthorizedException('Usuário não encontrado.');
+      } catch (err) {
+        throw new UnauthorizedException('SSO Token inválido ou expirado.');
+      }
+    } else {
+      if (!loginDto.email || !loginDto.senha) {
+         throw new UnauthorizedException('Email e senha são obrigatórios.');
+      }
+      usuario = await this.usuarioService.findByEmail(loginDto.email);
 
-    // Compara a senha que o aluno digitou com o salvo no banco
-    const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
+      if (!usuario) {
+        throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
+      }
 
-    if (!senhaValida) {
-      throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
+      // Compara a senha que o aluno digitou com o salvo no banco
+      const senhaValida = await bcrypt.compare(loginDto.senha, usuario.senha);
+
+      if (!senhaValida) {
+        throw new UnauthorizedException(ErrorMessages.EAUT00001.mensagem);
+      }
     }
 
     if (!usuario.emailVerificado) {
@@ -45,7 +63,7 @@ export class AuthService {
     // Esse token serve como a chave de ligação entre as duas contas
     const tokenIntegracao = this.jwtService.sign(
       { sub: usuario.idUsuario, type: 'link_gradment' },
-      { expiresIn: '365d' }, // Validade longa de 1 ano
+      { expiresIn: '3650d' }, // Validade longa de 10 anos
     );
 
     // 3. Busca dados do Gradment de forma não bloqueante

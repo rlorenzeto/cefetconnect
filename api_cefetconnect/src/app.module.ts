@@ -28,16 +28,27 @@ import { CustomThrottlerGuard } from './throttling/throttling.guard';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'mysql',
-        host: configService.get('DB_HOST', 'localhost'),
-        port: configService.get('DB_PORT', 3306),
-        username: configService.get('DB_USER', 'root'),
-        password: configService.get('DB_PASSWORD', ''),
-        database: configService.get('DB_NAME', 'cefetconnect'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
-      }),
+      useFactory: (configService: ConfigService) => {
+        const type = configService.get('DB_TYPE', 'mysql');
+        if (type === 'sqlite') {
+          return {
+            type: 'sqlite',
+            database: configService.get('DB_DATABASE', 'database.sqlite'),
+            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
+          };
+        }
+        return {
+          type: 'mysql',
+          host: configService.get('DB_HOST', 'localhost'),
+          port: configService.get('DB_PORT', 3306),
+          username: configService.get('DB_USER', 'root'),
+          password: configService.get('DB_PASSWORD', ''),
+          database: configService.get('DB_NAME', 'cefetconnect'),
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          synchronize: configService.get('DB_SYNCHRONIZE', 'false') === 'true',
+        };
+      },
     }),
     EmailModule,
     UsuarioModule,

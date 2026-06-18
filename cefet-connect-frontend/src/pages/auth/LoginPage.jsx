@@ -15,11 +15,25 @@ export default function LoginPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    if (searchParams.get("openMobileLogin") === "true") {
+    const ssoToken = searchParams.get("ssoToken");
+    const searchTopic = searchParams.get("search");
+    if (ssoToken) {
+      import("../../services/authService").then(({ loginUser }) => {
+        loginUser({ ssoToken })
+          .then(() => {
+            const redirectUrl = searchTopic 
+              ? `/home?search=${encodeURIComponent(searchTopic)}`
+              : "/home";
+            navigate(redirectUrl, { replace: true });
+          })
+          .catch((err) => alert(err.message || "SSO falhou."));
+      });
+      setSearchParams({});
+    } else if (searchParams.get("openMobileLogin") === "true") {
       setIsMobileLoginOpen(true);
       setSearchParams({});
     }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, setSearchParams, navigate]);
 
   function handleOpenForgotModal() {
     setIsMobileLoginOpen(false);

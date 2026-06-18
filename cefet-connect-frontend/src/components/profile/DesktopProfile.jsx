@@ -4,6 +4,7 @@ import ProfileSidebar from "./ProfileSidebar";
 import PostCard from "../feed/PostCard";
 import ProfileCommunities from "./ProfileCommunities";
 import ProfilePins from "../pin/ProfilePins";
+import GradMentIntegrationCard from "./GradMentIntegrationCard";
 import ProfileAcademicIcons from "./ProfileAcademicIcons";
 
 export default function DesktopProfile({
@@ -29,6 +30,8 @@ export default function DesktopProfile({
   onRefreshIcones,
   onOpenFullRanking,
   onOpenNotifications,
+  onConnectGradMent,
+  onDisconnectGradMent,
 }) {
   return (
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
@@ -132,14 +135,25 @@ export default function DesktopProfile({
                 />
 
                 {isOwnProfile && (
-                  <button
-                    type="button"
-                    onClick={onEditProfile}
-                    className="mt-8 h-11 w-56 rounded-full bg-[#089464] text-sm font-semibold text-white"
-                  >
-                    Editar perfil
-                  </button>
+                  <div className="mt-8 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={onEditProfile}
+                      className="h-11 flex-1 rounded-full bg-[#089464] text-sm font-semibold text-white transition hover:bg-[#067a52]"
+                    >
+                      Editar perfil
+                    </button>
+                  </div>
                 )}
+
+                {isOwnProfile && (
+                  <GradMentIntegrationCard 
+                    token={user?.tokenIntegracao || null}
+                    onConnect={onConnectGradMent}
+                    onDisconnect={onDisconnectGradMent}
+                  />
+                )}
+                
                 <ProfileCommunities
                   communities={communities}
                   showAll={showAllCommunities}

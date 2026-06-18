@@ -35,12 +35,9 @@ export async function addManualPin(nomePin, categoriaPin = "disciplina") {
   return unwrap(response);
 }
 
-export async function suggestPinsFromGradment(disciplinas = []) {
-  const response = await apiFetch("/pin/sugerir", {
-    method: "POST",
-    body: JSON.stringify({
-      disciplinas,
-    }),
+export async function suggestPinsFromGradment() {
+  const response = await apiFetch("/pin/sugerir-gradment", {
+    method: "GET",
   });
 
   return unwrap(response);

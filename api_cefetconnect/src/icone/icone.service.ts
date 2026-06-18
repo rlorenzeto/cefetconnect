@@ -90,14 +90,14 @@ export class IconeService {
       usuario.tokenIntegracao,
     )) as unknown;
 
-    const eixosFinalizados = this.extrairEixosFinalizados(respostaGradment);
+    const { eixosFinalizados, periodosFinalizados } = this.extrairConquistas(respostaGradment);
 
-    if (eixosFinalizados.length === 0) {
+    if (eixosFinalizados.length === 0 && periodosFinalizados.length === 0) {
       return {
         adicionados: [],
         duplicados: [],
         ignorados: [],
-        erro: 'Nenhum eixo completado encontrado no Gradment.',
+        erro: 'Nenhuma conquista encontrada no Gradment.',
       };
     }
 
@@ -114,13 +114,16 @@ export class IconeService {
     const duplicados: string[] = [];
     const ignorados: string[] = [];
 
-    for (const eixo of eixosFinalizados) {
-      const codigo = this.normalizarCodigoEixo(
-        eixo.codigo ?? eixo.codigoIcone ?? eixo.nome ?? '',
-      );
+    const todasConquistas = [
+      ...eixosFinalizados.map(e => e.nome ?? e.codigo ?? e.codigoIcone ?? ''),
+      ...periodosFinalizados.map(p => `PERIODO_${p.periodo}`)
+    ];
+
+    for (const valor of todasConquistas) {
+      const codigo = this.normalizarCodigoEixo(valor);
 
       if (!codigo || !(codigo in ICONES_PPC_ENG_COMP)) {
-        ignorados.push(eixo.nome ?? eixo.codigo ?? 'Eixo sem identificação');
+        ignorados.push(valor || 'Conquista desconhecida');
         continue;
       }
 
@@ -176,30 +179,29 @@ export class IconeService {
     });
   }
 
-  private extrairEixosFinalizados(
+  private extrairConquistas(
     respostaGradment: unknown,
-  ): EixoGradmentDto[] {
-    if (Array.isArray(respostaGradment)) {
-      return respostaGradment as EixoGradmentDto[];
-    }
-
+  ): { eixosFinalizados: any[]; periodosFinalizados: any[] } {
     if (
       respostaGradment &&
-      typeof respostaGradment === 'object' &&
-      'eixosFinalizados' in respostaGradment
+      typeof respostaGradment === 'object'
     ) {
-      const resposta = respostaGradment as RespostaGradmentDto;
-
-      if (Array.isArray(resposta.eixosFinalizados)) {
-        return resposta.eixosFinalizados;
-      }
+      const resposta = respostaGradment as any;
+      return {
+        eixosFinalizados: Array.isArray(resposta.eixosFinalizados) ? resposta.eixosFinalizados : [],
+        periodosFinalizados: Array.isArray(resposta.periodosFinalizados) ? resposta.periodosFinalizados : [],
+      };
     }
 
-    return [];
+    return { eixosFinalizados: [], periodosFinalizados: [] };
   }
 
   private normalizarCodigoEixo(valor: string): CodigoIconePpc | null {
     if (!valor) return null;
+
+    if (valor.startsWith('PERIODO_')) {
+      return valor as CodigoIconePpc;
+    }
 
     const texto = valor
       .normalize('NFD')

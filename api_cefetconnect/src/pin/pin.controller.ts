@@ -51,11 +51,24 @@ export class PinController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Gerar sugestões de pins a partir da grade/histórico acadêmico',
-    description: 'Recebe a lista de disciplinas/conquistas do Gradment e retorna quais ainda não estão no perfil do usuário (sugestões) e quais já foram adicionadas.',
+    description: 'Recebe a lista de disciplinas/conquistas e retorna quais ainda não estão no perfil do usuário.',
   })
   @ApiResponse({ status: 200, description: '[SPIN00006] Sugestões de pins geradas com sucesso.' })
   async sugerir(@Body() sugerirPinsDto: SugerirPinsDto, @Request() req: any) {
     const dados = await this.pinService.sugerir(sugerirPinsDto, req.user.idUsuario);
+    return { codigo: 'SPIN00006', mensagem: SuccessMessages.SPIN00006.mensagem, dados };
+  }
+
+  @Get('sugerir-gradment')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Gerar sugestões de pins a partir do GradMent',
+    description: 'Busca as disciplinas aprovadas no GradMent e retorna como sugestões de pins.',
+  })
+  @ApiResponse({ status: 200, description: '[SPIN00006] Sugestões de pins geradas com sucesso.' })
+  async sugerirGradment(@Request() req: any) {
+    const dados = await this.pinService.sugerirDoGradment(req.user.idUsuario);
     return { codigo: 'SPIN00006', mensagem: SuccessMessages.SPIN00006.mensagem, dados };
   }
 

@@ -87,6 +87,12 @@ export class UsuarioService {
     });
   }
 
+  async findByTokenIntegracao(tokenIntegracao: string): Promise<Usuario | null> {
+    return await this.usuarioRepository.findOne({
+      where: { tokenIntegracao },
+    });
+  }
+
   async verificarEmail(
     idUsuario: number,
     codigo: string,
@@ -211,10 +217,11 @@ export class UsuarioService {
     biografia: string | null;
     posts: Post[];
     totalPosts: number;
+    tokenIntegracao?: string | null;
   }> {
     const usuario = await this.usuarioRepository.findOne({
       where: { idUsuario },
-      select: ['idUsuario', 'nomeUsuario', 'fotoUrl', 'biografia'],
+      select: ['idUsuario', 'nomeUsuario', 'fotoUrl', 'biografia', 'tokenIntegracao'],
       relations: ['posts'],
     });
 
@@ -228,6 +235,7 @@ export class UsuarioService {
       biografia: usuario.biografia ?? null,
       posts: usuario.posts,
       totalPosts: usuario.posts.length,
+      tokenIntegracao: usuario.tokenIntegracao,
     };
   }
 
@@ -380,6 +388,21 @@ export class UsuarioService {
     return {
       codigo: 'SUSR00011',
       mensagem: SuccessMessages.SUSR00011.mensagem,
+    };
+  }
+
+  async vincularGradMent(idUsuario: number, gradmentToken: string) {
+    const usuario = await this.usuarioRepository.findOne({ where: { idUsuario } });
+    if (!usuario) {
+      throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
+    }
+
+    usuario.tokenIntegracao = gradmentToken;
+    await this.usuarioRepository.save(usuario);
+
+    return {
+      codigo: 'SUSR00012',
+      mensagem: 'Conta do GradMent vinculada com sucesso.',
     };
   }
 }

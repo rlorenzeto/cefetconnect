@@ -104,22 +104,26 @@ export default function FeedPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const createType = params.get("create");
+    const searchParam = params.get("search");
 
-    if (!createType) return;
+    if (searchParam) {
+      setSearchTerm(searchParam);
+      params.delete("search");
+    }
 
     if (createType === "post") {
       handleOpenPostComposer();
-    }
-
-    if (createType === "community") {
+    } else if (createType === "community") {
       setIsCommunityFormOpen(true);
-    }
-
-    if (createType === "event") {
+    } else if (createType === "event") {
       setIsEventFormOpen(true);
     }
 
-    navigate("/home", { replace: true });
+    if (createType || searchParam) {
+      params.delete("create");
+      const qs = params.toString();
+      navigate(qs ? `/home?${qs}` : "/home", { replace: true });
+    }
   }, [location.search]);
 
   function checkUserParticipating(eventData) {

@@ -125,10 +125,10 @@ export class GradmentService {
     if (!this.baseUrl) return { materias: [] };
 
     try {
-      const response = await fetch(`${this.baseUrl}/api/integracao/materias-aprovadas`, {
+      const response = await fetch(`${this.baseUrl}/integracao/conquistas`, {
         headers: {
           'Content-Type': 'application/json',
-          'X-Integration-Token': tokenIntegracao,
+          'Authorization': `Bearer ${tokenIntegracao}`,
         },
       });
 

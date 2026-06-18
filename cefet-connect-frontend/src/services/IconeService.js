@@ -1,6 +1,6 @@
 import { apiFetch } from "./api";
 
-const MOCK_GRADMENT_ICONES = true;
+const MOCK_GRADMENT_ICONES = false;
 const MOCK_STORAGE_KEY = "mock_gradment_icones_usuario";
 
 const MOCK_GRADMENT_RESPONSE = {

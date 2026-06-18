@@ -6,6 +6,7 @@ import MobileBottomNav from "../common/MobileBottomNav";
 import ProfileCommunities from "./ProfileCommunities";
 import ProfilePins from "../pin/ProfilePins";
 import ProfileAcademicIcons from "./ProfileAcademicIcons";
+import GradMentIntegrationCard from "./GradMentIntegrationCard";
 
 export default function MobileProfile({
   user,
@@ -28,6 +29,8 @@ export default function MobileProfile({
   icones = [],
   isRefreshingIcones = false,
   onRefreshIcones,
+  onConnectGradMent,
+  onDisconnectGradMent,
 }) {
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] text-[#202020] lg:hidden">
@@ -130,14 +133,24 @@ export default function MobileProfile({
           />
 
           {isOwnProfile && (
+          <div className="mt-8 px-6 flex flex-col gap-3">
             <button
               type="button"
               onClick={onEditProfile}
-              className="mt-8 h-11 w-full rounded-full bg-[#089464] text-sm font-semibold text-white"
+              className="w-full rounded-full bg-[#089464] py-3 text-sm font-semibold text-white transition hover:bg-[#067a52]"
             >
               Editar perfil
             </button>
-          )}
+          </div>
+        )}
+
+        {isOwnProfile && (
+          <GradMentIntegrationCard 
+            token={user?.tokenIntegracao || null}
+            onConnect={onConnectGradMent}
+            onDisconnect={onDisconnectGradMent}
+          />
+        )}
           <ProfileCommunities
             communities={communities}
             showAll={showAllCommunities}

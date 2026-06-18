@@ -24,6 +24,7 @@ import {
 
 import { getRankingCompleto } from "../../services/rankingService";
 import RankingModal from "../../components/ranking/RankingModal";
+import GradMentLoginModal from "../../components/profile/GradMentLoginModal";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ export default function ProfilePage() {
   const [rankingCompleto, setRankingCompleto] = useState([]);
   const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [isRankingLoading, setIsRankingLoading] = useState(false);
+  const [isGradMentModalOpen, setIsGradMentModalOpen] = useState(false);
 
   const isOwnProfile =
     loggedUserId &&
@@ -272,6 +274,23 @@ export default function ProfilePage() {
     }
   }
 
+  async function handleDisconnectGradMent() {
+    if (!isOwnProfile) return;
+
+    try {
+      const { apiFetch } = await import("../../services/api");
+      await apiFetch("/gradment/disconnect", {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+
+      setUser((prev) => ({ ...prev, tokenIntegracao: null }));
+      alert("Conta desconectada com sucesso!");
+    } catch (error) {
+      alert(`Erro ao desconectar conta: ${error.message}`);
+    }
+  }
+
   return (
     <>
       <DesktopProfile
@@ -296,6 +315,8 @@ export default function ProfilePage() {
         isRefreshingIcones={isRefreshingIcones}
         onRefreshIcones={handleRefreshIconesFromGradment}
         onOpenFullRanking={handleOpenFullRanking}
+        onConnectGradMent={() => setIsGradMentModalOpen(true)}
+        onDisconnectGradMent={handleDisconnectGradMent}
       />
 
       <MobileProfile
@@ -319,12 +340,23 @@ export default function ProfilePage() {
         icones={icones}
         isRefreshingIcones={isRefreshingIcones}
         onRefreshIcones={handleRefreshIconesFromGradment}
+        onConnectGradMent={() => setIsGradMentModalOpen(true)}
+        onDisconnectGradMent={handleDisconnectGradMent}
       />
       <RankingModal
         isOpen={isRankingModalOpen}
         ranking={rankingCompleto}
         isLoading={isRankingLoading}
         onClose={() => setIsRankingModalOpen(false)}
+      />
+      <GradMentLoginModal
+        isOpen={isGradMentModalOpen}
+        onClose={() => setIsGradMentModalOpen(false)}
+        onSuccess={(token) => {
+          // Update the user profile locally
+          setUser((prev) => ({ ...prev, tokenIntegracao: token }));
+          alert("Conta vinculada com sucesso! Você já pode importar seus dados.");
+        }}
       />
     </>
   );

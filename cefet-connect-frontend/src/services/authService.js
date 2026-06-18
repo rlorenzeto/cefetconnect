@@ -1,16 +1,21 @@
 import { apiFetch, API_BASE_URL } from "./api";
 
 export async function loginUser(payload) {
+  const body = payload.ssoToken 
+    ? { ssoToken: payload.ssoToken }
+    : { email: payload.email, senha: payload.senha };
+
   const data = await apiFetch("/auth/login", {
     method: "POST",
-    body: JSON.stringify({
-      email: payload.email,
-      senha: payload.senha,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (data?.access_token) {
     localStorage.setItem("cefetconnect_token", data.access_token);
+  }
+
+  if (data?.token_integracao) {
+    localStorage.setItem("cefetconnect_integration_token", data.token_integracao);
   }
 
   if (data?.usuario) {

@@ -245,5 +245,18 @@ export class UsuarioController {
     }
     return this.usuarioService.alterarEmail(id, dto);
   }
+  @Post('integracao/gradment')
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Vincular GradMent', description: 'Vincula a conta do GradMent informando o token de integração.' })
+  @ApiResponse({ status: 200, description: 'Conta do GradMent vinculada com sucesso.' })
+  @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
+  @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
+  async vincularGradMent(@Request() req: any, @Body('gradmentToken') gradmentToken: string) {
+    if (!gradmentToken) {
+      throw new ForbiddenException('Token do GradMent não informado.');
+    }
+    return this.usuarioService.vincularGradMent(req.user.idUsuario, gradmentToken);
+  }
 }
 

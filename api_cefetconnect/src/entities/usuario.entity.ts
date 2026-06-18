@@ -45,7 +45,7 @@ export class Usuario {
   @Column({ type: 'int', default: 0 })
   contadorInteracaoUsuario!: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: true, name: 'token_integracao' })
+  @Column({ type: 'text', nullable: true, name: 'token_integracao' })
   tokenIntegracao?: string | null;
 
   // Relacionamentos 1:N
