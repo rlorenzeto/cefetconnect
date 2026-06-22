@@ -15,6 +15,7 @@ export default function CreatePostCard({
 
   const [conteudo, setConteudo] = useState("");
   const [fotos, setFotos] = useState([]);
+  const POST_MAX = 1000;
   const [destino, setDestino] = useState(() =>
     fixedCommunity ? "comunidade" : "feed"
   );
@@ -251,15 +252,19 @@ export default function CreatePostCard({
           <textarea
             value={conteudo}
             onChange={(event) => {
-              setConteudo(event.target.value);
+              setConteudo(event.target.value.slice(0, POST_MAX));
               setError("");
             }}
-            maxLength={1000}
+            maxLength={POST_MAX}
             placeholder={`No que você está pensando, ${
               user?.nomeUsuario?.split(" ")?.[0] || "fulano"
             }?`}
-            className="min-h-[90px] w-full resize-none border-0 bg-transparent text-base font-medium text-[#202020] outline-none placeholder:text-[#8c8c8c]"
+            className="min-h-[90px] w-full resize-none border-0 bg-transparent text-base font-medium text-[#202020] outline-none placeholder:text-[#8c8c8c] break-words [overflow-wrap:anywhere]"
           />
+
+          <p className="mt-1 text-right text-xs text-[#777]">
+            {conteudo.length}/{POST_MAX}
+          </p>
 
           {fotos.length > 0 && (
             <div className="mt-3 rounded-2xl border border-[#e3e3e3] bg-[#f7f7f7] p-3">

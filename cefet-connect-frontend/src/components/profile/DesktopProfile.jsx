@@ -41,7 +41,7 @@ export default function DesktopProfile({
         onOpenNotifications={onOpenNotifications}
       />
 
-        <main className="ml-[112px] px-16 py-12">
+        <main className="ml-[112px] overflow-x-hidden px-16 py-12">
           <div className="mb-8 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -80,7 +80,7 @@ export default function DesktopProfile({
             </div>
 
           <div className="px-12 py-12">
-            <div className="grid grid-cols-[340px_1fr] items-start gap-12">
+            <div className="grid min-w-0 grid-cols-[340px_minmax(0,1fr)] items-start gap-12">
               <div>
                 <ProfileAvatar src={imageUrl} name={user?.nomeUsuario} />
 
@@ -98,15 +98,14 @@ export default function DesktopProfile({
                   </div>
                 </div>
               </div>
-
-              <div>
-                <h2 className="text-[42px] font-bold leading-tight text-[#202020]">
+              <div className="min-w-0 max-w-full overflow-hidden">
+                <h2 className="max-w-full break-words text-[42px] font-bold leading-tight text-[#202020] [overflow-wrap:anywhere]">
                   {user?.nomeUsuario || "Usuário"}
                 </h2>
 
-                <p className="mt-2 text-base text-[#343434]">
-                  {user?.email}
-                </p>
+              <p className="mt-2 break-all text-base text-[#343434]">
+                {user?.email}
+              </p>
 
                 <div className="mt-8">
                   <h3 className="mb-3 text-lg font-semibold text-[#202020]">

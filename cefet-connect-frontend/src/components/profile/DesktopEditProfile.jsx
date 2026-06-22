@@ -29,6 +29,26 @@ export default function DesktopEditProfile({
   onOpenFullRanking,
   onOpenNotifications,
 }) {
+    const PROFILE_NAME_MAX = 80;
+    const PROFILE_BIO_MAX = 300;
+
+    function handleLimitedProfileChange(event) {
+      const { name, value } = event.target;
+
+      const limits = {
+        nomeUsuario: PROFILE_NAME_MAX,
+        biografia: PROFILE_BIO_MAX,
+      };
+
+      const limit = limits[name];
+
+      onProfileChange({
+        target: {
+          name,
+          value: limit ? value.slice(0, limit) : value,
+        },
+      });
+    }
   return (
   <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
     <ProfileSidebar
@@ -91,9 +111,14 @@ export default function DesktopEditProfile({
                       type="text"
                       name="nomeUsuario"
                       value={profileForm.nomeUsuario}
-                      onChange={onProfileChange}
+                      onChange={handleLimitedProfileChange}
+                      maxLength={PROFILE_NAME_MAX}
                       className="h-11 w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
                     />
+
+                    <p className="mt-1 text-right text-xs text-[#777]">
+                      {(profileForm.nomeUsuario || "").length}/{PROFILE_NAME_MAX}
+                    </p>
                   </div>
 
                   <div>
@@ -103,11 +128,16 @@ export default function DesktopEditProfile({
                     <textarea
                       name="biografia"
                       value={profileForm.biografia}
-                      onChange={onProfileChange}
+                      onChange={handleLimitedProfileChange}
                       rows={6}
+                      maxLength={PROFILE_BIO_MAX}
                       placeholder="Fale sobre seu curso, período, interesses acadêmicos e projetos..."
-                      className="w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none"
+                      className="w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none break-words [overflow-wrap:anywhere]"
                     />
+
+                    <p className="mt-1 text-right text-xs text-[#777]">
+                      {(profileForm.biografia || "").length}/{PROFILE_BIO_MAX}
+                    </p>
                   </div>
                 </div>
 

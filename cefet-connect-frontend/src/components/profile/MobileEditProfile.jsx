@@ -28,6 +28,26 @@ export default function MobileEditProfile({
   onOpenDelete,
   onConfirmEmail,
 }) {
+  const PROFILE_NAME_MAX = 80;
+  const PROFILE_BIO_MAX = 300;
+
+  function handleLimitedProfileChange(event) {
+    const { name, value } = event.target;
+
+    const limits = {
+      nomeUsuario: PROFILE_NAME_MAX,
+      biografia: PROFILE_BIO_MAX,
+    };
+
+    const limit = limits[name];
+
+    onProfileChange({
+      target: {
+        name,
+        value: limit ? value.slice(0, limit) : value,
+      },
+    });
+  }
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f1f1f1] text-[#202020] lg:hidden">
       <header className="flex h-[60px] items-center justify-between bg-white px-5">
@@ -85,13 +105,18 @@ export default function MobileEditProfile({
                 <label className="mb-1 block text-sm font-semibold text-[#343434]">
                   Nome
                 </label>
-                <input
+               <input
                   type="text"
                   name="nomeUsuario"
                   value={profileForm.nomeUsuario}
-                  onChange={onProfileChange}
+                  onChange={handleLimitedProfileChange}
+                  maxLength={PROFILE_NAME_MAX}
                   className="h-11 w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
                 />
+
+                <p className="mt-1 text-right text-xs text-[#777]">
+                  {(profileForm.nomeUsuario || "").length}/{PROFILE_NAME_MAX}
+                </p>
               </div>
 
               <div>
@@ -101,11 +126,16 @@ export default function MobileEditProfile({
                 <textarea
                   name="biografia"
                   value={profileForm.biografia}
-                  onChange={onProfileChange}
+                  onChange={handleLimitedProfileChange}
                   rows={5}
+                  maxLength={PROFILE_BIO_MAX}
                   placeholder="Fale sobre seu curso, período e interesses..."
-                  className="w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none"
+                  className="w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none break-words [overflow-wrap:anywhere]"
                 />
+
+                <p className="mt-1 text-right text-xs text-[#777]">
+                  {(profileForm.biografia || "").length}/{PROFILE_BIO_MAX}
+                </p>
               </div>
             </div>
 
