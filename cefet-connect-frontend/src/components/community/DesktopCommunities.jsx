@@ -29,8 +29,8 @@ export default function DesktopCommunities({
 
         <main className="flex-1 px-12 py-10">
           <div className="mx-auto max-w-[1120px]">
-            <header className="mb-8 flex items-start justify-between gap-4">
-              <div>
+            <header className="mb-8 flex min-w-0 items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
                 <h1 className="text-[42px] font-bold text-[#202020]">
                   Comunidades
                 </h1>
@@ -44,7 +44,7 @@ export default function DesktopCommunities({
               <button
                 type="button"
                 onClick={onOpenCreate}
-                className="rounded-full bg-[#089464] px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[#067f57]"
+                className="shrink-0 rounded-full bg-[#089464] px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-[#067f57]"
               >
                 Nova comunidade
               </button>
@@ -58,7 +58,7 @@ export default function DesktopCommunities({
             />
 
             {error && (
-              <div className="mb-5 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">
+              <div className="mb-5 rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600 break-words [overflow-wrap:anywhere]">
                 {error}
               </div>
             )}

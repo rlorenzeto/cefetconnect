@@ -55,7 +55,7 @@ export default function EventPostContent({ event, formatDate }) {
             {communityName ? `Evento em ${communityName}` : "Evento público"}
           </p>
 
-          <h2 className="mt-1 line-clamp-2 text-[22px] font-extrabold leading-tight text-[#202020]">
+          <h2 className="mt-1 line-clamp-2 break-words text-[22px] font-extrabold leading-tight text-[#202020] [overflow-wrap:anywhere]">
             {event?.titulo}
           </h2>
             {!event?.isFinalizado && (
@@ -66,7 +66,7 @@ export default function EventPostContent({ event, formatDate }) {
 
           {description && (
             <div className="mt-2">
-              <p className="whitespace-pre-line text-sm leading-relaxed text-[#343434]">
+              <p className="max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
                 {visibleDescription}
                 {isLongDescription &&
                   !isExpanded &&
@@ -117,8 +117,7 @@ export default function EventPostContent({ event, formatDate }) {
               <p className="text-[11px] font-bold uppercase text-[#777]">
                 Local
               </p>
-
-              <p className="mt-1 line-clamp-2 text-sm font-bold text-[#202020]">
+              <p className="mt-1 line-clamp-2 break-words text-sm font-bold text-[#202020] [overflow-wrap:anywhere]">
                 {event?.localEvento || "Local não informado"}
               </p>
             </div>
@@ -188,7 +187,7 @@ export default function EventPostContent({ event, formatDate }) {
               </div>
 
               {description && (
-                <p className="mt-5 whitespace-pre-line text-sm leading-relaxed text-[#343434]">
+                <p className="mt-5 max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
                   {description}
                 </p>
               )}

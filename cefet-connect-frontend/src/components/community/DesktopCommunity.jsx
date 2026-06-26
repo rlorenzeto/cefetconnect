@@ -75,7 +75,7 @@ export default function DesktopCommunity({
               </div>
             ) : (
               <>
-                <section className="mb-6 overflow-hidden rounded-[32px] bg-white shadow-sm">
+                <section className="mb-6 min-w-0 max-w-full overflow-hidden rounded-[32px] bg-white shadow-sm">
                   <div className="h-56 w-full bg-[#d9d9d9]">
                     {community?.capaComunidade ? (
                       <img
@@ -125,11 +125,11 @@ export default function DesktopCommunity({
                       )}
                     </div>
 
-                    <h1 className="mt-5 text-[36px] font-bold text-[#202020]">
+                    <h1 className="mt-5 max-w-full break-words text-[36px] font-bold text-[#202020] [overflow-wrap:anywhere]">
                       {community?.nomeComunidade}
                     </h1>
 
-                    <p className="mt-2 text-sm leading-relaxed text-[#666]">
+                    <p className="mt-2 max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#666] [overflow-wrap:anywhere]">
                       {community?.descricaoComunidade ||
                         "Comunidade sem descrição."}
                     </p>
@@ -139,7 +139,7 @@ export default function DesktopCommunity({
                           Pins relacionados
                         </p>
 
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex min-w-0 max-w-full flex-wrap gap-2">
                           {pins.map((pin) => (
                             <PinBadge key={pin.idPin} pin={pin} />
                           ))}
@@ -174,7 +174,7 @@ export default function DesktopCommunity({
 
                 <div className="space-y-6">
                   {error && (
-                    <div className="rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600">
+                    <div className="rounded-2xl bg-red-50 px-5 py-4 text-sm text-red-600 break-words [overflow-wrap:anywhere]">
                       {error}
                     </div>
                   )}

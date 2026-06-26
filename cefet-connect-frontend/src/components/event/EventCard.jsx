@@ -29,7 +29,7 @@ export default function EventCard({
   }
 
   return (
-    <article className="overflow-hidden rounded-[28px] bg-white shadow-sm">
+    <article className="min-w-0 max-w-full overflow-hidden rounded-[28px] bg-white shadow-sm">
       <button
         type="button"
         onClick={() => onOpen(event)}
@@ -51,11 +51,11 @@ export default function EventCard({
       <div className="px-5 pb-5 pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-bold text-[#202020]">
+            <h2 className="max-w-full truncate text-lg font-bold text-[#202020]">
               {event.titulo}
             </h2>
 
-            <p className="mt-1 text-xs font-semibold text-[#089464]">
+            <p className="mt-1 line-clamp-2 max-w-full break-words text-xs font-semibold text-[#089464] [overflow-wrap:anywhere]">
               {communityName ? `Comunidade: ${communityName}` : "Evento público"}
             </p>
           </div>
@@ -72,7 +72,7 @@ export default function EventCard({
           )}
         </div>
 
-        <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-[#666]">
+        <p className="mt-3 line-clamp-2 max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#666] [overflow-wrap:anywhere]">
           {event.descricaoEvento || "Evento sem descrição."}
         </p>
         {!event?.isFinalizado && (
@@ -81,10 +81,18 @@ export default function EventCard({
           </p>
         )}
 
-        <div className="mt-4 space-y-1 text-xs text-[#777]">
-          <p>{formatDate(event.dataEvento)}</p>
-          <p>{event.localEvento || "Local não informado"}</p>
-          <p>Criado por {event?.usuario?.nomeUsuario || "Usuário"}</p>
+        <div className="mt-4 min-w-0 max-w-full space-y-1 text-xs text-[#777]">
+          <p className="max-w-full break-words [overflow-wrap:anywhere]">
+            {formatDate(event.dataEvento)}
+          </p>
+
+          <p className="line-clamp-2 max-w-full break-words [overflow-wrap:anywhere]">
+            {event.localEvento || "Local não informado"}
+          </p>
+
+          <p className="line-clamp-2 max-w-full break-words [overflow-wrap:anywhere]">
+            Criado por {event?.usuario?.nomeUsuario || "Usuário"}
+          </p>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-2">

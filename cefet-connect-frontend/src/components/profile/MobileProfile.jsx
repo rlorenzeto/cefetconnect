@@ -85,7 +85,7 @@ export default function MobileProfile({
           <div className="-mt-12 min-w-0 max-w-full overflow-hidden px-5">
             <ProfileAvatar src={imageUrl} name={user?.nomeUsuario} size="small" />
 
-            <h2 className="mt-6 max-w-full break-words text-center text-[30px] font-bold leading-tight text-[#202020] [overflow-wrap:anywhere]">
+            <h2 className="mt-6 max-w-full whitespace-pre-wrap break-words text-center text-[30px] font-bold leading-tight text-[#202020] [overflow-wrap:anywhere]">
               {user?.nomeUsuario || "Usuário"}
             </h2>
 
@@ -112,7 +112,7 @@ export default function MobileProfile({
               Descrição acadêmica
             </h3>
 
-            <p className="min-h-28 whitespace-pre-line break-words rounded-2xl bg-[#f1f1f1] px-5 py-4 text-left text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
+            <p className="min-h-28 max-w-full overflow-hidden whitespace-pre-wrap break-words rounded-2xl bg-[#f1f1f1] px-5 py-4 text-left text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
               {user?.biografia?.trim()
                 ? user.biografia
                 : "Adicione uma descrição acadêmica no seu perfil."}

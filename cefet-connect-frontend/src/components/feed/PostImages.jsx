@@ -266,7 +266,7 @@ export default function PostImages({
             )}
           </div>
 
-          <aside className="h-[46dvh] shrink-0 overflow-y-auto bg-white px-4 py-4 lg:h-auto lg:max-h-none lg:w-[360px] lg:max-w-[38vw] lg:px-5 lg:py-5">
+          <aside className="h-[46dvh] min-w-0 shrink-0 overflow-y-auto bg-white px-4 py-4 lg:h-auto lg:max-h-none lg:w-[360px] lg:max-w-[38vw] lg:px-5 lg:py-5">
             <div className="border-b border-[#eeeeee] pb-4">
               <div className="flex items-center gap-3">
                 <button
@@ -300,7 +300,7 @@ export default function PostImages({
 
             <div className="py-4">
               {post?.conteudo ? (
-                <p className="whitespace-pre-line text-sm leading-relaxed text-[#343434]">
+                <p className="max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
                   {post.conteudo}
                 </p>
               ) : (

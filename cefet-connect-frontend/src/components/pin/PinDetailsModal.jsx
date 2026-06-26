@@ -68,15 +68,15 @@ export default function PinDetailsModal({ pin, isOpen, onClose }) {
       aria-modal="true"
     >
       <div className="max-h-[90vh] w-full max-w-[520px] overflow-hidden rounded-[24px] bg-white shadow-xl">
-        <header className="flex items-start justify-between gap-4 border-b border-[#eeeeee] px-5 py-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-extrabold text-[#202020]">
+        <header className="flex min-w-0 items-start justify-between gap-4 border-b border-[#eeeeee] px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2 className="min-w-0 flex-1 break-words text-lg font-extrabold text-[#202020] [overflow-wrap:anywhere]">
                 {details?.nomePin || pin.nomePin}
               </h2>
 
               {pin?.origem === "gradment" && (
-                <span className="rounded-full bg-[#eaffdf] px-2 py-0.5 text-[10px] font-extrabold text-[#3dae21]">
+                <span className="shrink-0 rounded-full bg-[#eaffdf] px-2 py-0.5 text-[10px] font-extrabold text-[#3dae21]">
                   Validado
                 </span>
               )}
@@ -90,7 +90,7 @@ export default function PinDetailsModal({ pin, isOpen, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f1f1f1] text-xl font-bold text-[#555] transition hover:bg-[#e5e5e5]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-xl font-bold text-[#555] transition hover:bg-[#e5e5e5]"
             aria-label="Fechar detalhes do pin"
           >
             ×
@@ -105,7 +105,7 @@ export default function PinDetailsModal({ pin, isOpen, onClose }) {
           )}
 
           {error && (
-            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500">
+            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">
               {error}
             </p>
           )}
@@ -143,7 +143,7 @@ export default function PinDetailsModal({ pin, isOpen, onClose }) {
                         />
 
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-bold text-[#202020]">
+                          <p className="max-w-full truncate text-sm font-bold text-[#202020]">
                             {user.nomeUsuario || "Usuário"}
                           </p>
 
@@ -189,12 +189,12 @@ export default function PinDetailsModal({ pin, isOpen, onClose }) {
                           )}
                         </div>
 
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-[#202020]">
+                        <div className="min-w-0 flex-1">
+                          <p className="max-w-full truncate text-sm font-bold text-[#202020]">
                             {community.nomeComunidade}
                           </p>
 
-                          <p className="line-clamp-1 text-xs text-[#777]">
+                          <p className="line-clamp-1 max-w-full break-words text-xs text-[#777] [overflow-wrap:anywhere]">
                             {community.descricaoComunidade || "Sem descrição."}
                           </p>
                         </div>

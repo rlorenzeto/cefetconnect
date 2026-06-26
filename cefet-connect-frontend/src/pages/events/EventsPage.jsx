@@ -197,9 +197,13 @@ export default function EventsPage() {
       setIsFormOpen(false);
       setEditingEvent(null);
       await loadInitialData();
-      
-    } catch (error) {
-      setError(error.message || "Não foi possível salvar o evento.");
+    } 
+    catch (error) {
+      const message = error.message || "Não foi possível salvar o evento.";
+
+      setError(message);
+
+      throw new Error(message);
     } finally {
       setIsSaving(false);
     }

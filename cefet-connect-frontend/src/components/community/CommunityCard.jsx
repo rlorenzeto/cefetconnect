@@ -56,11 +56,11 @@ export default function CommunityCard({
           </button>
         </div>
 
-        <h2 className="mt-4 break-words text-lg font-bold leading-tight text-[#202020]">
+        <h2 className="mt-4 max-w-full break-words text-lg font-bold leading-tight text-[#202020] [overflow-wrap:anywhere]">
           {community.nomeComunidade}
         </h2>
 
-        <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-[#666]">
+        <p className="mt-2 line-clamp-3 max-w-full break-words text-sm leading-relaxed text-[#666] [overflow-wrap:anywhere]">
           {community.descricaoComunidade || "Comunidade sem descrição."}
         </p>
         {Array.isArray(community.pins) && community.pins.length > 0 && (
@@ -69,7 +69,7 @@ export default function CommunityCard({
               Pins principais
             </p>
 
-            <div className="flex max-w-full flex-wrap gap-1 overflow-hidden">
+            <div className="flex min-w-0 max-w-full flex-wrap gap-1 overflow-hidden">
               {community.pins.slice(0, 2).map((pin) => (
                 <PinBadge
                   key={pin.idPin}

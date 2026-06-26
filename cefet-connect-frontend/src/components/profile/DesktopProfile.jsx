@@ -99,20 +99,20 @@ export default function DesktopProfile({
                 </div>
               </div>
               <div className="min-w-0 max-w-full overflow-hidden">
-                <h2 className="max-w-full break-words text-[42px] font-bold leading-tight text-[#202020] [overflow-wrap:anywhere]">
+                <h2 className="max-w-full whitespace-pre-wrap break-words text-[42px] font-bold leading-tight text-[#202020] [overflow-wrap:anywhere]">
                   {user?.nomeUsuario || "Usuário"}
                 </h2>
 
-              <p className="mt-2 break-all text-base text-[#343434]">
-                {user?.email}
-              </p>
+                <p className="mt-2 max-w-full break-words text-base text-[#343434] [overflow-wrap:anywhere]">
+                  {user?.email}
+                </p>
 
-                <div className="mt-8">
+                <div className="mt-8 min-w-0 max-w-full overflow-hidden">
                   <h3 className="mb-3 text-lg font-semibold text-[#202020]">
                     Descrição acadêmica
                   </h3>
 
-                  <p className="min-h-28 max-w-3xl rounded-2xl bg-[#f1f1f1] px-5 py-4 text-sm leading-relaxed text-[#343434]">
+                  <p className="min-h-28 w-full max-w-3xl overflow-hidden whitespace-pre-wrap break-words rounded-2xl bg-[#f1f1f1] px-5 py-4 text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
                     {user?.biografia?.trim()
                       ? user.biografia
                       : "Adicione uma descrição acadêmica no seu perfil, como curso, período, interesses, projetos e áreas que você acompanha."}

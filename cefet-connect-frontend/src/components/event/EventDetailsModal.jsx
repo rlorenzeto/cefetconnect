@@ -36,7 +36,7 @@ export default function EventDetailsModal({
     String(currentUser?.idUsuario || "");
 
   const isFinished = Boolean(event?.isFinalizado || isPastEvent(event?.dataEvento));
-  const canSeeParticipants = isCreator;
+  const canSeeParticipants = true;
   const isParticipating = Boolean(event?.isParticipando);
     
   function formatDate(date) {
@@ -63,7 +63,7 @@ export default function EventDetailsModal({
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/55 px-4">
-      <div className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-[28px] bg-white shadow-xl">
+      <div className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto overflow-x-hidden rounded-[28px] bg-white shadow-xl">
         <div className="h-48 w-full bg-[#d9d9d9]">
           {event.capaEvento ? (
             <img
@@ -79,13 +79,13 @@ export default function EventDetailsModal({
         </div>
 
         <div className="p-6">
-          <header className="mb-5 flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-bold text-[#202020]">
+          <header className="mb-5 flex min-w-0 items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h2 className="max-w-full break-words text-2xl font-bold text-[#202020] [overflow-wrap:anywhere]">
                 {event.titulo}
               </h2>
 
-              <p className="mt-1 text-sm text-[#089464]">
+              <p className="mt-1 max-w-full break-words text-sm text-[#089464] [overflow-wrap:anywhere]">
                 {event?.comunidade?.nomeComunidade
                   ? `Comunidade: ${event.comunidade.nomeComunidade}`
                   : "Evento público"}
@@ -95,28 +95,33 @@ export default function EventDetailsModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f1f1f1] text-xl text-[#343434]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-xl text-[#343434]"
             >
               ×
             </button>
           </header>
 
-          <div className="space-y-3 text-sm text-[#343434]">
-            <p>{event.descricaoEvento || "Evento sem descrição."}</p>
-            <p>
+          <div className="min-w-0 max-w-full space-y-3 text-sm text-[#343434]">
+            <p className="max-w-full whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+              {event.descricaoEvento || "Evento sem descrição."}
+            </p>
+
+            <p className="max-w-full break-words [overflow-wrap:anywhere]">
               <strong>Data:</strong> {formatDate(event.dataEvento)}
             </p>
-            <p>
+
+            <p className="max-w-full break-words [overflow-wrap:anywhere]">
               <strong>Local:</strong> {event.localEvento || "Local não informado"}
             </p>
-            <p>
+
+            <p className="max-w-full break-words [overflow-wrap:anywhere]">
               <strong>Criado por:</strong> {event?.usuario?.nomeUsuario || "Usuário"}
             </p>
 
             {canSeeParticipants && (
-              <div className="rounded-2xl bg-[#f7f7f7] px-4 py-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
+              <div className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-[#f7f7f7] px-4 py-4">
+                <div className="flex min-w-0 items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
                     <strong>Participantes</strong>
 
                     <p className="mt-1 text-xs text-[#777]">
@@ -124,7 +129,7 @@ export default function EventDetailsModal({
                     </p>
                   </div>
 
-                  <span className="rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-bold text-[#089464]">
+                  <span className="shrink-0 rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-bold text-[#089464]">
                     {participantes.length}
                   </span>
                 </div>
@@ -145,7 +150,7 @@ export default function EventDetailsModal({
                           key={participante.idUsuario || participante.nomeUsuario}
                           type="button"
                           onClick={() => handleGoToParticipantProfile(participante.idUsuario)}
-                          className="flex w-full items-center justify-start gap-3 rounded-2xl bg-white px-4 py-3 text-left transition hover:bg-[#eeeeee]"
+                          className="flex min-w-0 w-full items-center justify-start gap-3 rounded-2xl bg-white px-4 py-3 text-left transition hover:bg-[#eeeeee]"
                         >
                           <ProfileAvatar
                             src={getProfileImageUrl(participante.fotoUrl)}
@@ -154,7 +159,7 @@ export default function EventDetailsModal({
                           />
 
                           <div className="min-w-0 flex-1 text-left">
-                            <p className="truncate text-sm font-bold text-[#202020]">
+                            <p className="max-w-full truncate text-sm font-bold text-[#202020]">
                               {participante.nomeUsuario || "Usuário"}
                             </p>
                           </div>

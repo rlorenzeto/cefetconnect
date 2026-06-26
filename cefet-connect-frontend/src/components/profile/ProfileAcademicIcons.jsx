@@ -44,7 +44,7 @@ export default function ProfileAcademicIcons({
                 className="h-20 w-20 transition group-hover:scale-105"
               />
 
-              <p className="mt-2 line-clamp-2 max-w-[95px] text-[11px] font-bold leading-tight text-[#343434]">
+              <p className="mt-2 line-clamp-2 max-w-[95px] break-words text-[11px] font-bold leading-tight text-[#343434] [overflow-wrap:anywhere]">
                 {icone.nomeIcone}
               </p>
             </div>

@@ -259,7 +259,7 @@ export default function CreatePostCard({
             placeholder={`No que você está pensando, ${
               user?.nomeUsuario?.split(" ")?.[0] || "fulano"
             }?`}
-            className="min-h-[90px] w-full resize-none border-0 bg-transparent text-base font-medium text-[#202020] outline-none placeholder:text-[#8c8c8c] break-words [overflow-wrap:anywhere]"
+            className="min-h-[90px] w-full max-w-full resize-none border-0 bg-transparent text-base font-medium text-[#202020] outline-none placeholder:text-[#8c8c8c] whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
           />
 
           <p className="mt-1 text-right text-xs text-[#777]">

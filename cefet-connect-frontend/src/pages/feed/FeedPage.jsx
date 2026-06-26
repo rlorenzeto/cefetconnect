@@ -384,7 +384,12 @@ export default function FeedPage() {
       setIsCommunityFormOpen(false);
       await loadInitialData();
     } catch (error) {
-      setError(error.message || "Não foi possível criar a comunidade.");
+      const message =
+        error.message || "Não foi possível criar a comunidade.";
+
+      setError(message);
+
+      throw new Error(message);
     } finally {
       setIsSavingCommunity(false);
     }

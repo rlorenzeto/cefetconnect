@@ -1,5 +1,25 @@
 import { useState } from "react";
 
+const COMMUNITY_NAME_MAX = 100;
+const COMMUNITY_DESCRIPTION_MAX = 255;
+
+function getCommunityFormErrorMessage(error) {
+  const message = String(error?.message || "");
+
+  if (
+    message.includes("descricaoComunidade") ||
+    message.includes("Data too long")
+  ) {
+    return `A descrição da comunidade pode ter no máximo ${COMMUNITY_DESCRIPTION_MAX} caracteres.`;
+  }
+
+  if (message.includes("nomeComunidade")) {
+    return `O nome da comunidade pode ter no máximo ${COMMUNITY_NAME_MAX} caracteres.`;
+  }
+
+  return message || "Não foi possível salvar a comunidade.";
+}
+
 export default function CommunityFormModal({
   isOpen,
   community,
@@ -8,8 +28,14 @@ export default function CommunityFormModal({
   onSubmit,
 }) {
   const [form, setForm] = useState(() => ({
-    nomeComunidade: community?.nomeComunidade || "",
-    descricaoComunidade: community?.descricaoComunidade || "",
+    nomeComunidade: (community?.nomeComunidade || "").slice(
+      0,
+      COMMUNITY_NAME_MAX
+    ),
+    descricaoComunidade: (community?.descricaoComunidade || "").slice(
+      0,
+      COMMUNITY_DESCRIPTION_MAX
+    ),
   }));
 
   const [capaComunidade, setCapaComunidade] = useState(null);
@@ -21,28 +47,55 @@ export default function CommunityFormModal({
   function handleChange(event) {
     const { name, value } = event.target;
 
+    const limits = {
+      nomeComunidade: COMMUNITY_NAME_MAX,
+      descricaoComunidade: COMMUNITY_DESCRIPTION_MAX,
+    };
+
+    const limit = limits[name];
+    const limitedValue = limit ? value.slice(0, limit) : value;
+
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: limitedValue,
     }));
 
     setError("");
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!form.nomeComunidade.trim()) {
+    const nomeComunidade = form.nomeComunidade.trim();
+    const descricaoComunidade = form.descricaoComunidade.trim();
+
+    if (!nomeComunidade) {
       setError("O nome da comunidade é obrigatório.");
       return;
     }
 
-    onSubmit({
-      nomeComunidade: form.nomeComunidade.trim(),
-      descricaoComunidade: form.descricaoComunidade.trim(),
-      capaComunidade,
-      fotoUrlComunidade,
-    });
+    if (nomeComunidade.length > COMMUNITY_NAME_MAX) {
+      setError(`O nome da comunidade pode ter no máximo ${COMMUNITY_NAME_MAX} caracteres.`);
+      return;
+    }
+
+    if (descricaoComunidade.length > COMMUNITY_DESCRIPTION_MAX) {
+      setError(
+        `A descrição da comunidade pode ter no máximo ${COMMUNITY_DESCRIPTION_MAX} caracteres.`
+      );
+      return;
+    }
+
+    try {
+      await onSubmit({
+        nomeComunidade,
+        descricaoComunidade,
+        capaComunidade,
+        fotoUrlComunidade,
+      });
+    } catch (error) {
+      setError(getCommunityFormErrorMessage(error));
+    }
   }
 
   return (
@@ -73,9 +126,13 @@ export default function CommunityFormModal({
               name="nomeComunidade"
               value={form.nomeComunidade}
               onChange={handleChange}
-              maxLength={100}
-              className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 text-sm outline-none focus:border-[#089464]"
+              maxLength={COMMUNITY_NAME_MAX}
+              className="h-11 w-full max-w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 text-sm outline-none focus:border-[#089464]"
             />
+
+            <p className="mt-1 text-right text-xs text-[#777]">
+              {form.nomeComunidade.length}/{COMMUNITY_NAME_MAX}
+            </p>
           </div>
 
           <div>
@@ -87,10 +144,14 @@ export default function CommunityFormModal({
               name="descricaoComunidade"
               value={form.descricaoComunidade}
               onChange={handleChange}
-              maxLength={500}
+              maxLength={COMMUNITY_DESCRIPTION_MAX}
               rows={5}
-              className="w-full resize-none rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 py-3 text-sm outline-none focus:border-[#089464]"
+              className="w-full max-w-full resize-none rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 py-3 text-sm outline-none focus:border-[#089464] whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
             />
+
+            <p className="mt-1 text-right text-xs text-[#777]">
+              {form.descricaoComunidade.length}/{COMMUNITY_DESCRIPTION_MAX}
+            </p>
           </div>
 
           <div>
@@ -123,7 +184,11 @@ export default function CommunityFormModal({
             />
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">
+              {error}
+            </p>
+          )}
 
           <div className="flex justify-end gap-3 pt-3">
             <button

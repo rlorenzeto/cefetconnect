@@ -54,11 +54,17 @@ export default function ProfileCommunities({
               </div>
 
               <div className="min-w-0 flex-1 overflow-hidden">
-                <p className="truncate text-sm font-bold text-[#202020]">
+                <p
+                  className="max-w-full truncate text-sm font-bold text-[#202020]"
+                  title={community.nomeComunidade}
+                >
                   {community.nomeComunidade}
                 </p>
 
-                <p className="truncate text-xs text-[#777]">
+                <p
+                  className="max-w-full truncate text-xs text-[#777]"
+                  title={community.descricaoComunidade || "Sem descrição."}
+                >
                   {community.descricaoComunidade || "Sem descrição."}
                 </p>
               </div>

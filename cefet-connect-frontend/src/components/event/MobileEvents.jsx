@@ -25,7 +25,7 @@ export default function MobileEvents({
         <button
           type="button"
           onClick={onOpenCreate}
-          className="rounded-full bg-[#089464] px-4 py-1.5 text-xs font-semibold text-white"
+          className="shrink-0 rounded-full bg-[#089464] px-4 py-1.5 text-xs font-semibold text-white"
         >
           Novo
         </button>
@@ -49,7 +49,7 @@ export default function MobileEvents({
         </div>
 
         {error && (
-          <div className="mb-5 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="mb-5 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 break-words [overflow-wrap:anywhere]">
             {error}
           </div>
         )}

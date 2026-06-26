@@ -105,13 +105,13 @@ export default function MobileEditProfile({
                 <label className="mb-1 block text-sm font-semibold text-[#343434]">
                   Nome
                 </label>
-               <input
+                <input
                   type="text"
                   name="nomeUsuario"
                   value={profileForm.nomeUsuario}
                   onChange={handleLimitedProfileChange}
                   maxLength={PROFILE_NAME_MAX}
-                  className="h-11 w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
+                  className="h-11 w-full max-w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
                 />
 
                 <p className="mt-1 text-right text-xs text-[#777]">
@@ -130,7 +130,7 @@ export default function MobileEditProfile({
                   rows={5}
                   maxLength={PROFILE_BIO_MAX}
                   placeholder="Fale sobre seu curso, período e interesses..."
-                  className="w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none break-words [overflow-wrap:anywhere]"
+                  className="w-full max-w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
                 />
 
                 <p className="mt-1 text-right text-xs text-[#777]">

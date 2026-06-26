@@ -481,7 +481,7 @@ export default function PostCard({
     <>
       <article
         onDoubleClick={handleDoubleClick}
-        className={`w-full rounded-[24px] bg-white p-4 shadow-sm ${
+        className={`w-full min-w-0 max-w-full overflow-hidden rounded-[24px] bg-white p-4 shadow-sm ${
           isEventPost ? "border border-[#d8f0e4]" : ""
         }`}
       >
@@ -570,7 +570,7 @@ export default function PostCard({
             />
           )}
         </header>
-        <div className="mt-4">
+        <div className="mt-4 min-w-0 max-w-full">
           {isEventPost ? (
             <EventPostContent
               event={event}
@@ -579,7 +579,7 @@ export default function PostCard({
           ) : (
             <>
               {post.conteudo && (
-                <p className="whitespace-pre-line text-sm leading-relaxed text-[#343434]">
+                <p className="max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
                   {post.conteudo}
                 </p>
               )}

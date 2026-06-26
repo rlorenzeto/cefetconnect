@@ -162,7 +162,7 @@ export default function CommentItem({
 
   return (
     <>
-      <article className="rounded-2xl bg-[#f7f7f7] px-4 py-3">
+      <article className="min-w-0 max-w-full overflow-hidden rounded-2xl bg-[#f7f7f7] px-4 py-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-start gap-3">
             <button
@@ -197,10 +197,10 @@ export default function CommentItem({
                     setError("");
                   }}
                   maxLength={255}
-                  className="mt-2 min-h-20 w-full resize-none rounded-xl border border-[#d9d9d9] bg-white px-3 py-2 text-sm outline-none"
+                  className="mt-2 min-h-20 w-full max-w-full resize-none rounded-xl border border-[#d9d9d9] bg-white px-3 py-2 text-sm outline-none whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
                 />
               ) : (
-                <p className="mt-1 text-sm leading-relaxed text-[#343434]">
+                <p className="mt-1 max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
                   {texto}
                 </p>
               )}

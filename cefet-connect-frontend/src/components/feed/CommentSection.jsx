@@ -13,6 +13,7 @@ export default function CommentSection({
 }) {
   const [comments, setComments] = useState([]);
   const [texto, setTexto] = useState("");
+  const COMMENT_MAX = 255;
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
@@ -91,12 +92,12 @@ export default function CommentSection({
           type="text"
           value={texto}
           onChange={(event) => {
-            setTexto(event.target.value);
+            setTexto(event.target.value.slice(0, COMMENT_MAX));
             setError("");
           }}
-          maxLength={255}
+          maxLength={COMMENT_MAX}
           placeholder="Escreva um comentário..."
-          className="h-10 flex-1 rounded-full border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm outline-none focus:border-[#089464]"
+          className="h-10 min-w-0 flex-1 rounded-full border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm outline-none focus:border-[#089464]"
         />
 
         <button

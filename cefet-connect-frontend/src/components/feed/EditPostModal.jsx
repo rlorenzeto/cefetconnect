@@ -12,6 +12,7 @@ export default function EditPostModal({
   isSaving,
 }) {
   const fileInputRef = useRef(null);
+  const POST_MAX = 1000;
 
   const [conteudo, setConteudo] = useState(() => post?.conteudo || "");
 
@@ -206,14 +207,17 @@ export default function EditPostModal({
           <textarea
             value={conteudo}
             onChange={(event) => {
-              setConteudo(event.target.value);
+              setConteudo(event.target.value.slice(0, POST_MAX));
               setError("");
             }}
-            maxLength={1000}
+            maxLength={POST_MAX}
             placeholder="Edite o texto da publicação..."
-            className="min-h-[130px] w-full resize-none rounded-2xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 py-3 text-sm text-[#202020] outline-none focus:border-[#089464]"
+            className="min-h-[130px] w-full max-w-full resize-none rounded-2xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 py-3 text-sm text-[#202020] outline-none focus:border-[#089464] whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
           />
 
+          <p className="mt-1 text-right text-xs text-[#777]">
+            {conteudo.length}/{POST_MAX}
+          </p>
           {(existingPhotos.length > 0 || newPhotos.length > 0) && (
             <div className="mt-4 rounded-2xl border border-[#e3e3e3] bg-[#f7f7f7] p-3">
               <div className="mb-3 flex items-center justify-between">

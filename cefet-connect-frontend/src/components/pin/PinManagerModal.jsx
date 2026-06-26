@@ -24,6 +24,7 @@ export default function PinManagerModal({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const PIN_NAME_MAX = 80;
 
   const userPinNames = useMemo(() => {
     return new Set(userPins.map((pin) => pin.nomePin?.toLowerCase()));
@@ -65,7 +66,7 @@ export default function PinManagerModal({
   }
 
   async function handleAddManualPin() {
-    const nomePin = selectedManualPin?.nomePin || search.trim();
+    const nomePin = (selectedManualPin?.nomePin || search.trim()).slice(0, PIN_NAME_MAX);
 
     if (!nomePin) {
       setError("Escolha ou digite um pin para adicionar.");
@@ -145,8 +146,8 @@ export default function PinManagerModal({
       aria-modal="true"
     >
       <div className="max-h-[90vh] w-full max-w-[520px] overflow-hidden rounded-[24px] bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-[#eeeeee] px-5 py-4">
-          <div>
+        <header className="flex min-w-0 items-center justify-between gap-4 border-b border-[#eeeeee] px-5 py-4">
+          <div className="min-w-0 flex-1">
             <h2 className="text-lg font-extrabold text-[#202020]">
               Adicionar pin
             </h2>
@@ -159,7 +160,7 @@ export default function PinManagerModal({
           <button
             type="button"
             onClick={resetAndClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f1f1f1] text-xl font-bold text-[#555]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-xl font-bold text-[#555]"
           >
             ×
           </button>
@@ -213,10 +214,11 @@ export default function PinManagerModal({
                 type="text"
                 value={search}
                 onChange={(event) => {
-                  setSearch(event.target.value);
+                  setSearch(event.target.value.slice(0, PIN_NAME_MAX));
                   setSelectedManualPin(null);
                   setError("");
                 }}
+                maxLength={PIN_NAME_MAX}
                 placeholder="Pesquisar pin. Ex: Cálculo I"
                 className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm outline-none focus:border-[#089464]"
                 
@@ -265,24 +267,24 @@ export default function PinManagerModal({
                         type="button"
                         disabled={alreadyAdded}
                         onClick={() => setSelectedManualPin(pin)}
-                        className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-55 ${
+                        className={`flex min-w-0 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-55 ${
                           isSelected
                             ? "border-[#089464] bg-[#e8f7ef]"
                             : "border-[#eeeeee] bg-white hover:bg-[#f7f7f7]"
                         }`}
                       >
-                        <span className="text-sm font-bold text-[#202020]">
-                          {pin.nomePin}
-                        </span>
+                      <span className="min-w-0 flex-1 break-words text-sm font-bold text-[#202020] [overflow-wrap:anywhere]">
+                        {pin.nomePin}
+                      </span>
 
                         {alreadyAdded && (
-                          <span className="text-xs font-bold text-[#777]">
+                          <span className="shrink-0 text-xs font-bold text-[#777]">
                             Já adicionado
                           </span>
                         )}
 
                         {isSelected && (
-                          <span className="text-sm font-bold text-[#089464]">
+                          <span className="shrink-0 text-sm font-bold text-[#089464]">
                             ✓
                           </span>
                         )}
@@ -328,7 +330,7 @@ export default function PinManagerModal({
               </div>
 
               {duplicatedPins.length > 0 && (
-                <p className="mt-3 rounded-2xl bg-[#f1f1f1] px-4 py-3 text-xs text-[#777]">
+                <p className="mt-3 rounded-2xl bg-[#f1f1f1] px-4 py-3 text-xs text-[#777] break-words [overflow-wrap:anywhere]">
                   Já estavam no seu perfil: {duplicatedPins.join(", ")}.
                 </p>
               )}
@@ -343,7 +345,7 @@ export default function PinManagerModal({
                         key={nomePin}
                         type="button"
                         onClick={() => toggleSuggestion(nomePin)}
-                        className={`rounded-full border px-3 py-1 text-xs font-extrabold transition ${
+                        className={`max-w-full whitespace-normal break-words rounded-full border px-3 py-1 text-left text-xs font-extrabold transition [overflow-wrap:anywhere] ${
                           checked
                             ? "border-[#8bd85f] bg-[#eaffdf] text-[#3dae21]"
                             : "border-[#d9d9d9] bg-[#f1f1f1] text-[#555]"
@@ -372,13 +374,13 @@ export default function PinManagerModal({
           )}
 
           {error && (
-            <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500">
+            <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">
               {error}
             </p>
           )}
 
           {message && (
-            <p className="mt-4 rounded-2xl bg-[#e8f7ef] px-4 py-3 text-sm text-[#089464]">
+            <p className="mt-4 rounded-2xl bg-[#e8f7ef] px-4 py-3 text-sm text-[#089464] break-words [overflow-wrap:anywhere]">
               {message}
             </p>
           )}

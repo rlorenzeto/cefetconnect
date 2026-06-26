@@ -1,6 +1,41 @@
 import { useEffect, useState } from "react";
 import CommunitySelectorModal from "../community/CommunitySelectorModal";
 
+const EVENT_TITLE_MAX = 255;
+const EVENT_DESCRIPTION_MAX = 1000;
+const EVENT_LOCATION_MAX = 255;
+
+function getEventFormErrorMessage(error) {
+  const message = String(error?.message || "");
+
+  if (
+    message.includes("Data too long") &&
+    (message.includes("titulo") || message.includes("tituloEvento"))
+  ) {
+    return `O nome do evento pode ter no máximo ${EVENT_TITLE_MAX} caracteres.`;
+  }
+
+  if (
+    message.includes("Data too long") &&
+    (message.includes("descricaoEvento") || message.includes("conteudo"))
+  ) {
+    return `A descrição do evento pode ter no máximo ${EVENT_DESCRIPTION_MAX} caracteres.`;
+  }
+
+  if (
+    message.includes("Data too long") &&
+    message.includes("localEvento")
+  ) {
+    return `O local do evento pode ter no máximo ${EVENT_LOCATION_MAX} caracteres.`;
+  }
+
+  if (message.includes("A data do evento precisa ser futura")) {
+    return "A data do evento precisa ser futura.";
+  }
+
+  return message || "Não foi possível salvar o evento.";
+}
+
 export default function EventFormModal({
   isOpen,
   event,
@@ -29,9 +64,9 @@ export default function EventFormModal({
     const communityId = event?.comunidade?.idComunidade || "";
 
     setForm({
-      titulo: event?.titulo || "",
-      descricaoEvento: event?.descricaoEvento || "",
-      localEvento: event?.localEvento || "",
+      titulo: (event?.titulo || "").slice(0, EVENT_TITLE_MAX),
+      descricaoEvento: (event?.descricaoEvento || "").slice(0, EVENT_DESCRIPTION_MAX),
+      localEvento: (event?.localEvento || "").slice(0, EVENT_LOCATION_MAX),
       dataEvento: event?.dataEvento
         ? new Date(event.dataEvento).toISOString().slice(0, 16)
         : "",
@@ -53,9 +88,18 @@ export default function EventFormModal({
   function handleChange(event) {
     const { name, value } = event.target;
 
+    const limits = {
+      titulo: EVENT_TITLE_MAX,
+      descricaoEvento: EVENT_DESCRIPTION_MAX,
+      localEvento: EVENT_LOCATION_MAX,
+    };
+
+    const limit = limits[name];
+    const limitedValue = limit ? value.slice(0, limit) : value;
+
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: limitedValue,
     }));
 
     setError("");
@@ -105,21 +149,42 @@ export default function EventFormModal({
     return localDate.toISOString().slice(0, 16);
   }
 
-  function handleSubmit(eventSubmit) {
+  async function handleSubmit(eventSubmit) {
     eventSubmit.preventDefault();
 
-    if (!form.titulo.trim()) {
+    const titulo = form.titulo.trim();
+    const descricaoEvento = form.descricaoEvento.trim();
+    const localEvento = form.localEvento.trim();
+
+    if (!titulo) {
       setError("O nome do evento é obrigatório.");
       return;
     }
 
-    if (!form.descricaoEvento.trim()) {
+    if (titulo.length > EVENT_TITLE_MAX) {
+      setError(`O nome do evento pode ter no máximo ${EVENT_TITLE_MAX} caracteres.`);
+      return;
+    }
+
+    if (!descricaoEvento) {
       setError("A descrição do evento é obrigatória.");
       return;
     }
 
-    if (!form.localEvento.trim()) {
+    if (descricaoEvento.length > EVENT_DESCRIPTION_MAX) {
+      setError(
+        `A descrição do evento pode ter no máximo ${EVENT_DESCRIPTION_MAX} caracteres.`
+      );
+      return;
+    }
+
+    if (!localEvento) {
       setError("O local do evento é obrigatório.");
+      return;
+    }
+
+    if (localEvento.length > EVENT_LOCATION_MAX) {
+      setError(`O local do evento pode ter no máximo ${EVENT_LOCATION_MAX} caracteres.`);
       return;
     }
 
@@ -127,6 +192,7 @@ export default function EventFormModal({
       setError("A data do evento é obrigatória.");
       return;
     }
+
     const selectedDate = new Date(form.dataEvento);
     const now = new Date();
 
@@ -141,24 +207,28 @@ export default function EventFormModal({
       return;
     }
 
-    onSubmit({
-      titulo: form.titulo.trim(),
-      descricaoEvento: form.descricaoEvento.trim(),
-      localEvento: form.localEvento.trim(),
-      dataEvento: new Date(form.dataEvento).toISOString(),
-      status: true,
-      comunidadeId: form.tipo === "comunidade" ? form.comunidadeId : "",
-      capaEvento,
-      fotoUrlEvento,
-    });
+    try {
+      await onSubmit({
+        titulo,
+        descricaoEvento,
+        localEvento,
+        dataEvento: new Date(form.dataEvento).toISOString(),
+        status: true,
+        comunidadeId: form.tipo === "comunidade" ? form.comunidadeId : "",
+        capaEvento,
+        fotoUrlEvento,
+      });
+    } catch (error) {
+      setError(getEventFormErrorMessage(error));
+    }
   }
 
   return (
     <>
       <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 px-4">
         <div className="max-h-[92vh] w-full max-w-[560px] overflow-y-auto rounded-[28px] bg-white p-6 shadow-xl">
-          <header className="mb-5 flex items-center justify-between">
-            <div>
+          <header className="mb-5 flex min-w-0 items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
               <h2 className="text-xl font-bold text-[#202020]">
                 {event ? "Editar evento" : "Novo evento"}
               </h2>
@@ -171,7 +241,7 @@ export default function EventFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f1f1f1] text-xl text-[#343434]"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-xl text-[#343434]"
             >
               ×
             </button>
@@ -219,7 +289,7 @@ export default function EventFormModal({
                 <button
                   type="button"
                   onClick={() => setIsCommunityModalOpen(true)}
-                  className="mt-3 w-full rounded-2xl bg-[#f1f1f1] px-4 py-3 text-left text-sm font-bold text-[#343434]"
+                  className="mt-3 w-full max-w-full overflow-hidden break-words rounded-2xl bg-[#f1f1f1] px-4 py-3 text-left text-sm font-bold text-[#343434] [overflow-wrap:anywhere]"
                 >
                   {selectedCommunity
                     ? selectedCommunity.nomeComunidade
@@ -238,24 +308,31 @@ export default function EventFormModal({
                 name="titulo"
                 value={form.titulo}
                 onChange={handleChange}
-                maxLength={100}
-                className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 text-sm outline-none focus:border-[#089464]"
+                maxLength={EVENT_TITLE_MAX}
+                className="h-11 w-full max-w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 text-sm outline-none focus:border-[#089464]"
               />
+
+              <p className="mt-1 text-right text-xs text-[#777]">
+                {form.titulo.length}/{EVENT_TITLE_MAX}
+              </p>
             </div>
 
             <div>
               <label className="mb-1 block text-sm font-semibold text-[#343434]">
                 Descrição
               </label>
-
               <textarea
                 name="descricaoEvento"
                 value={form.descricaoEvento}
                 onChange={handleChange}
-                maxLength={10000}
+                maxLength={EVENT_DESCRIPTION_MAX}
                 rows={5}
-                className="w-full resize-none rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 py-3 text-sm outline-none focus:border-[#089464]"
+                className="w-full max-w-full resize-none rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 py-3 text-sm outline-none focus:border-[#089464] whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
               />
+
+              <p className="mt-1 text-right text-xs text-[#777]">
+                {form.descricaoEvento.length}/{EVENT_DESCRIPTION_MAX}
+              </p>
             </div>
 
             <div>
@@ -283,9 +360,13 @@ export default function EventFormModal({
                 name="localEvento"
                 value={form.localEvento}
                 onChange={handleChange}
-                maxLength={150}
-                className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 text-sm outline-none focus:border-[#089464]"
+                maxLength={EVENT_LOCATION_MAX}
+                className="h-11 w-full max-w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-3 text-sm outline-none focus:border-[#089464]"
               />
+
+              <p className="mt-1 text-right text-xs text-[#777]">
+                {form.localEvento.length}/{EVENT_LOCATION_MAX}
+              </p>
             </div>
 
             <div>
@@ -318,7 +399,11 @@ export default function EventFormModal({
               />
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && (
+              <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">
+                {error}
+              </p>
+            )}
 
             <button
               type="submit"

@@ -110,20 +110,22 @@ export default function PinBadge({
   const categoryStyle = getCategoryStyle(pin);
 
   return (
-    <span className="group inline-flex max-w-full items-center gap-1">
+    <span className="group inline-flex min-w-0 max-w-full items-center gap-1">
       <button
         type="button"
         onClick={() => onClick?.(pin)}
-        className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-extrabold transition hover:scale-[1.02] ${categoryStyle} ${
+        className={`inline-flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full border px-2 py-0.5 text-[11px] font-extrabold transition hover:scale-[1.02] ${categoryStyle} ${
           compact ? "max-w-[105px]" : "max-w-[240px]"
         }`}
         title={pin?.nomePin}
       >
-        <span className="truncate">{pin?.nomePin}</span>
+        <span className="min-w-0 max-w-full truncate">
+          {pin?.nomePin}
+        </span>
 
         {isGradment && (
           <span
-            className="text-[10px]"
+            className="shrink-0 text-[10px]"
             title="Pin importado/validado pelo GradMent"
           >
             ✓
@@ -135,8 +137,7 @@ export default function PinBadge({
         <button
           type="button"
           onClick={() => onRemove?.(pin)}
-          className="hidden h-5 w-5 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-500 transition hover:bg-red-100 group-hover:flex"
-          aria-label={`Remover pin ${pin?.nomePin}`}
+          className="hidden h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-500 transition hover:bg-red-100 group-hover:flex"          aria-label={`Remover pin ${pin?.nomePin}`}
           title="Remover pin"
         >
           ×

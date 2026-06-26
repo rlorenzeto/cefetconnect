@@ -45,7 +45,7 @@ export default function GradMentIntegrationCard({ token, onConnect, onDisconnect
         </div>
 
         {/* Info Container */}
-        <div className="flex-1 text-center sm:text-left z-10">
+        <div className="min-w-0 flex-1 text-center sm:text-left z-10">
           <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
             <h3 className="text-lg font-bold text-[#202020]">GradMent</h3>
             {token && (
@@ -55,7 +55,7 @@ export default function GradMentIntegrationCard({ token, onConnect, onDisconnect
               </span>
             )}
           </div>
-          <p className="text-sm text-[#777]">
+          <p className="max-w-full break-words text-sm text-[#777] [overflow-wrap:anywhere]">
             {token 
               ? "Sua conta está vinculada. Você pode importar ícones e disciplinas do GradMent." 
               : "Vincule sua conta do GradMent para importar automaticamente suas conquistas."}

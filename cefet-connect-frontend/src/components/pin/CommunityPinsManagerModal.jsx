@@ -18,6 +18,7 @@ export default function CommunityPinsManagerModal({
   const [isLoading, setIsLoading] = useState(false);
   const [savingId, setSavingId] = useState("");
   const [error, setError] = useState("");
+  const PIN_SEARCH_MAX = 80;
 
   const currentPinIds = useMemo(() => {
     return new Set(currentPins.map((pin) => String(pin.idPin)));
@@ -84,21 +85,21 @@ export default function CommunityPinsManagerModal({
       aria-modal="true"
     >
       <div className="max-h-[90vh] w-full max-w-[560px] overflow-hidden rounded-[28px] bg-white shadow-xl">
-        <header className="flex items-start justify-between gap-4 border-b border-[#eeeeee] px-5 py-4">
-          <div>
+        <header className="flex min-w-0 items-start justify-between gap-4 border-b border-[#eeeeee] px-5 py-4">
+          <div className="min-w-0 flex-1">
             <h2 className="text-lg font-extrabold text-[#202020]">
               Pins da comunidade
             </h2>
 
-            <p className="mt-1 text-xs text-[#777]">
-              Adicione pins que combinam com {community?.nomeComunidade}.
-            </p>
+          <p className="mt-1 max-w-full break-words text-xs text-[#777] [overflow-wrap:anywhere]">
+            Adicione pins que combinam com {community?.nomeComunidade}.
+          </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f1f1f1] text-xl font-bold text-[#555]"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-xl font-bold text-[#555]"
             aria-label="Fechar"
           >
             ×
@@ -114,14 +115,14 @@ export default function CommunityPinsManagerModal({
             {currentPins.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {currentPins.map((pin) => (
-                  <span key={pin.idPin} className="inline-flex items-center gap-1">
+                  <span key={pin.idPin} className="inline-flex min-w-0 max-w-full items-center gap-1">
                     <PinBadge pin={pin} />
 
                     <button
                       type="button"
                       onClick={() => handleRemove(pin)}
                       disabled={savingId === pin.idPin}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-500 hover:bg-red-100 disabled:opacity-60"
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-50 text-xs font-bold text-red-500 hover:bg-red-100 disabled:opacity-60"
                       title="Remover pin da comunidade"
                     >
                       ×
@@ -139,13 +140,13 @@ export default function CommunityPinsManagerModal({
           <input
             type="text"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => setSearch(event.target.value.slice(0, PIN_SEARCH_MAX))}
             placeholder="Buscar pin. Ex: Cálculo I, IC, Projeto..."
             className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm outline-none focus:border-[#089464]"
           />
 
           {error && (
-            <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500">
+            <p className="mt-3 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">
               {error}
             </p>
           )}
@@ -162,12 +163,12 @@ export default function CommunityPinsManagerModal({
                 return (
                   <div
                     key={pin.idPin}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-[#eeeeee] bg-white px-4 py-3"
+                    className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#eeeeee] bg-white px-4 py-3"
                   >
                     <PinBadge pin={pin} />
 
                     {alreadyAdded ? (
-                      <span className="rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-bold text-[#089464]">
+                      <span className="shrink-0 rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-bold text-[#089464]">
                         Adicionado
                       </span>
                     ) : (
@@ -175,7 +176,7 @@ export default function CommunityPinsManagerModal({
                         type="button"
                         onClick={() => handleAdd(pin)}
                         disabled={savingId === pin.idPin}
-                        className="rounded-full bg-[#089464] px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+                        className="shrink-0 rounded-full bg-[#089464] px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
                       >
                         {savingId === pin.idPin ? "Adicionando..." : "Adicionar"}
                       </button>

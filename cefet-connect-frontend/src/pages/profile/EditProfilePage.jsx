@@ -19,6 +19,8 @@ import { getRankingCompleto } from "../../services/rankingService";
 import RankingModal from "../../components/ranking/RankingModal";
 
 export default function EditProfilePage() {
+  const PROFILE_NAME_MAX = 80;
+  const PROFILE_BIO_MAX = 300;
   const navigate = useNavigate();
   const savedUser = getCurrentUser();
 
@@ -98,9 +100,17 @@ export default function EditProfilePage() {
   function handleProfileChange(event) {
     const { name, value } = event.target;
 
+    const limits = {
+      nomeUsuario: PROFILE_NAME_MAX,
+      biografia: PROFILE_BIO_MAX,
+    };
+
+    const limit = limits[name];
+    const limitedValue = limit ? value.slice(0, limit) : value;
+
     setProfileForm((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: limitedValue,
     }));
 
     setProfileError("");

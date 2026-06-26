@@ -50,7 +50,7 @@ export default function MobileCommunities({
         </div>
 
         {error && (
-          <div className="mb-5 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="mb-5 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 break-words [overflow-wrap:anywhere]">
             {error}
           </div>
         )}

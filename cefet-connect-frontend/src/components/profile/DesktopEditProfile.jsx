@@ -113,7 +113,7 @@ export default function DesktopEditProfile({
                       value={profileForm.nomeUsuario}
                       onChange={handleLimitedProfileChange}
                       maxLength={PROFILE_NAME_MAX}
-                      className="h-11 w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
+                      className="h-11 w-full max-w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
                     />
 
                     <p className="mt-1 text-right text-xs text-[#777]">
@@ -132,7 +132,7 @@ export default function DesktopEditProfile({
                       rows={6}
                       maxLength={PROFILE_BIO_MAX}
                       placeholder="Fale sobre seu curso, período, interesses acadêmicos e projetos..."
-                      className="w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none break-words [overflow-wrap:anywhere]"
+                      className="w-full max-w-full resize-none rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 py-3 text-sm outline-none whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
                     />
 
                     <p className="mt-1 text-right text-xs text-[#777]">

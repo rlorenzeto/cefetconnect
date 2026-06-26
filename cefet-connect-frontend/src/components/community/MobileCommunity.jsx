@@ -111,7 +111,7 @@ export default function MobileCommunity({
           </div>
         ) : (
           <div className="space-y-5">
-            <section className="overflow-hidden rounded-[32px] bg-white pb-6 shadow-sm">
+            <section className="min-w-0 max-w-full overflow-hidden rounded-[32px] bg-white pb-6 shadow-sm">
               <div className="h-36 w-full bg-[#d9d9d9]">
                 {community?.capaComunidade ? (
                   <img
@@ -139,11 +139,11 @@ export default function MobileCommunity({
                   )}
                 </div>
 
-                <h1 className="mt-5 text-[28px] font-bold text-[#202020]">
+                <h1 className="mt-5 max-w-full break-words text-[28px] font-bold text-[#202020] [overflow-wrap:anywhere]">
                   {community?.nomeComunidade}
                 </h1>
 
-                <p className="mt-2 text-sm leading-relaxed text-[#666]">
+                <p className="mt-2 max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#666] [overflow-wrap:anywhere]">
                   {community?.descricaoComunidade ||
                     "Comunidade sem descrição."}
                 </p>
@@ -153,7 +153,7 @@ export default function MobileCommunity({
                       Pins relacionados
                     </p>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex min-w-0 max-w-full flex-wrap gap-2">
                       {pins.map((pin) => (
                         <PinBadge key={pin.idPin} pin={pin} />
                       ))}
@@ -187,7 +187,7 @@ export default function MobileCommunity({
             </section>
 
             {error && (
-              <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+              <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 break-words [overflow-wrap:anywhere]">
                 {error}
               </div>
             )}
