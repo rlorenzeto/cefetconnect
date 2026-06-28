@@ -1,5 +1,19 @@
-import { IsString, IsEmail, IsNotEmpty, MaxLength, MinLength, IsStrongPassword, Matches } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, MaxLength, MinLength, IsStrongPassword, Matches, IsDateString, IsBoolean, Equals, ValidatorConstraint, ValidatorConstraintInterface, Validate } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+@ValidatorConstraint({ name: 'maiorDeIdade', async: false })
+export class MaiorDeIdadeConstraint implements ValidatorConstraintInterface {
+  validate(dataNascimento: string) {
+    const nascimento = new Date(dataNascimento);
+    const hoje = new Date();
+    const dezoitoAnosAtras = new Date(hoje.getFullYear() - 18, hoje.getMonth(), hoje.getDate());
+    return nascimento <= dezoitoAnosAtras;
+  }
+
+  defaultMessage() {
+    return 'Você deve ter pelo menos 18 anos para se cadastrar';
+  }
+}
 
 export class CreateUsuarioDto {
   @ApiProperty({ example: '12345678910 ou 1234567', description: 'Matrícula do usuário: 11 dígitos para aluno ou 7 dígitos para professor' })
@@ -36,4 +50,15 @@ export class CreateUsuarioDto {
     message: 'A senha deve conter obrigatoriamente pelo menos um número, um caractere especial e uma letra maiúscula.' 
   })
   senha!: string;
+
+  @ApiProperty({ example: '2000-05-15', description: 'Data de nascimento no formato YYYY-MM-DD. O usuário deve ter pelo menos 18 anos.' })
+  @IsNotEmpty({ message: 'A data de nascimento é obrigatória' })
+  @IsDateString({}, { message: 'A data de nascimento deve estar no formato YYYY-MM-DD' })
+  @Validate(MaiorDeIdadeConstraint)
+  dataNascimento!: string;
+
+  @ApiProperty({ example: true, description: 'O usuário deve aceitar os termos de compromisso para se cadastrar' })
+  @IsBoolean({ message: 'O campo de aceite dos termos deve ser verdadeiro ou falso' })
+  @Equals(true, { message: 'Você deve aceitar os termos de compromisso para se cadastrar' })
+  aceitouTermos!: boolean;
 }

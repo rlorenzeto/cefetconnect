@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, ParseIntPipe, Query } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { PostService } from './post.service';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -6,7 +6,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { RemoverFotosDto } from './dto/remover-fotos.dto';
 import { SuccessMessages } from '../common/constants/messages.success';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PostRateLimitGuard } from '../throttling/post-rate-limit.guard';
 import { multerPostFotosConfig } from '../uploads/multer.config';
@@ -40,16 +40,18 @@ export class PostController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Listar todos os posts', description: 'Retorna todos os posts com suas fotos. Requer autenticação.' })
+  @ApiOperation({ summary: 'Listar todos os posts', description: 'Retorna todos os posts com suas fotos paginados (10 por página). Requer autenticação.' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Número da página (padrão: 1)' })
   @ApiResponse({ status: 200, description: '[SUSR00015] Posts retornados com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
-  async findAll(@Request() req: any) { 
-    const dados = await this.postService.findAll(req.user.idUsuario); 
+  async findAll(@Request() req: any, @Query('page') page?: string) { 
+    const pagina = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const resultado = await this.postService.findAll(req.user.idUsuario, pagina);
 
     return {
       codigo: 'SUSR00015',
       mensagem: SuccessMessages.SUSR00015.mensagem,
-      dados,
+      ...resultado,
     };
   }
 

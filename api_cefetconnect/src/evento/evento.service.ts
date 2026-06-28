@@ -79,8 +79,11 @@ export class EventoService {
     return eventoCriado;
   }
 
-  async findAll() {
-    return await this.eventoRepository.find({
+  async findAll(page: number = 1) {
+    const limite = 10;
+    const skip = (page - 1) * limite;
+
+    const [eventos, total] = await this.eventoRepository.findAndCount({
       relations: ['usuario', 'comunidade', 'participantes'],
       select: {
         idEvento: true,
@@ -104,7 +107,19 @@ export class EventoService {
         },
       },
       order: { dataEvento: 'ASC' },
+      take: limite,
+      skip,
     });
+
+    return {
+      dados: eventos,
+      paginacao: {
+        pagina: page,
+        limite,
+        total,
+        totalPaginas: Math.ceil(total / limite),
+      },
+    };
   }
 
   async findOne(id: string) {

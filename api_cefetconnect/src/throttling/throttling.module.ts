@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD, Reflector } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './throttling.guard';
 
 @Module({
   imports: [
@@ -9,6 +11,13 @@ import { ThrottlerModule } from '@nestjs/throttler';
         limit: 100, // 100 requisições por minuto
       },
     ]),
+  ],
+  providers: [
+    Reflector,
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
   ],
   exports: [ThrottlerModule],
 })

@@ -48,6 +48,12 @@ export class Usuario {
   @Column({ type: 'text', nullable: true, name: 'token_integracao' })
   tokenIntegracao?: string | null;
 
+  @Column({ type: 'date' })
+  dataNascimento!: string;
+
+  @Column({ type: 'boolean', default: false })
+  aceitouTermos!: boolean;
+
   // Relacionamentos 1:N
   @OneToMany(() => Post, (post) => post.usuario)
   posts!: Post[];

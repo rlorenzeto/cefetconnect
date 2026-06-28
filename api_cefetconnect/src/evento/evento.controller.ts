@@ -1,11 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, UseInterceptors, UploadedFiles, Query } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerEventoConfig } from '../uploads/multer.config';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { EventoService } from './evento.service';
 import { CreateEventoDto } from './dto/create-evento.dto';
 import { UpdateEventoDto } from './dto/update-evento.dto';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
 @ApiTags('Eventos')
@@ -38,11 +38,13 @@ export class EventoController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Listar todos os eventos' })
+  @ApiOperation({ summary: 'Listar todos os eventos', description: 'Retorna eventos paginados (10 por página).' })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Número da página (padrão: 1)' })
   @ApiResponse({ status: 200, description: '[SEVT00002] Eventos retornados com sucesso.' })
-  async findAll() {
-    const dados = await this.eventoService.findAll();
-    return { codigo: 'SEVT00002', mensagem: SuccessMessages.SEVT00002.mensagem, dados };
+  async findAll(@Query('page') page?: string) {
+    const pagina = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const resultado = await this.eventoService.findAll(pagina);
+    return { codigo: 'SEVT00002', mensagem: SuccessMessages.SEVT00002.mensagem, ...resultado };
   }
 
   @Get('meus')

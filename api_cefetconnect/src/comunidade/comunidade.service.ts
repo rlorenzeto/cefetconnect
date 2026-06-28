@@ -489,8 +489,16 @@ export class ComunidadeService {
     }));
   }
 
+<<<<<<< Updated upstream
   async findPosts(idComunidade: string, idUsuario: number) {
     const comunidadetarget = await this.comunidaderepository.findOne({
+=======
+  async findPosts(idComunidade: string, idUsuario: number, page: number = 1) {
+    const limite = 10;
+    const skip = (page - 1) * limite;
+
+    const comunidade = await this.comunidadeRepository.findOne({
+>>>>>>> Stashed changes
       where: { idComunidade },
     });
 
@@ -506,6 +514,12 @@ export class ComunidadeService {
     if (membro.length === 0) {
       throw new ForbiddenException(ErrorMessages.ECOM00003.mensagem);
     }
+
+    const [totalRow]: [{ total: string }] = await this.dataSource.query(
+      'SELECT COUNT(DISTINCT p.idPost) AS total FROM post p WHERE p.fk_Comunidade_idComunidade = ?',
+      [idComunidade],
+    );
+    const total = parseInt(totalRow.total, 10);
 
     const posts = await this.dataSource.query(
       ` 
@@ -571,68 +585,78 @@ export class ComunidadeService {
         e.capaEvento,
         e.fotoUrlEvento,
         pe.usuarioIdUsuario
+      ORDER BY p.dataHoraPublicacao DESC
+      LIMIT ? OFFSET ?
       `,
-      [idUsuario, idComunidade],
+      [idUsuario, idComunidade, limite, skip],
     );
 
-    const postsFormatados = await Promise.all(
-      posts.map(async (post) => {
-       const fotosPost = await this.dataSource.query(
-          `
-          SELECT 
-            id_foto AS idFoto,
-            url,
-            ordem
-          FROM post_fotos
-          WHERE idPost = ?
-          ORDER BY ordem ASC
-          `,
-          [post.idPost],
-        );
+    let postsFormatados: any[] = [];
 
-        return {
-          idPost: post.idPost,
-          conteudo: post.conteudo,
-          dataHoraPublicacao: post.dataHoraPublicacao,
-          totalComentarios: Number(post.totalComentarios || 0),
-          usuario: {
-            idUsuario: post.usuario_idUsuario,
-            nomeUsuario: post.usuario_nomeUsuario,
-            fotoUrl: post.usuario_fotoUrl,
+    if (posts.length > 0) {
+      const postIds = posts.map((p) => p.idPost);
+      const todasFotos = await this.dataSource.query(
+        `SELECT id_foto AS idFoto, url, ordem, idPost
+         FROM post_fotos
+         WHERE idPost IN (${postIds.map(() => '?').join(',')})
+         ORDER BY ordem ASC`,
+        postIds,
+      );
+
+      const fotosPorPost = new Map<string, any[]>();
+      for (const foto of todasFotos) {
+        if (!fotosPorPost.has(foto.idPost)) fotosPorPost.set(foto.idPost, []);
+        fotosPorPost.get(foto.idPost)!.push({ idFoto: foto.idFoto, url: foto.url, ordem: foto.ordem });
+      }
+
+      postsFormatados = posts.map((post) => ({
+        idPost: post.idPost,
+        conteudo: post.conteudo,
+        dataHoraPublicacao: post.dataHoraPublicacao,
+        totalComentarios: Number(post.totalComentarios || 0),
+        usuario: {
+          idUsuario: post.usuario_idUsuario,
+          nomeUsuario: post.usuario_nomeUsuario,
+          fotoUrl: post.usuario_fotoUrl,
+        },
+        comunidade: {
+          idComunidade: post.comunidade_idComunidade,
+          nomeComunidade: post.comunidade_nomeComunidade,
+          criador: {
+            idUsuario: post.comunidade_idCriador,
+            nomeUsuario: post.comunidade_nomeCriador,
           },
-          comunidade: {
-            idComunidade: post.comunidade_idComunidade,
-            nomeComunidade: post.comunidade_nomeComunidade,
-            criador: {
-              idUsuario: post.comunidade_idCriador,
-              nomeUsuario: post.comunidade_nomeCriador,
-            },
-          },
-          evento: post.evento_idEvento
-            ? {
-                idEvento: post.evento_idEvento,
-                titulo: post.evento_titulo,
-                descricaoEvento: post.evento_descricaoEvento,
-                localEvento: post.evento_localEvento,
-                status: Boolean(Number(post.evento_status)),
-                dataEvento: post.evento_dataEvento,
-                capaEvento: post.evento_capaEvento,
-                fotoUrlEvento: post.evento_fotoUrlEvento,
-                isParticipando: Boolean(post.evento_participanteAtual),
+        },
+        evento: post.evento_idEvento
+          ? {
+              idEvento: post.evento_idEvento,
+              titulo: post.evento_titulo,
+              descricaoEvento: post.evento_descricaoEvento,
+              localEvento: post.evento_localEvento,
+              status: Boolean(Number(post.evento_status)),
+              dataEvento: post.evento_dataEvento,
+              capaEvento: post.evento_capaEvento,
+              fotoUrlEvento: post.evento_fotoUrlEvento,
+              isParticipando: Boolean(post.evento_participanteAtual),
+              comunidade: {
+                idComunidade: post.comunidade_idComunidade,
+                nomeComunidade: post.comunidade_nomeComunidade,
+              },
+            }
+          : null,
+        fotosPost: fotosPorPost.get(post.idPost) ?? [],
+      }));
+    }
 
-                comunidade: {
-                  idComunidade: post.comunidade_idComunidade,
-                  nomeComunidade: post.comunidade_nomeComunidade,
-                },
-              }
-            : null,
-
-          fotosPost,
-        };
-      }),
-    );
-
-    return postsFormatados;
+    return {
+      dados: postsFormatados,
+      paginacao: {
+        pagina: page,
+        limite,
+        total,
+        totalPaginas: Math.ceil(total / limite),
+      },
+    };
   }
 
   async findEventos(idComunidade: string) {
