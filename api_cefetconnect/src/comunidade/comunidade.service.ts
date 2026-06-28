@@ -489,20 +489,15 @@ export class ComunidadeService {
     }));
   }
 
-<<<<<<< Updated upstream
-  async findPosts(idComunidade: string, idUsuario: number) {
-    const comunidadetarget = await this.comunidaderepository.findOne({
-=======
   async findPosts(idComunidade: string, idUsuario: number, page: number = 1) {
     const limite = 10;
     const skip = (page - 1) * limite;
 
-    const comunidade = await this.comunidadeRepository.findOne({
->>>>>>> Stashed changes
+    const comunidade = await this.comunidaderepository.findOne({
       where: { idComunidade },
     });
 
-    if (!comunidadetarget) {
+    if (!comunidade) {
       throw new NotFoundException(ErrorMessages.ECOM00001.mensagem);
     }
 
