@@ -155,37 +155,6 @@ export default function DesktopFeed({
               />
 
               <div className="space-y-6">
-                <section className="overflow-hidden rounded-[8px] bg-white shadow-sm">
-                  <div className="flex h-[54px] items-center justify-center border-b border-[#d9d9d9]">
-                    <div className="flex items-center gap-2">
-                      <img
-                        src="/images/gradment-logo.svg"
-                        alt="GradMent"
-                        className="h-7 w-auto object-contain"
-                      />
-
-                      <span className="text-[22px] font-extrabold text-[#39b02f]">
-                        GradMent
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="px-5 py-4 text-center">
-                    <h2 className="text-[21px] font-extrabold leading-tight text-[#39b02f]">
-                      A sua jornada acadêmica começa Aqui
-                    </h2>
-
-                    <a
-                      href={GRADMENT_URL}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-4 inline-flex h-10 items-center justify-center rounded-[9px] bg-[#3dae21] px-5 text-[16px] font-extrabold text-white transition hover:bg-[#319219]"
-                    >
-                      conheça !
-                    </a>
-                  </div>
-                </section>
-
                 <CreatePostCard
                   user={user}
                   userImageUrl={userImageUrl}
@@ -277,16 +246,6 @@ export default function DesktopFeed({
                 </div>
 
                 <div className="mt-4 space-y-3 text-sm text-[#343434]">
-                  {importantEvents.map((event) => (
-                    <Link
-                      to="/eventos"
-                      className="text-xs font-bold text-[#089464] hover:underline"
-                    >
-                      Ver todos
-                    </Link>
-                  </div>
-
-                  <div className="mt-4 space-y-3 text-sm text-[#343434]">
                     {importantEvents.map((event) => (
                       <Link
                         key={event.idEvento}
