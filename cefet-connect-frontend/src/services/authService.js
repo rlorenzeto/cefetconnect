@@ -33,6 +33,8 @@ export function registerUser(payload) {
       nomeUsuario: payload.nomeUsuario,
       email: payload.email,
       senha: payload.senha,
+      dataNascimento: payload.dataNascimento,
+      aceitouTermos: payload.aceitouTermos,
     }),
   });
 }

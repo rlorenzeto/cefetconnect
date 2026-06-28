@@ -12,6 +12,8 @@ export default function RegisterForm({ onGoToLogin }) {
     email: "",
     registration: "",
     password: "",
+    dataNascimento: "",
+    aceitouTermos: false,
   });
 
   const [errors, setErrors] = useState({
@@ -19,6 +21,8 @@ export default function RegisterForm({ onGoToLogin }) {
     email: "",
     registration: "",
     password: "",
+    dataNascimento: "",
+    aceitouTermos: "",
   });
 
   const [apiError, setApiError] = useState("");
@@ -53,11 +57,12 @@ export default function RegisterForm({ onGoToLogin }) {
   }
 
   function handleChange(event) {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
+    const fieldValue = type === "checkbox" ? checked : value;
 
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: fieldValue,
     }));
 
     setErrors((prev) => ({
@@ -66,6 +71,16 @@ export default function RegisterForm({ onGoToLogin }) {
     }));
 
     setApiError("");
+  }
+
+  function validateDateOfBirth(dataNascimento) {
+    if (!dataNascimento) return "A data de nascimento é obrigatória.";
+    const nascimento = new Date(dataNascimento);
+    if (isNaN(nascimento.getTime())) return "Data de nascimento inválida.";
+    const hoje = new Date();
+    const dezoitoAnosAtras = new Date(hoje.getFullYear() - 18, hoje.getMonth(), hoje.getDate());
+    if (nascimento > dezoitoAnosAtras) return "Você deve ter pelo menos 18 anos para se cadastrar.";
+    return "";
   }
 
   function validateEmail(email) {
@@ -81,6 +96,8 @@ export default function RegisterForm({ onGoToLogin }) {
       email: "",
       registration: "",
       password: "",
+      dataNascimento: "",
+      aceitouTermos: "",
     };
 
     if (!formData.name.trim()) {
@@ -112,12 +129,19 @@ export default function RegisterForm({ onGoToLogin }) {
     }
 
     newErrors.password = validatePassword(password);
+    newErrors.dataNascimento = validateDateOfBirth(formData.dataNascimento);
+
+    if (!formData.aceitouTermos) {
+      newErrors.aceitouTermos = "Você deve aceitar os termos de compromisso para se cadastrar.";
+    }
 
     if (
       newErrors.name ||
       newErrors.email ||
       newErrors.registration ||
-      newErrors.password
+      newErrors.password ||
+      newErrors.dataNascimento ||
+      newErrors.aceitouTermos
     ) {
       setErrors(newErrors);
       return;
@@ -132,6 +156,8 @@ export default function RegisterForm({ onGoToLogin }) {
         nomeUsuario: formData.name,
         email: formData.email,
         senha: password,
+        dataNascimento: formData.dataNascimento,
+        aceitouTermos: formData.aceitouTermos,
       });
 
       console.log("Resposta cadastro:", response);
@@ -218,13 +244,44 @@ export default function RegisterForm({ onGoToLogin }) {
         )}
       </div>
 
+      <div>
+        <input
+          type="date"
+          name="dataNascimento"
+          value={formData.dataNascimento}
+          onChange={handleChange}
+          required
+          className="h-11 w-full rounded-md border border-[#bfbfbf] bg-white px-3 text-sm outline-none"
+        />
+        {errors.dataNascimento && (
+          <p className="mt-1 text-sm text-red-500">{errors.dataNascimento}</p>
+        )}
+      </div>
+
+      <div className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          name="aceitouTermos"
+          id="aceitouTermos"
+          checked={formData.aceitouTermos}
+          onChange={handleChange}
+          className="mt-0.5 h-4 w-4 accent-[#089464]"
+        />
+        <label htmlFor="aceitouTermos" className="text-sm text-[#555]">
+          Eu li e aceito os termos de compromisso
+        </label>
+      </div>
+      {errors.aceitouTermos && (
+        <p className="text-sm text-red-500">{errors.aceitouTermos}</p>
+      )}
+
       {apiError && (
         <p className="text-sm text-red-500">{apiError}</p>
       )}
 
       <AuthButton
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !formData.aceitouTermos}
         className="mt-7"
       >
         {isSubmitting ? "Cadastrando..." : "Cadastrar"}

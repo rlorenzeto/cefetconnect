@@ -10,8 +10,8 @@ export function getEventImageUrl(url) {
   return `${API_BASE_URL}/${url.replace(/^\/+/, "")}`;
 }
 
-export function listEventos() {
-  return apiFetch("/evento");
+export function listEventos(page = 1) {
+  return apiFetch(`/evento?page=${page}`);
 }
 
 export function listMeusEventos() {

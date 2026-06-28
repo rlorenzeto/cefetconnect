@@ -175,6 +175,38 @@ export default function MobileFeed({
         </div>
 
         <div className="space-y-5">
+          <section className="overflow-hidden rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 bg-white px-5 py-3 border-b border-[#e8e8e8]">
+              <img
+                src="/images/gradment-logo.svg"
+                alt="GradMent"
+                className="h-6 w-auto object-contain"
+              />
+              <span className="text-lg font-extrabold text-[#39b02f]">
+                GradMent
+              </span>
+            </div>
+            <div className="bg-gradient-to-b from-[#f0faf4] to-[#e2f5ea] px-5 py-5 text-center">
+              <h2 className="text-base font-extrabold leading-snug text-[#1a7a3f]">
+                A sua jornada acadêmica começa aqui
+              </h2>
+              <p className="mt-1.5 text-xs text-[#4a7c5f]">
+                Conecte-se à plataforma acadêmica e importe suas disciplinas automaticamente.
+              </p>
+              <a
+                href={GRADMENT_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#3dae21] py-2.5 text-sm font-bold text-white transition hover:bg-[#319219]"
+              >
+                Conhecer o GradMent
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </a>
+            </div>
+          </section>
+
           <div id="post-composer">
             <CreatePostCard
               user={user}

@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { multerComunidadeConfig } from '../uploads/multer.config';
@@ -18,7 +19,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ComunidadeService } from './comunidade.service';
 import { CreateComunidadeDto } from './dto/create-comunidade.dto';
 import { UpdateComunidadeDto } from './dto/update-comunidade.dto';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
 @ApiTags('Comunidades')
@@ -224,18 +225,20 @@ export class ComunidadeController {
   @ApiParam({ name: 'id', description: 'ID da comunidade' })
   @ApiOperation({
     summary: 'Listar posts de uma comunidade',
-    description: 'Retorna os posts da comunidade se o usuário for membro.',
+    description: 'Retorna os posts da comunidade paginados (10 por página) se o usuário for membro.',
   })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Número da página (padrão: 1)' })
   @ApiResponse({ status: 200, description: '[SCOM00009] Posts da comunidade retornados com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 403, description: '[ECOM00003] Você precisa ser membro para ver os posts.' })
   @ApiResponse({ status: 404, description: '[ECOM00001] Comunidade não encontrada.' })
-  async findPosts(@Param('id') id: string, @Request() req: any) {
-    const dados = await this.comunidadeService.findPosts(id, req.user.idUsuario);
+  async findPosts(@Param('id') id: string, @Request() req: any, @Query('page') page?: string) {
+    const pagina = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const resultado = await this.comunidadeService.findPosts(id, req.user.idUsuario, pagina);
     return {
       codigo: 'SCOM00009',
       mensagem: 'Posts da comunidade retornados com sucesso.',
-      dados,
+      ...resultado,
     };
   }
 

@@ -110,8 +110,11 @@ export class PostService {
   // Parte de Leitura 
 
   // Essa função que retorna todos os posts com suas respectivas fotos e usuários, possibilitando o feed funcionar
-  async findAll(idUsuario: number) {
-    return this.postRepository
+  async findAll(idUsuario: number, page: number = 1) {
+    const limite = 10;
+    const skip = (page - 1) * limite;
+
+    const [posts, total] = await this.postRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
@@ -168,7 +171,45 @@ export class PostService {
       ])
       .orderBy('post.dataHoraPublicacao', 'DESC')
       .addOrderBy('foto.ordem', 'ASC')
-      .getMany();
+      .skip(skip)
+      .take(limite)
+      .getManyAndCount();
+
+    let dados: any[] = posts;
+
+    if (posts.length > 0) {
+      const postIds = posts.map((p) => p.idPost);
+      const curtidasData: { postIdPost: string; total: string; jaCurtiu: string }[] =
+        await this.dataSource.query(
+          `SELECT postIdPost, COUNT(*) AS total,
+           SUM(CASE WHEN usuarioIdUsuario = ? THEN 1 ELSE 0 END) AS jaCurtiu
+           FROM likePost
+           WHERE postIdPost IN (${postIds.map(() => '?').join(',')})
+           GROUP BY postIdPost`,
+          [idUsuario, ...postIds],
+        );
+
+      const curtidasMap = new Map(curtidasData.map((c) => [c.postIdPost, c]));
+
+      dados = posts.map((post) => {
+        const curtida = curtidasMap.get(post.idPost);
+        return {
+          ...post,
+          totalCurtidas: curtida ? parseInt(curtida.total, 10) : 0,
+          jaCurtiu: curtida ? Number(curtida.jaCurtiu) > 0 : false,
+        };
+      });
+    }
+
+    return {
+      dados,
+      paginacao: {
+        pagina: page,
+        limite,
+        total,
+        totalPaginas: Math.ceil(total / limite),
+      },
+    };
   }
 
   async findOne(id: string) {

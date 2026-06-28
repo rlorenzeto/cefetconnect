@@ -10,8 +10,8 @@ export function getImageUrl(url) {
   return `${API_BASE_URL}/${url.replace(/^\/+/, "")}`;
 }
 
-export function listPosts() {
-  return apiFetch("/post");
+export function listPosts(page = 1) {
+  return apiFetch(`/post?page=${page}`);
 }
 
 export function getPostById(idPost) {
