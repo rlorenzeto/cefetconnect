@@ -95,11 +95,7 @@ export default function CommentSection({
             setTexto(event.target.value.slice(0, COMMENT_MAX));
             setError("");
           }}
-<<<<<<< Updated upstream
-          maxLength={COMMENT_MAX}
-=======
           maxLength={1000}
->>>>>>> Stashed changes
           placeholder="Escreva um comentário..."
           className="h-10 min-w-0 flex-1 rounded-full border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm outline-none focus:border-[#089464]"
         />

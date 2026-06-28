@@ -227,26 +227,6 @@ export default function DesktopFeed({
               </div>
             </section>
 
-<<<<<<< Updated upstream
-              <aside
-                ref={rightSidebarRef}
-                style={{
-                  transform: `translateY(-${rightSidebarOffset}px)`,
-                }}
-                className="fixed right-8 top-10 z-20 w-[400px] space-y-5"
-              >
-                <RankingCard
-                  ranking={rankingPreview}
-                  onOpenFullRanking={onOpenFullRanking}
-                />
-
-                <section className="rounded-[28px] bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="text-lg font-bold text-[#202020]">
-                      Próximos eventos
-                    </h2>
-
-=======
             <aside className="fixed right-12 top-10 w-[320px] max-h-[calc(100vh-5rem)] space-y-5 overflow-y-auto pr-1">
               <section className="overflow-hidden rounded-2xl shadow-sm">
                 <div className="flex items-center gap-2 bg-white px-5 py-3 border-b border-[#e8e8e8]">
@@ -298,7 +278,6 @@ export default function DesktopFeed({
 
                 <div className="mt-4 space-y-3 text-sm text-[#343434]">
                   {importantEvents.map((event) => (
->>>>>>> Stashed changes
                     <Link
                       to="/eventos"
                       className="text-xs font-bold text-[#089464] hover:underline"

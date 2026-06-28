@@ -196,13 +196,8 @@ export default function CommentItem({
                     setTexto(event.target.value);
                     setError("");
                   }}
-<<<<<<< Updated upstream
-                  maxLength={255}
-                  className="mt-2 min-h-20 w-full max-w-full resize-none rounded-xl border border-[#d9d9d9] bg-white px-3 py-2 text-sm outline-none whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
-=======
                   maxLength={1000}
                   className="mt-2 min-h-20 w-full resize-none rounded-xl border border-[#d9d9d9] bg-white px-3 py-2 text-sm outline-none"
->>>>>>> Stashed changes
                 />
               ) : (
                 <p className="mt-1 max-w-full whitespace-pre-wrap break-words text-sm leading-relaxed text-[#343434] [overflow-wrap:anywhere]">
