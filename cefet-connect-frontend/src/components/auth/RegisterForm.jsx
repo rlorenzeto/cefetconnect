@@ -55,7 +55,7 @@ function getAgeFromDateInput(dateString) {
   return age;
 }
 
-export default function RegisterForm({ onGoToLogin }) {
+export default function RegisterForm({ onGoToLogin, compact = false }) {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -298,7 +298,7 @@ export default function RegisterForm({ onGoToLogin }) {
     !isSubmitting;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-2">
+    <form onSubmit={handleSubmit} className={compact ? "space-y-1.5" : "space-y-2"}>
       <div>
         <input
           type="text"
@@ -455,7 +455,7 @@ export default function RegisterForm({ onGoToLogin }) {
       <AuthButton
         type="submit"
         disabled={!canSubmit}
-        className="mt-7"
+        className={compact ? "mt-5 h-11 text-sm" : "mt-7"}
       >
         {isSubmitting ? "Cadastrando..." : "Cadastrar"}
       </AuthButton>
