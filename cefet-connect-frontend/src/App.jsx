@@ -10,11 +10,12 @@ import FeedPage from "./pages/feed/FeedPage";
 import CommunitiesPage from "./pages/community/CommunitiesPage";
 import CommunityPage from "./pages/community/CommunityPage";
 import EventsPage from "./pages/events/EventsPage";
+import LandingPage from "./pages/landing/LandingPage";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -31,7 +32,7 @@ export default function App() {
       <Route path="/home" element={<FeedPage />} />
       <Route path="/feed" element={<FeedPage />} />
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
