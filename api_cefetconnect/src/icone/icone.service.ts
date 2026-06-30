@@ -12,9 +12,7 @@ import { GradmentService } from '../gradment/gradment.service';
 import { InteracaoService } from '../interacao/interacao.service';
 import { ErrorMessages } from '../common/constants/messages.errors.js';
 import {
-  obterCatalogoIcones,
-  obterCursoGradment,
-  normalizarTexto,
+  ICONES_PPC_ENG_COMP,
   CodigoIconePpc,
 } from './icone-catalog';
 
@@ -92,24 +90,7 @@ export class IconeService {
       usuario.tokenIntegracao,
     )) as unknown;
 
-    const {
-      curso,
-      eixosFinalizados,
-      periodosFinalizados,
-    } = this.extrairConquistas(respostaGradment);
-
-    const codigoCurso = obterCursoGradment(curso);
-
-    if (!codigoCurso) {
-      return {
-        adicionados: [],
-        duplicados: [],
-        ignorados: [],
-        erro: 'Curso não suportado pela integração de pins do Gradment.',
-      };
-    }
-
-    const catalogoIcones = obterCatalogoIcones(codigoCurso);
+    const { eixosFinalizados, periodosFinalizados } = this.extrairConquistas(respostaGradment);
 
     if (eixosFinalizados.length === 0 && periodosFinalizados.length === 0) {
       return {
@@ -134,28 +115,24 @@ export class IconeService {
     const ignorados: string[] = [];
 
     const todasConquistas = [
-      ...eixosFinalizados.map(
-        (e) => e.codigo ?? e.codigoIcone ?? e.nome ?? '',
-      ),
-      ...periodosFinalizados.map(
-        (p) => p.codigo ?? p.codigoIcone ?? (p.periodo ? `PERIODO_${p.periodo}` : ''),
-      ),
+      ...eixosFinalizados.map(e => e.nome ?? e.codigo ?? e.codigoIcone ?? ''),
+      ...periodosFinalizados.map(p => `PERIODO_${p.periodo}`),
     ];
 
     for (const valor of todasConquistas) {
       const codigo = this.normalizarCodigoEixo(valor);
 
-      if (!codigo || !(codigo in catalogoIcones)) {
+      if (!codigo || !(codigo in ICONES_PPC_ENG_COMP)) {
         ignorados.push(valor || 'Conquista desconhecida');
         continue;
       }
 
       if (codigosJaPossuidos.has(codigo)) {
-        duplicados.push(catalogoIcones[codigo].nomeIcone);
+        duplicados.push(ICONES_PPC_ENG_COMP[codigo].nomeIcone);
         continue;
       }
 
-      const dadosIcone = catalogoIcones[codigo];
+      const dadosIcone = ICONES_PPC_ENG_COMP[codigo];
 
       let icone = await this.iconeRepository.findOne({
         where: { codigoIcone: dadosIcone.codigoIcone },
@@ -204,37 +181,16 @@ export class IconeService {
 
   private extrairConquistas(
     respostaGradment: unknown,
-  ): { curso: any; eixosFinalizados: any[]; periodosFinalizados: any[] } {
-    if (
-      respostaGradment &&
-      typeof respostaGradment === 'object'
-    ) {
+  ): { eixosFinalizados: any[]; periodosFinalizados: any[] } {
+    if (respostaGradment && typeof respostaGradment === 'object') {
       const resposta = respostaGradment as any;
       return {
-        curso:
-          resposta.curso ??
-          resposta.usuario?.curso ??
-          resposta.resumo?.curso ??
-          resposta.usuario?.curso_id ??
-          resposta.cursoId ??
-          resposta.curso_id ??
-          null,
-
-        eixosFinalizados: Array.isArray(resposta.eixosFinalizados)
-          ? resposta.eixosFinalizados
-          : [],
-
-        periodosFinalizados: Array.isArray(resposta.periodosFinalizados)
-          ? resposta.periodosFinalizados
-          : [],
+        eixosFinalizados: Array.isArray(resposta.eixosFinalizados)? resposta.eixosFinalizados : [],
+        periodosFinalizados: Array.isArray(resposta.periodosFinalizados)? resposta.periodosFinalizados : [],
       };
     }
 
-    return {
-      curso: null,
-      eixosFinalizados: [],
-      periodosFinalizados: [],
-    };
+    return { eixosFinalizados: [], periodosFinalizados: [] };
   }
 
   private normalizarCodigoEixo(valor: string): CodigoIconePpc | null {

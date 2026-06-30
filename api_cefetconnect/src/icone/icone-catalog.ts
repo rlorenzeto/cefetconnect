@@ -1,10 +1,4 @@
-type DadosIcone = {
-  nomeIcone: string;
-  descricaoIcone: string;
-  codigoIcone: string;
-};
-
-const ICONES_COMUNS = {
+export const ICONES_PPC_ENG_COMP = {
   MATEMATICA: {
     nomeIcone: 'Matemática',
     descricaoIcone: 'Representa a conclusão do eixo de Matemática.',
@@ -42,7 +36,7 @@ const ICONES_COMUNS = {
   },
 
   PRATICA_PROFISSIONAL: {
-    nomeIcone: 'Prática Profissional e Formação Diversificada',
+    nomeIcone: 'Prática Profissional e Integração Curricular',
     descricaoIcone: 'Representa a conclusão do eixo de Prática Profissional e Formação Diversificada.',
     codigoIcone: 'PRATICA_PROFISSIONAL',
   },
@@ -106,57 +100,4 @@ export const ICONES_PPC_POR_CURSO = {
   },
 } as const;
 
-export const ICONES_PPC_ENG_COMP = ICONES_PPC_POR_CURSO.ECOMP;
-
-export type CursoGradmentCodigo = keyof typeof ICONES_PPC_POR_CURSO;
-
-export type CodigoIconePpc =
-  | keyof typeof ICONES_PPC_POR_CURSO.ECOMP
-  | keyof typeof ICONES_PPC_POR_CURSO.ENCAUT;
-
-export function normalizarTexto(valor: string): string {
-  return valor
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase()
-    .trim();
-}
-
-export function obterCursoGradment(curso: any): CursoGradmentCodigo | null {
-  const texto = normalizarTexto(
-    String(
-      curso?.codigo ??
-      curso?.codigoCurso ??
-      curso?.idCurso ??
-      curso?.nomeCurso ??
-      curso?.nome ??
-      curso ??
-      '',
-    ),
-  );
-
-  if (
-    texto.includes('ENCAUT') ||
-    texto.includes('CONTROLE') ||
-    texto.includes('AUTOMACAO')
-  ) {
-    return 'ENCAUT';
-  }
-
-  if (
-    texto.includes('ECOMP') ||
-    texto.includes('ENG_COMP') ||
-    texto.includes('ENGENHARIA DE COMPUTACAO') ||
-    texto.includes('COMPUTACAO')
-  ) {
-    return 'ECOMP';
-  }
-
-  return null;
-}
-
-export function obterCatalogoIcones(
-  curso: CursoGradmentCodigo,
-): Record<string, DadosIcone> {
-  return ICONES_PPC_POR_CURSO[curso] as unknown as Record<string, DadosIcone>;
-}
+export type CodigoIconePpc = keyof typeof ICONES_PPC_ENG_COMP;
