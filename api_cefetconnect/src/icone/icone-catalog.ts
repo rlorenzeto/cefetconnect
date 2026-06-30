@@ -1,4 +1,4 @@
-export const ICONES_PPC_ENG_COMP = {
+const ICONES_COMUNS = {
   MATEMATICA: {
     nomeIcone: 'Matemática',
     descricaoIcone: 'Representa a conclusão do eixo de Matemática.',
@@ -42,62 +42,78 @@ export const ICONES_PPC_ENG_COMP = {
   },
 } as const;
 
+const ICONES_ECOMP = {
+  FUNDAMENTOS_COMP: {
+    nomeIcone: 'Fundamentos de Engenharia de Computação',
+    descricaoIcone: 'Representa a conclusão do eixo de Fundamentos de Engenharia de Computação.',
+    codigoIcone: 'FUNDAMENTOS_COMP',
+  },
+
+  ENG_SOFTWARE_BD: {
+    nomeIcone: 'Engenharia de Software e Banco de Dados',
+    descricaoIcone: 'Representa a conclusão do eixo de Engenharia de Software e Banco de Dados.',
+    codigoIcone: 'ENG_SOFTWARE_BD',
+  },
+
+  REDES_SD: {
+    nomeIcone: 'Redes e Sistemas Distribuídos',
+    descricaoIcone: 'Representa a conclusão do eixo de Redes e Sistemas Distribuídos.',
+    codigoIcone: 'REDES_SD',
+  },
+
+  SISTEMAS_INTELIGENTES: {
+    nomeIcone: 'Sistemas Inteligentes',
+    descricaoIcone: 'Representa a conclusão do eixo de Sistemas Inteligentes.',
+    codigoIcone: 'SISTEMAS_INTELIGENTES',
+  },
+} as const;
+
+const ICONES_ENCAUT = {
+  AUTOMACAO: {
+    nomeIcone: 'Automação',
+    descricaoIcone: 'Representa a conclusão do eixo de Automação.',
+    codigoIcone: 'AUTOMACAO',
+  },
+
+  COMPUTACAO_MATEMATICA_APLICADA: {
+    nomeIcone: 'Computação e Matemática Aplicada',
+    descricaoIcone: 'Representa a conclusão do eixo de Computação e Matemática Aplicada.',
+    codigoIcone: 'COMPUTACAO_MATEMATICA_APLICADA',
+  },
+
+  INFORMATICA_INDUSTRIAL: {
+    nomeIcone: 'Informática Industrial',
+    descricaoIcone: 'Representa a conclusão do eixo de Informática Industrial.',
+    codigoIcone: 'INFORMATICA_INDUSTRIAL',
+  },
+
+  MECANICA: {
+    nomeIcone: 'Mecânica',
+    descricaoIcone: 'Representa a conclusão do eixo de Mecânica.',
+    codigoIcone: 'MECANICA',
+  },
+} as const;
+
 export const ICONES_PPC_POR_CURSO = {
   ECOMP: {
     ...ICONES_COMUNS,
-
-    FUNDAMENTOS_COMP: {
-      nomeIcone: 'Fundamentos de Engenharia de Computação',
-      descricaoIcone: 'Representa a conclusão do eixo de Fundamentos de Engenharia de Computação.',
-      codigoIcone: 'FUNDAMENTOS_COMP',
-    },
-
-    ENG_SOFTWARE_BD: {
-      nomeIcone: 'Engenharia de Software e Banco de Dados',
-      descricaoIcone: 'Representa a conclusão do eixo de Engenharia de Software e Banco de Dados.',
-      codigoIcone: 'ENG_SOFTWARE_BD',
-    },
-
-    REDES_SD: {
-      nomeIcone: 'Redes e Sistemas Distribuídos',
-      descricaoIcone: 'Representa a conclusão do eixo de Redes e Sistemas Distribuídos.',
-      codigoIcone: 'REDES_SD',
-    },
-
-    SISTEMAS_INTELIGENTES: {
-      nomeIcone: 'Sistemas Inteligentes',
-      descricaoIcone: 'Representa a conclusão do eixo de Sistemas Inteligentes.',
-      codigoIcone: 'SISTEMAS_INTELIGENTES',
-    },
+    ...ICONES_ECOMP,
   },
 
   ENCAUT: {
     ...ICONES_COMUNS,
-
-    AUTOMACAO: {
-      nomeIcone: 'Automação',
-      descricaoIcone: 'Representa a conclusão do eixo de Automação.',
-      codigoIcone: 'AUTOMACAO',
-    },
-
-    COMPUTACAO_MATEMATICA_APLICADA: {
-      nomeIcone: 'Computação e Matemática Aplicada',
-      descricaoIcone: 'Representa a conclusão do eixo de Computação e Matemática Aplicada.',
-      codigoIcone: 'COMPUTACAO_MATEMATICA_APLICADA',
-    },
-
-    INFORMATICA_INDUSTRIAL: {
-      nomeIcone: 'Informática Industrial',
-      descricaoIcone: 'Representa a conclusão do eixo de Informática Industrial.',
-      codigoIcone: 'INFORMATICA_INDUSTRIAL',
-    },
-
-    MECANICA: {
-      nomeIcone: 'Mecânica',
-      descricaoIcone: 'Representa a conclusão do eixo de Mecânica.',
-      codigoIcone: 'MECANICA',
-    },
+    ...ICONES_ENCAUT,
   },
+} as const;
+
+/**
+ * Mantém esse nome porque o icone.service.ts antigo importa ICONES_PPC_ENG_COMP.
+ * Aqui ele junta todos os códigos que o service já está tentando normalizar.
+ */
+export const ICONES_PPC_ENG_COMP = {
+  ...ICONES_COMUNS,
+  ...ICONES_ECOMP,
+  ...ICONES_ENCAUT,
 } as const;
 
 export type CodigoIconePpc = keyof typeof ICONES_PPC_ENG_COMP;
