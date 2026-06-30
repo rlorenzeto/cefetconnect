@@ -285,16 +285,27 @@ export default function RegisterForm({ onGoToLogin, compact = false }) {
     }
   }
 
-  const dateError = validateDateOfBirth(formData.dataNascimento);
+  const registration = formData.registration.trim();
+  const password = formData.password.trim();
+  const email = formData.email.trim();
+
+  const dateError = formData.dataNascimento
+    ? validateDateOfBirth(formData.dataNascimento)
+    : "A data de nascimento é obrigatória.";
 
   const canSubmit =
-    formData.name.trim() &&
-    formData.email.trim() &&
-    formData.registration.trim() &&
-    formData.password.trim() &&
-    formData.dataNascimento &&
+    Boolean(formData.name.trim()) &&
+    Boolean(email) &&
+    validateEmail(email) &&
+    Boolean(registration) &&
+    /^\d{7}$|^\d{11}$/.test(registration) &&
+    Boolean(password) &&
+    !validatePassword(password) &&
+    Boolean(formData.dataNascimento) &&
     !dateError &&
+    formData.declarouMaioridade &&
     formData.aceitouTermos &&
+    formData.aceitouPolitica &&
     !isSubmitting;
 
   return (
