@@ -1,125 +1,100 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   --font-heading: "Poppins", "Inter", ui-sans-serif, system-ui;
   --font-sans: "Inter", ui-sans-serif, system-ui;
 
-  --color-brand-green-50: #f7fbed;
-  --color-brand-green-light: #8dd04c;
-  --color-brand-green-medium: #5ca43d;
-  --color-brand-green-dark: #089464;
+  --color-brand-green-50: var(--brand-green-50);
+  --color-brand-green-light: var(--brand-green-light);
+  --color-brand-green-medium: var(--brand-green-medium);
+  --color-brand-green-dark: var(--brand-green-dark);
 
-  --color-brand-blue-light: #0291db;
-  --color-brand-blue-medium: #0062c2;
-  --color-brand-blue-dark: #0149b7;
+  --color-brand-blue-light: var(--brand-blue-light);
+  --color-brand-blue-medium: var(--brand-blue-medium);
+  --color-brand-blue-dark: var(--brand-blue-dark);
 
-  --color-background: #ffffff;
-  --color-foreground: #0f1b2d;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
 
-  --color-card: #ffffff;
-  --color-card-foreground: #0f1b2d;
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
 
-  --color-primary: #0062c2;
-  --color-primary-foreground: #ffffff;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
 
-  --color-secondary: #f7fbed;
-  --color-secondary-foreground: #0f1b2d;
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
 
-  --color-muted: #f3f6fb;
-  --color-muted-foreground: #5a6b82;
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
 
-  --color-accent: #e9f6ec;
-  --color-accent-foreground: #089464;
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
 
-  --color-border: #e6ebf2;
-  --color-input: #e6ebf2;
-  --color-ring: #0062c2;
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-  margin: 0;
-  padding: 0;
+:root {
+  color-scheme: light;
+
+  --brand-green-50: #f7fbed;
+  --brand-green-light: #8dd04c;
+  --brand-green-medium: #5ca43d;
+  --brand-green-dark: #089464;
+
+  --brand-blue-light: #0291db;
+  --brand-blue-medium: #0062c2;
+  --brand-blue-dark: #0149b7;
+
+  --background: #ffffff;
+  --foreground: #0f1b2d;
+
+  --card: #ffffff;
+  --card-foreground: #0f1b2d;
+
+  --primary: #0062c2;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f7fbed;
+  --secondary-foreground: #0f1b2d;
+
+  --muted: #f3f6fb;
+  --muted-foreground: #5a6b82;
+
+  --accent: #e9f6ec;
+  --accent-foreground: #089464;
+
+  --border: #e6ebf2;
+  --input: #e6ebf2;
+  --ring: #0062c2;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+.dark {
+  color-scheme: dark;
 
-body {
-  margin: 0;
-  font-family: "Inter", Arial, Helvetica, sans-serif;
-  background: #f4f4f4;
-  color: #0f1b2d;
-}
+  --background: #111111;
+  --foreground: #f5f5f5;
 
-* {
-  box-sizing: border-box;
-}
+  --card: #1c1c1c;
+  --card-foreground: #f5f5f5;
 
-.font-heading {
-  font-family: "Poppins", "Inter", Arial, Helvetica, sans-serif;
-}
+  --primary: #0062c2;
+  --primary-foreground: #ffffff;
 
-@keyframes reveal-up {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-  }
+  --secondary: #1f2a22;
+  --secondary-foreground: #f5f5f5;
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+  --muted: #222222;
+  --muted-foreground: #b8b8b8;
 
-.reveal {
-  opacity: 0;
-}
+  --accent: #153624;
+  --accent-foreground: #8dd04c;
 
-.reveal.is-visible {
-  animation: reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes float-soft {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-float {
-  animation: float-soft 5s ease-in-out infinite;
-}
-
-.animate-float-delayed {
-  animation: float-soft 6s ease-in-out infinite;
-  animation-delay: 1.2s;
-}
-
-.scrollbar-hide {
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .reveal,
-  .reveal.is-visible,
-  .animate-float,
-  .animate-float-delayed {
-    animation: none;
-    opacity: 1;
-  }
+  --border: #333333;
+  --input: #333333;
+  --ring: #8dd04c;
 }

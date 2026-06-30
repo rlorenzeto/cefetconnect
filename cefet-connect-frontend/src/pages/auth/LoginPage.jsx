@@ -3,12 +3,10 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import BrandLogo from "../../components/auth/BrandLogo";
 import DesktopHero from "../../components/auth/DesktopHero";
 import LoginForm from "../../components/auth/LoginForm";
-import MobileHero from "../../components/auth/MobileHero";
 import MobileLoginModal from "../../components/auth/MobileLoginModal";
 import MobileForgotPasswordModal from "../../components/auth/MobileForgotPasswordModal";
 
 export default function LoginPage() {
-  const [isMobileLoginOpen, setIsMobileLoginOpen] = useState(false);
   const [isMobileForgotOpen, setIsMobileForgotOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -17,26 +15,25 @@ export default function LoginPage() {
   useEffect(() => {
     const ssoToken = searchParams.get("ssoToken");
     const searchTopic = searchParams.get("search");
+
     if (ssoToken) {
       import("../../services/authService").then(({ loginUser }) => {
         loginUser({ ssoToken })
           .then(() => {
-            const redirectUrl = searchTopic 
+            const redirectUrl = searchTopic
               ? `/home?search=${encodeURIComponent(searchTopic)}`
               : "/home";
+
             navigate(redirectUrl, { replace: true });
           })
           .catch((err) => alert(err.message || "SSO falhou."));
       });
-      setSearchParams({});
-    } else if (searchParams.get("openMobileLogin") === "true") {
-      setIsMobileLoginOpen(true);
+
       setSearchParams({});
     }
   }, [searchParams, setSearchParams, navigate]);
 
   function handleOpenForgotModal() {
-    setIsMobileLoginOpen(false);
     setIsMobileForgotOpen(true);
   }
 
@@ -63,14 +60,9 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <MobileHero
-          onOpenLogin={() => setIsMobileLoginOpen(true)}
-          onOpenRegister={() => navigate("/register")}
-        />
-
         <MobileLoginModal
-          isOpen={isMobileLoginOpen}
-          onClose={() => setIsMobileLoginOpen(false)}
+          isOpen={!isMobileForgotOpen}
+          onClose={() => navigate("/")}
           onGoToRegister={() => navigate("/register")}
           onGoToForgotPassword={handleOpenForgotModal}
         />
@@ -80,7 +72,6 @@ export default function LoginPage() {
           onClose={() => setIsMobileForgotOpen(false)}
           onGoToLogin={() => {
             setIsMobileForgotOpen(false);
-            setIsMobileLoginOpen(true);
           }}
         />
       </div>

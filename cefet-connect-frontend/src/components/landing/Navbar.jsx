@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Menu, X } from "lucide-react"
-import { Logo } from "./Logo"
-import { cn } from "../../lib/utils"
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Menu, X } from "lucide-react";
+import { Logo } from "./Logo";
+import { cn } from "../../lib/utils";
 
 const links = [
   { label: "Início", href: "#inicio" },
