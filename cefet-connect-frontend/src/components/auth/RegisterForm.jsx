@@ -285,28 +285,7 @@ export default function RegisterForm({ onGoToLogin, compact = false }) {
     }
   }
 
-  const registration = formData.registration.trim();
-  const password = formData.password.trim();
-  const email = formData.email.trim();
-
-  const dateError = formData.dataNascimento
-    ? validateDateOfBirth(formData.dataNascimento)
-    : "A data de nascimento é obrigatória.";
-
-  const canSubmit =
-    Boolean(formData.name.trim()) &&
-    Boolean(email) &&
-    validateEmail(email) &&
-    Boolean(registration) &&
-    /^\d{7}$|^\d{11}$/.test(registration) &&
-    Boolean(password) &&
-    !validatePassword(password) &&
-    Boolean(formData.dataNascimento) &&
-    !dateError &&
-    formData.declarouMaioridade &&
-    formData.aceitouTermos &&
-    formData.aceitouPolitica &&
-    !isSubmitting;
+  const canSubmit = !isSubmitting;
 
   return (
     <form onSubmit={handleSubmit} className={compact ? "space-y-1.5" : "space-y-2"}>
@@ -465,7 +444,7 @@ export default function RegisterForm({ onGoToLogin, compact = false }) {
 
       <AuthButton
         type="submit"
-        disabled={!canSubmit}
+        disabled={isSubmitting}
         className={compact ? "mt-5 h-11 text-sm" : "mt-7"}
       >
         {isSubmitting ? "Cadastrando..." : "Cadastrar"}
