@@ -116,13 +116,24 @@ export class UsuarioController {
   }
   @Get(':id')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Buscar usuário por id', description: 'Retorna os dados de um usuário pelo id. Requer autenticação.' })
+  @ApiOperation({
+    summary: 'Buscar usuário por id',
+    description:
+      'Retorna os dados públicos de um usuário. Se o perfil for do próprio usuário autenticado, também retorna dados privados necessários para edição.',
+  })
   @ApiParam({ name: 'id', description: 'Id do usuário que deseja buscar.' })
   @ApiResponse({ status: 200, description: '[SUSR00004] Usuário localizado com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
   @ApiResponse({ status: 404, description: '[EUSR00003] Estudante não encontrado.' })
-  async findOne(@Param('id') id: number) {
-    const dados = await this.usuarioService.findPerfilCompleto(id); //Verificar!
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @Request() req: any,
+  ) {
+    const dados = await this.usuarioService.findPerfilCompleto(
+      id,
+      req.user.idUsuario,
+    );
+
     return {
       codigo: 'SUSR00004',
       mensagem: SuccessMessages.SUSR00004.mensagem,

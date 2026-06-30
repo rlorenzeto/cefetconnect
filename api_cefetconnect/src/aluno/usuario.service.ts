@@ -36,7 +36,56 @@ export class UsuarioService {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
+  private validarDataNascimento(dataNascimento: string): string | null {
+    if (!dataNascimento || !/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
+      return 'Digite uma data de nascimento válida.';
+    }
+
+    const [ano, mes, dia] = dataNascimento.split('-').map(Number);
+
+    if (!ano || !mes || !dia) {
+      return 'Digite uma data de nascimento válida.';
+    }
+
+    if (ano < 1930) {
+      return 'Digite uma data de nascimento válida.';
+    }
+
+    const nascimento = new Date(ano, mes - 1, dia);
+
+    const dataExiste =
+      nascimento.getFullYear() === ano &&
+      nascimento.getMonth() === mes - 1 &&
+      nascimento.getDate() === dia;
+
+    if (!dataExiste) {
+      return 'Digite uma data de nascimento válida.';
+    }
+
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - ano;
+
+    const aniversarioJaPassou =
+      hoje.getMonth() > mes - 1 ||
+      (hoje.getMonth() === mes - 1 && hoje.getDate() >= dia);
+
+    if (!aniversarioJaPassou) {
+      idade -= 1;
+    }
+
+    if (idade < 18) {
+      return 'Você deve ter pelo menos 18 anos.';
+    }
+
+    if (idade > 100) {
+      return 'Digite uma data de nascimento válida.';
+    }
+
+    return null;
+  }
+
   async create(createUsuarioDto: CreateUsuarioDto): Promise<{
+    idUsuario: number;
     nomeUsuario: string;
     email: string;
   }> {
@@ -75,6 +124,7 @@ export class UsuarioService {
     );
 
     return {
+      idUsuario: usuarioSalvo.idUsuario,
       nomeUsuario: usuarioSalvo.nomeUsuario,
       email: usuarioSalvo.email,
     };
@@ -211,17 +261,32 @@ export class UsuarioService {
     return usuario;
   }*/
 
-  async findPerfilCompleto(idUsuario: number): Promise<{
-    nomeUsuario: string;
-    fotoUrl: string | null;
-    biografia: string | null;
-    posts: Post[];
-    totalPosts: number;
-    tokenIntegracao?: string | null;
-  }> {
+  async findPerfilCompleto(
+    idUsuario: number,
+    idUsuarioLogado: number,
+  ): Promise<any> {
+    const isOwnProfile = Number(idUsuario) === Number(idUsuarioLogado);
+
+    const selectPublico: (keyof Usuario)[] = [
+      'idUsuario',
+      'nomeUsuario',
+      'fotoUrl',
+      'biografia',
+    ];
+
+    const selectPrivado: (keyof Usuario)[] = [
+      'email',
+      'matricula',
+      'dataNascimento',
+      'aceitouTermos',
+      'tokenIntegracao',
+    ];
+
     const usuario = await this.usuarioRepository.findOne({
       where: { idUsuario },
-      select: ['idUsuario', 'nomeUsuario', 'fotoUrl', 'biografia', 'tokenIntegracao'],
+      select: isOwnProfile
+        ? [...selectPublico, ...selectPrivado]
+        : selectPublico,
       relations: ['posts'],
     });
 
@@ -229,22 +294,65 @@ export class UsuarioService {
       throw new NotFoundException(ErrorMessages.EUSR00003.mensagem);
     }
 
-    return {
+    const perfil: any = {
+      idUsuario: usuario.idUsuario,
       nomeUsuario: usuario.nomeUsuario,
       fotoUrl: usuario.fotoUrl ?? null,
       biografia: usuario.biografia ?? null,
-      posts: usuario.posts,
-      totalPosts: usuario.posts.length,
-      tokenIntegracao: usuario.tokenIntegracao,
+      posts: usuario.posts ?? [],
+      totalPosts: usuario.posts?.length ?? 0,
+      isOwnProfile,
     };
+
+    if (isOwnProfile) {
+      perfil.email = usuario.email;
+      perfil.matricula = usuario.matricula;
+      perfil.dataNascimento = usuario.dataNascimento ?? null;
+      perfil.aceitouTermos = Boolean(usuario.aceitouTermos);
+      perfil.tokenIntegracao = usuario.tokenIntegracao ?? null;
+    }
+
+    return perfil;
   }
 
   async update(
     idUsuario: number,
     updateUsuarioDto: UpdateUsuarioDto,
     fotoUrl?: Express.Multer.File,
-  ): Promise<Pick<Usuario, 'matricula' | 'nomeUsuario' | 'biografia' | 'fotoUrl'>> {
+  ): Promise<
+    Pick<
+      Usuario,
+      | 'idUsuario'
+      | 'matricula'
+      | 'nomeUsuario'
+      | 'biografia'
+      | 'fotoUrl'
+      | 'dataNascimento'
+      | 'aceitouTermos'
+    >
+  > {
     const usuario = await this.findOne(idUsuario); // Garante que o usuário existe
+    if ((updateUsuarioDto as any).aceitouTermos !== undefined) {
+      (updateUsuarioDto as any).aceitouTermos =
+        (updateUsuarioDto as any).aceitouTermos === true ||
+        (updateUsuarioDto as any).aceitouTermos === 'true';
+    }
+
+    if ((updateUsuarioDto as any).aceitouTermos === false) {
+      throw new BadRequestException(
+        'Você precisa aceitar os termos para continuar usando o Cefet Connect.',
+      );
+    }
+
+    if ((updateUsuarioDto as any).dataNascimento !== undefined) {
+      const erroDataNascimento = this.validarDataNascimento(
+        (updateUsuarioDto as any).dataNascimento,
+      );
+
+      if (erroDataNascimento) {
+        throw new BadRequestException(erroDataNascimento);
+      }
+    }
 
     if (updateUsuarioDto.matricula && updateUsuarioDto.matricula !== usuario.matricula) {
       const existente = await this.usuarioRepository.findOne({ where: { matricula: updateUsuarioDto.matricula } });
@@ -279,10 +387,13 @@ export class UsuarioService {
     const atualizado = await this.usuarioRepository.save(usuario);
 
     return {
+      idUsuario: atualizado.idUsuario,
       matricula: atualizado.matricula,
       nomeUsuario: atualizado.nomeUsuario,
       biografia: atualizado.biografia,
       fotoUrl: atualizado.fotoUrl,
+      dataNascimento: atualizado.dataNascimento,
+      aceitouTermos: Boolean(atualizado.aceitouTermos),
     };
   }
 

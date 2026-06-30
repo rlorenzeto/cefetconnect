@@ -1,5 +1,15 @@
 import { PartialType } from '@nestjs/swagger';
-import { IsOptional, IsString, IsStrongPassword, MaxLength, MinLength, Matches } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsOptional,
+  IsString,
+  IsStrongPassword,
+  MaxLength,
+  MinLength,
+  Matches,
+} from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateUsuarioDto } from './create-usuario.dto';
 
@@ -9,6 +19,23 @@ export class UpdateUsuarioDto extends PartialType(CreateUsuarioDto) {
   @IsString({ message: 'A matrícula deve ser um texto' })
   @Matches(/^\d{7}$|^\d{11}$/, { message: 'A matrícula deve ter 7 dígitos (caso seja professor) ou 11 dígitos (caso seja aluno)' })
   matricula?: string;
+
+  @ApiPropertyOptional({
+    example: '2000-05-15',
+    description: 'Data de nascimento no formato YYYY-MM-DD.',
+  })
+  @IsOptional()
+  @IsDateString({}, { message: 'A data de nascimento deve estar no formato YYYY-MM-DD' })
+  dataNascimento?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Confirma se o usuário aceitou os termos.',
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean({ message: 'O campo de aceite dos termos deve ser verdadeiro ou falso' })
+  aceitouTermos?: boolean;
   
   @ApiPropertyOptional({ example: 'NovaSenha@2024', description: 'Nova senha do aluno (mínimo 8 caracteres, com número, símbolo e letra maiúscula)' })
   @IsOptional()

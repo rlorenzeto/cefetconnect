@@ -122,44 +122,79 @@ export class GradmentService {
   // Busca os eixos/matérias aprovadas do usuário usando o token de integração do Gradment
   // O tokenIntegracao é o token que o Gradment nos forneceu e está salvo no campo token_integracao do usuário
   async obterEixosCompletados(tokenIntegracao: string): Promise<any> {
-    if (!this.baseUrl) return { materias: [] };
+    if (!this.baseUrl) {
+      return {
+        curso: null,
+        materias: [],
+        eixosFinalizados: [],
+        periodosFinalizados: [],
+      };
+    }
 
     try {
       const response = await fetch(`${this.baseUrl}/integracao/conquistas`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${tokenIntegracao}`,
+          Authorization: `Bearer ${tokenIntegracao}`,
         },
       });
 
       if (!response.ok) {
-        this.logger.warn(`[Gradment] obterEixosCompletados falhou: HTTP ${response.status}`);
-        return { materias: [] };
-      }
+        this.logger.warn(
+          `[Gradment] obterEixosCompletados falhou: HTTP ${response.status}`,
+        );
 
-      const data = await response.json() as any;
-
-      // Garante interceptação dos metadados novos de eixo, periodo e resumo no formato de integração direta
-      if (data.dados && Array.isArray(data.dados.materias_aprovadas)) {
         return {
-          materias: data.dados.materias_aprovadas,
-          resumo: data.dados.resumo ?? null,
+          curso: null,
+          materias: [],
+          eixosFinalizados: [],
+          periodosFinalizados: [],
         };
       }
-      if (Array.isArray(data.materias_aprovadas)) {
-        return {
-          materias: data.materias_aprovadas,
-          resumo: data.resumo ?? null,
-        };
-      }
-      if (Array.isArray(data)) {
-        return { materias: data };
-      }
 
-      return { materias: [] };
+      const data = (await response.json()) as any;
+      const payload = data.dados ?? data;
+
+      const materias =
+        payload.materias_aprovadas ??
+        payload.materiasAprovadas ??
+        payload.materias ??
+        [];
+
+      const eixosFinalizados =
+        payload.eixosFinalizados ??
+        payload.eixos_finalizados ??
+        payload.eixos ??
+        [];
+
+      const periodosFinalizados =
+        payload.periodosFinalizados ??
+        payload.periodos_finalizados ??
+        payload.periodos ??
+        [];
+
+      const curso =
+        payload.curso ??
+        payload.usuario?.curso ??
+        payload.resumo?.curso ??
+        null;
+
+      return {
+        curso,
+        materias,
+        eixosFinalizados,
+        periodosFinalizados,
+        resumo: payload.resumo ?? null,
+      };
     } catch (e) {
       this.logger.error(`[Gradment] Erro em obterEixosCompletados: ${e}`);
-      return { materias: [] };
+
+      return {
+        curso: null,
+        materias: [],
+        eixosFinalizados: [],
+        periodosFinalizados: [],
+      };
     }
   }
 

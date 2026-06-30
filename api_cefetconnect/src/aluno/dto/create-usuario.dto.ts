@@ -4,14 +4,48 @@ import { ApiProperty } from '@nestjs/swagger';
 @ValidatorConstraint({ name: 'maiorDeIdade', async: false })
 export class MaiorDeIdadeConstraint implements ValidatorConstraintInterface {
   validate(dataNascimento: string) {
-    const nascimento = new Date(dataNascimento);
+    if (!dataNascimento || !/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
+      return false;
+    }
+
+    const [ano, mes, dia] = dataNascimento.split('-').map(Number);
+
+    if (!ano || !mes || !dia) {
+      return false;
+    }
+
+    if (ano < 1930) {
+      return false;
+    }
+
+    const nascimento = new Date(ano, mes - 1, dia);
+
+    const dataExiste =
+      nascimento.getFullYear() === ano &&
+      nascimento.getMonth() === mes - 1 &&
+      nascimento.getDate() === dia;
+
+    if (!dataExiste) {
+      return false;
+    }
+
     const hoje = new Date();
-    const dezoitoAnosAtras = new Date(hoje.getFullYear() - 18, hoje.getMonth(), hoje.getDate());
-    return nascimento <= dezoitoAnosAtras;
+
+    let idade = hoje.getFullYear() - ano;
+
+    const aniversarioJaPassou =
+      hoje.getMonth() > mes - 1 ||
+      (hoje.getMonth() === mes - 1 && hoje.getDate() >= dia);
+
+    if (!aniversarioJaPassou) {
+      idade -= 1;
+    }
+
+    return idade >= 18 && idade <= 120;
   }
 
   defaultMessage() {
-    return 'Você deve ter pelo menos 18 anos para se cadastrar';
+    return 'Digite uma data de nascimento válida. O usuário deve ter entre 18 e 120 anos.';
   }
 }
 
