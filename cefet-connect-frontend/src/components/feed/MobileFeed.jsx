@@ -5,7 +5,6 @@ import PostCard from "./PostCard";
 import MobileBottomNav from "../common/MobileBottomNav";
 import {
   ChevronDownIcon,
-  HeartOutlineIcon,
   TrophyIcon,
 } from "../icons/AppIcons";
 import GlobalCreateMenu from "../common/GlobalCreateMenu";
@@ -107,15 +106,6 @@ export default function MobileFeed({
             title="Ranking"
           >
             <TrophyIcon className="h-6 w-6" />
-          </button>
-
-          <button
-            type="button"
-            className="transition hover:text-[#089464]"
-            aria-label="Notificações"
-            title="Notificações"
-          >
-            <HeartOutlineIcon className="h-6 w-6" />
           </button>
 
           <button

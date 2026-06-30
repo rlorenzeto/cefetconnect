@@ -22,6 +22,7 @@ export default function DesktopEvents({
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
         <ProfileSidebar
           activePage="events"
+          currentUser={currentUser}
           onOpenFullRanking={onOpenFullRanking}
           onOpenNotifications={onOpenNotifications}
         />

@@ -9,18 +9,18 @@ export default function MobileRegisterModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/20 lg:hidden">
-      <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f4f4f4] px-4 pt-6">
+    <div className="fixed inset-0 z-50 overflow-hidden bg-black/20 lg:hidden">
+      <div className="h-[100dvh] w-full max-w-full overflow-hidden bg-[#f4f4f4] px-4 pt-3 pb-3">
         <button
           type="button"
           onClick={onClose}
-          className="mb-6 text-3xl leading-none text-black/70"
+          className="mb-2 text-3xl leading-none text-black/70"
           aria-label="Voltar"
         >
           ‹
         </button>
 
-        <div className="mx-auto w-full max-w-[320px]">
+        <div className="mx-auto flex h-[calc(100dvh-48px)] w-full max-w-[360px] flex-col">
           <div className="mb-8 flex justify-center">
             <BrandLogo className="h-28 w-auto object-contain" />
           </div>
@@ -30,7 +30,7 @@ export default function MobileRegisterModal({
             <span className="text-[#2d67c5]">Connect</span> !
           </p>
 
-          <RegisterForm onGoToLogin={onGoToLogin} />
+          <RegisterForm onGoToLogin={onGoToLogin} compact />
         </div>
       </div>
     </div>

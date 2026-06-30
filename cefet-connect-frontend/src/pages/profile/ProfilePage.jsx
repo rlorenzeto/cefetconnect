@@ -20,7 +20,7 @@ import {
   listMyIcons,
   listUserIcons,
   importarIconesDoGradment,
-} from "../../services/IconeService1";
+} from "../../services/IconeService";
 
 import { getRankingCompleto } from "../../services/rankingService";
 import RankingModal from "../../components/ranking/RankingModal";
@@ -352,10 +352,15 @@ export default function ProfilePage() {
       <GradMentLoginModal
         isOpen={isGradMentModalOpen}
         onClose={() => setIsGradMentModalOpen(false)}
-        onSuccess={(token) => {
-          // Update the user profile locally
-          setUser((prev) => ({ ...prev, tokenIntegracao: token }));
-          alert("Conta vinculada com sucesso! Você já pode importar seus dados.");
+        onSuccess={async (token) => {
+          setIsGradMentModalOpen(false);
+
+          setUser((prev) => ({
+            ...prev,
+            tokenIntegracao: token,
+          }));
+
+          await handleRefreshIconesFromGradment();
         }}
       />
     </>

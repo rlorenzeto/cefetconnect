@@ -95,9 +95,29 @@ export function getUserProfile(idUsuario) {
 export function updateUserProfile(idUsuario, payload) {
   const formData = new FormData();
 
-  if (payload.nomeUsuario) formData.append("nomeUsuario", payload.nomeUsuario);
-  if (payload.biografia !== undefined) formData.append("biografia", payload.biografia);
-  if (payload.fotoUrl) formData.append("fotoUrl", payload.fotoUrl);
+  if (payload.nomeUsuario !== undefined) {
+    formData.append("nomeUsuario", payload.nomeUsuario);
+  }
+
+  if (payload.matricula !== undefined) {
+    formData.append("matricula", payload.matricula);
+  }
+
+  if (payload.biografia !== undefined) {
+    formData.append("biografia", payload.biografia);
+  }
+
+  if (payload.dataNascimento !== undefined) {
+    formData.append("dataNascimento", payload.dataNascimento);
+  }
+
+  if (payload.aceitouTermos !== undefined) {
+    formData.append("aceitouTermos", String(payload.aceitouTermos));
+  }
+
+  if (payload.fotoUrl) {
+    formData.append("fotoUrl", payload.fotoUrl);
+  }
 
   return apiFetch(`/usuario/${idUsuario}`, {
     method: "PATCH",

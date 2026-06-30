@@ -18,9 +18,106 @@ import {
 import { getRankingCompleto } from "../../services/rankingService";
 import RankingModal from "../../components/ranking/RankingModal";
 
+const MIN_BIRTH_DATE = "1930-01-01";
+const MAX_AGE = 100;
+
+function formatDateInput(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function getMaxBirthDate() {
+  const today = new Date();
+
+  const eighteenYearsAgo = new Date(
+    today.getFullYear() - 18,
+    today.getMonth(),
+    today.getDate()
+  );
+
+  return formatDateInput(eighteenYearsAgo);
+}
+
+function isRealDate(year, month, day) {
+  const date = new Date(year, month - 1, day);
+
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
+function getAgeFromDateInput(dateString) {
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  if (!year || !month || !day) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - year;
+
+  const birthdayAlreadyHappened =
+    today.getMonth() > month - 1 ||
+    (today.getMonth() === month - 1 && today.getDate() >= day);
+
+  if (!birthdayAlreadyHappened) {
+    age -= 1;
+  }
+
+  return age;
+}
+
+function validateDateOfBirth(dataNascimento) {
+  if (!dataNascimento) {
+    return "A data de nascimento é obrigatória.";
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataNascimento)) {
+    return "Digite uma data de nascimento válida.";
+  }
+
+  const [year, month, day] = dataNascimento.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return "Digite uma data de nascimento válida.";
+  }
+
+  if (year < 1930) {
+    return "Digite uma data de nascimento válida.";
+  }
+
+  if (!isRealDate(year, month, day)) {
+    return "Digite uma data de nascimento válida.";
+  }
+
+  const birthDate = new Date(year, month - 1, day);
+  const minDate = new Date(MIN_BIRTH_DATE);
+  const maxDate = new Date(getMaxBirthDate());
+
+  if (birthDate < minDate) {
+    return "Digite uma data de nascimento válida.";
+  }
+
+  if (birthDate > maxDate) {
+    return "Você deve ter pelo menos 18 anos.";
+  }
+
+  const age = getAgeFromDateInput(dataNascimento);
+
+  if (age === null || age > MAX_AGE) {
+    return "Digite uma data de nascimento válida.";
+  }
+
+  return "";
+}
+
 export default function EditProfilePage() {
   const PROFILE_NAME_MAX = 80;
   const PROFILE_BIO_MAX = 300;
+  const PROFILE_MATRICULA_MAX = 11;
   const navigate = useNavigate();
   const savedUser = getCurrentUser();
 
@@ -30,7 +127,10 @@ export default function EditProfilePage() {
 
   const [profileForm, setProfileForm] = useState({
     nomeUsuario: "",
+    matricula: "",
     biografia: "",
+    dataNascimento: "",
+    aceitouTermos: false,
   });
 
   const [emailForm, setEmailForm] = useState({
@@ -82,9 +182,11 @@ export default function EditProfilePage() {
 
         setProfileForm({
           nomeUsuario: profile?.nomeUsuario || "",
+          matricula: profile?.matricula || "",
           biografia: profile?.biografia || "",
+          dataNascimento: profile?.dataNascimento || "",
+          aceitouTermos: Boolean(profile?.aceitouTermos),
         });
-
         setEmailForm((prev) => ({
           ...prev,
           novoEmail: profile?.email || "",
@@ -98,15 +200,22 @@ export default function EditProfilePage() {
   }, [idUsuario, navigate]);
 
   function handleProfileChange(event) {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
+
+    const fieldValue = type === "checkbox" ? checked : value;
 
     const limits = {
       nomeUsuario: PROFILE_NAME_MAX,
       biografia: PROFILE_BIO_MAX,
+      matricula: PROFILE_MATRICULA_MAX,
     };
 
     const limit = limits[name];
-    const limitedValue = limit ? value.slice(0, limit) : value;
+
+    const limitedValue =
+      typeof fieldValue === "string" && limit
+        ? fieldValue.slice(0, limit)
+        : fieldValue;
 
     setProfileForm((prev) => ({
       ...prev,
@@ -159,6 +268,37 @@ export default function EditProfilePage() {
       return;
     }
 
+    const matricula = profileForm.matricula.trim();
+
+    if (!matricula) {
+      setProfileError("A matrícula é obrigatória.");
+      return;
+    }
+
+    if (!/^\d+$/.test(matricula)) {
+      setProfileError("A matrícula deve conter apenas números.");
+      return;
+    }
+
+    if (!/^\d{7}$|^\d{11}$/.test(matricula)) {
+      setProfileError("A matrícula deve ter exatamente 7 ou 11 dígitos.");
+      return;
+    }
+
+    const dateError = validateDateOfBirth(profileForm.dataNascimento);
+
+    if (dateError) {
+      setProfileError(dateError);
+      return;
+    }
+
+    if (!profileForm.aceitouTermos) {
+      setProfileError(
+        "Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar."
+      );
+      return;
+    }
+
     try {
       setIsSavingProfile(true);
       setProfileError("");
@@ -166,7 +306,10 @@ export default function EditProfilePage() {
 
       const response = await updateUserProfile(idUsuario, {
         nomeUsuario: profileForm.nomeUsuario,
+        matricula,
         biografia: profileForm.biografia,
+        dataNascimento: profileForm.dataNascimento,
+        aceitouTermos: profileForm.aceitouTermos,
         fotoUrl: photoFile,
       });
 
@@ -176,7 +319,13 @@ export default function EditProfilePage() {
         ...user,
         ...updatedProfile,
         idUsuario: updatedProfile?.idUsuario || user?.idUsuario || idUsuario,
-        matricula: updatedProfile?.matricula || user?.matricula,
+        matricula: updatedProfile?.matricula || profileForm.matricula,
+        dataNascimento:
+          updatedProfile?.dataNascimento || profileForm.dataNascimento,
+        aceitouTermos:
+          updatedProfile?.aceitouTermos !== undefined
+            ? Boolean(updatedProfile.aceitouTermos)
+            : Boolean(profileForm.aceitouTermos),
       };
 
       setUser(normalizedUser);
@@ -350,6 +499,8 @@ async function handleSaveEmail(event) {
     user,
     currentPhotoUrl,
     profileForm,
+    minBirthDate: MIN_BIRTH_DATE,
+    maxBirthDate: getMaxBirthDate(),
     emailForm,
     passwordForm,
     profileError,

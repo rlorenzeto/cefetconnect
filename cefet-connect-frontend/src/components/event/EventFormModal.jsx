@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import CommunitySelectorModal from "../community/CommunitySelectorModal";
+import { ImageIcon } from "../icons/AppIcons";
 
 const EVENT_TITLE_MAX = 255;
 const EVENT_DESCRIPTION_MAX = 1000;
@@ -34,6 +35,37 @@ function getEventFormErrorMessage(error) {
   }
 
   return message || "Não foi possível salvar o evento.";
+}
+
+function PhotoUploadField({ id, label, placeholder, file, onChange }) {
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-semibold text-[#343434]">
+        {label}
+      </label>
+
+      <label
+        htmlFor={id}
+        className="flex h-14 w-full cursor-pointer items-center justify-between rounded-xl border border-[#d9d9d9] bg-white px-4 text-sm text-[#343434] transition hover:border-[#089464]"
+      >
+        <span className="min-w-0 truncate">
+          {file ? file.name : placeholder}
+        </span>
+
+        <span className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e8f7ef] text-[#089464]">
+          <ImageIcon className="h-5 w-5" />
+        </span>
+      </label>
+
+      <input
+        id={id}
+        type="file"
+        accept="image/*"
+        onChange={onChange}
+        className="hidden"
+      />
+    </div>
+  );
 }
 
 export default function EventFormModal({
@@ -369,35 +401,15 @@ export default function EventFormModal({
               </p>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[#343434]">
-                Foto chamada/capa do evento
-              </label>
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) =>
-                  setCapaEvento(event.target.files?.[0] || null)
-                }
-                className="block w-full text-sm text-[#343434]"
-              />
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[#343434]">
-                Foto pequena do evento
-              </label>
-
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) =>
-                  setFotoUrlEvento(event.target.files?.[0] || null)
-                }
-                className="block w-full text-sm text-[#343434]"
-              />
-            </div>
+            <PhotoUploadField
+              id="capa-evento-input"
+              label="Foto de capa do evento"
+              placeholder="Adicione uma capa para o evento!"
+              file={capaEvento}
+              onChange={(event) =>
+                setCapaEvento(event.target.files?.[0] || null)
+              }
+            />
 
             {error && (
               <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">

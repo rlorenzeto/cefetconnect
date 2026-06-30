@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ImageIcon } from "../icons/AppIcons";
 
 const COMMUNITY_NAME_MAX = 100;
 const COMMUNITY_DESCRIPTION_MAX = 255;
@@ -18,6 +19,37 @@ function getCommunityFormErrorMessage(error) {
   }
 
   return message || "Não foi possível salvar a comunidade.";
+}
+
+function PhotoUploadField({ id, label, placeholder, file, onChange }) {
+  return (
+    <div>
+      <label className="mb-1 block text-sm font-semibold text-[#343434]">
+        {label}
+      </label>
+
+      <label
+        htmlFor={id}
+        className="flex h-14 w-full cursor-pointer items-center justify-between rounded-xl border border-[#d9d9d9] bg-white px-4 text-sm text-[#343434] transition hover:border-[#089464]"
+      >
+        <span className="min-w-0 truncate">
+          {file ? file.name : placeholder}
+        </span>
+
+        <span className="ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e8f7ef] text-[#089464]">
+          <ImageIcon className="h-5 w-5" />
+        </span>
+      </label>
+
+      <input
+        id={id}
+        type="file"
+        accept="image/*"
+        onChange={onChange}
+        className="hidden"
+      />
+    </div>
+  );
 }
 
 export default function CommunityFormModal({
@@ -154,35 +186,25 @@ export default function CommunityFormModal({
             </p>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-[#343434]">
-              Capa da comunidade
-            </label>
+          <PhotoUploadField
+            id="capa-comunidade-input"
+            label="Capa da comunidade"
+            placeholder="Adicione uma capa para a comunidade!"
+            file={capaComunidade}
+            onChange={(event) =>
+              setCapaComunidade(event.target.files?.[0] || null)
+            }
+          />
 
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(event) =>
-                setCapaComunidade(event.target.files?.[0] || null)
-              }
-              className="block w-full text-sm text-[#343434]"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-[#343434]">
-              Foto da comunidade
-            </label>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(event) =>
-                setFotoUrlComunidade(event.target.files?.[0] || null)
-              }
-              className="block w-full text-sm text-[#343434]"
-            />
-          </div>
+          <PhotoUploadField
+            id="foto-comunidade-input"
+            label="Foto da comunidade"
+            placeholder="Adicione uma foto para a comunidade!"
+            file={fotoUrlComunidade}
+            onChange={(event) =>
+              setFotoUrlComunidade(event.target.files?.[0] || null)
+            }
+          />
 
           {error && (
             <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">

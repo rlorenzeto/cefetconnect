@@ -1,11 +1,11 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BrandLogo from "../auth/BrandLogo";
+import { getProfileImageUrl } from "../../services/authService";
 import {
   CommunityIcon,
-  HeartOutlineIcon,
   HomeIcon,
   PartyIcon,
-  PlusCircleIcon,
   TrophyIcon,
   UserCircleIcon,
 } from "../icons/AppIcons";
@@ -39,10 +39,23 @@ function NavButton({ children, active = false, onClick, label }) {
 
 export default function ProfileSidebar({
   activePage = "profile",
+  currentUser = null,
+  userImageUrl = "",
   onOpenFullRanking,
   onOpenNotifications,
 }) {
   const navigate = useNavigate();
+  const [avatarError, setAvatarError] = useState(false);
+
+  const sidebarImageUrl =
+    userImageUrl ||
+    (currentUser?.fotoUrl ? getProfileImageUrl(currentUser.fotoUrl) : "");
+
+  const shouldShowUserPhoto = Boolean(sidebarImageUrl) && !avatarError;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [sidebarImageUrl]);
 
   return (
     <aside className="fixed left-0 top-0 z-40 hidden h-screen w-[112px] flex-col items-center rounded-r-[42px] bg-white py-10 lg:flex">
@@ -88,21 +101,6 @@ export default function ProfileSidebar({
         >
           <TrophyIcon active={activePage === "ranking"} />
         </NavButton>
-
-        <NavButton
-          label="Notificações"
-          active={activePage === "notifications"}
-          onClick={onOpenNotifications}
-        >
-          <HeartOutlineIcon active={activePage === "notifications"} />
-        </NavButton>
-
-        <NavButton
-          label="Criar"
-          onClick={() => navigate("/home?create=post")}
-        >
-          <PlusCircleIcon />
-        </NavButton>
       </nav>
 
       <button
@@ -110,13 +108,22 @@ export default function ProfileSidebar({
         onClick={() => navigate("/profile")}
         aria-label="Perfil"
         title="Perfil"
-        className={`mt-10 flex h-11 w-11 items-center justify-center rounded-full transition ${
+        className={`mt-10 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full transition ${
           activePage === "profile"
             ? "bg-[#089464] text-white"
             : "bg-[#d9d9d9] text-[#0f1830] hover:bg-[#e8f7ef] hover:text-[#089464]"
         }`}
       >
-        <UserCircleIcon active={activePage === "profile"} className="h-7 w-7" />
+        {shouldShowUserPhoto ? (
+          <img
+            src={sidebarImageUrl}
+            alt={currentUser?.nomeUsuario || "Foto do perfil"}
+            onError={() => setAvatarError(true)}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <UserCircleIcon active={activePage === "profile"} className="h-7 w-7" />
+        )}
       </button>
     </aside>
   );

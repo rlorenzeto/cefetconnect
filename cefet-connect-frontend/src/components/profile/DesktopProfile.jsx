@@ -37,6 +37,7 @@ export default function DesktopProfile({
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
       <ProfileSidebar
         activePage="profile"
+        currentUser={user}
         onOpenFullRanking={onOpenFullRanking}
         onOpenNotifications={onOpenNotifications}
       />

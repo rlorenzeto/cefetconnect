@@ -6,6 +6,27 @@ export default function ProfileAcademicIcons({
   isRefreshing = false,
   onRefreshIcones,
 }) {
+  function getCodigoIcone(item) {
+    return item?.codigoIcone ?? item?.icone?.codigoIcone ?? "";
+  }
+
+  function getNomeIcone(item) {
+    return item?.nomeIcone ?? item?.icone?.nomeIcone ?? "Pin acadêmico";
+  }
+
+  function getDescricaoIcone(item) {
+    return item?.descricaoIcone ?? item?.icone?.descricaoIcone ?? getNomeIcone(item);
+  }
+
+  function getIdIcone(item, index) {
+    return (
+      item?.idPossuiIcone ??
+      item?.idIcone ??
+      item?.icone?.idIcone ??
+      `${getCodigoIcone(item)}-${index}`
+    );
+  }
+
   return (
     <section className="mt-8 w-full max-w-full overflow-hidden rounded-[28px] bg-[#f7f7f7] px-4 py-5">
       <div className="mb-4 flex min-w-0 items-start justify-between gap-3">
@@ -33,27 +54,33 @@ export default function ProfileAcademicIcons({
 
       {icones.length > 0 ? (
         <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-5">
-          {icones.map((icone) => (
-            <div
-              key={icone.idIcone}
-              className="group flex min-w-0 flex-col items-center text-center"
-              title={icone.descricaoIcone}
-            >
-              <AcademicPpcIcon
-                code={icone.codigoIcone}
-                className="h-20 w-20 transition group-hover:scale-105"
-              />
+          {icones.map((item, index) => {
+            const codigo = getCodigoIcone(item);
+            const nome = getNomeIcone(item);
+            const descricao = getDescricaoIcone(item);
 
-              <p className="mt-2 line-clamp-2 max-w-[95px] break-words text-[11px] font-bold leading-tight text-[#343434] [overflow-wrap:anywhere]">
-                {icone.nomeIcone}
-              </p>
-            </div>
-          ))}
+            return (
+              <div
+                key={getIdIcone(item, index)}
+                className="group flex min-w-0 flex-col items-center text-center"
+                title={descricao}
+              >
+                <AcademicPpcIcon
+                  code={codigo}
+                  className="h-20 w-20 transition group-hover:scale-105"
+                />
+
+                <p className="mt-2 line-clamp-2 max-w-[95px] break-words text-[11px] font-bold leading-tight text-[#343434] [overflow-wrap:anywhere]">
+                  {nome}
+                </p>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <p className="rounded-2xl bg-white px-4 py-3 text-sm text-[#777]">
           {isOwnProfile
-            ? "Você ainda não possui ícones acadêmicos. Clique em Atualizar ícones para buscar suas conquistas no Gradment."
+            ? "Você ainda não possui ícones acadêmicos. Conecte sua conta ao GradMent para importar suas conquistas."
             : "Este usuário ainda não possui ícones acadêmicos."}
         </p>
       )}

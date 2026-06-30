@@ -132,6 +132,7 @@ export default function DesktopFeed({
     <div className="hidden min-h-screen bg-[#f1f1f1] text-[#202020] lg:block">
         <ProfileSidebar
           activePage="home"
+          currentUser={user}
           onOpenFullRanking={onOpenFullRanking}
         />
 
@@ -196,7 +197,17 @@ export default function DesktopFeed({
               </div>
             </section>
 
-            <aside className="fixed right-12 top-10 w-[320px] max-h-[calc(100vh-5rem)] space-y-5 overflow-y-auto pr-1">
+              <aside
+                ref={rightSidebarRef}
+                style={{
+                  transform: `translateY(-${rightSidebarOffset}px)`,
+                }}
+                className="fixed right-8 top-10 z-20 w-[400px] space-y-5 will-change-transform"
+              >
+                  <RankingCard
+                    rankingPreview={rankingPreview}
+                    onOpenFullRanking={onOpenFullRanking}
+                  />
               <section className="overflow-hidden rounded-2xl shadow-sm">
                 <div className="flex items-center gap-2 bg-white px-5 py-3 border-b border-[#e8e8e8]">
                   <img

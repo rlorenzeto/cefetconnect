@@ -7,6 +7,8 @@ export default function MobileEditProfile({
   user,
   currentPhotoUrl,
   profileForm,
+  minBirthDate,
+  maxBirthDate,
   emailForm,
   passwordForm,
   profileError,
@@ -30,21 +32,35 @@ export default function MobileEditProfile({
 }) {
   const PROFILE_NAME_MAX = 80;
   const PROFILE_BIO_MAX = 300;
+  const PROFILE_MATRICULA_MAX = 11;
+
+  const TERMOS_URL = "/documentos/termos_de_uso-cefetconnect.pdf";
+  const POLITICA_URL = "/documentos/politicas_privacidade-cefetconnect.pdf";
 
   function handleLimitedProfileChange(event) {
-    const { name, value } = event.target;
+    const { name, value, type, checked } = event.target;
 
     const limits = {
       nomeUsuario: PROFILE_NAME_MAX,
       biografia: PROFILE_BIO_MAX,
+      matricula: PROFILE_MATRICULA_MAX,
     };
 
     const limit = limits[name];
 
+    const nextValue =
+      type === "checkbox"
+        ? checked
+        : limit
+          ? value.slice(0, limit)
+          : value;
+
     onProfileChange({
       target: {
         name,
-        value: limit ? value.slice(0, limit) : value,
+        value: nextValue,
+        type,
+        checked,
       },
     });
   }
@@ -121,6 +137,47 @@ export default function MobileEditProfile({
 
               <div>
                 <label className="mb-1 block text-sm font-semibold text-[#343434]">
+                  Matrícula
+                </label>
+
+                <input
+                  type="text"
+                  name="matricula"
+                  value={profileForm.matricula}
+                  onChange={handleLimitedProfileChange}
+                  maxLength={PROFILE_MATRICULA_MAX}
+                  inputMode="numeric"
+                  placeholder="Digite sua matrícula"
+                  className="h-11 w-full max-w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
+                />
+
+                <p className="mt-1 text-right text-xs text-[#777]">
+                  {(profileForm.matricula || "").length}/{PROFILE_MATRICULA_MAX}
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-[#343434]">
+                  Data de nascimento
+                </label>
+
+                <input
+                  type="date"
+                  name="dataNascimento"
+                  value={profileForm.dataNascimento}
+                  onChange={handleLimitedProfileChange}
+                  min={minBirthDate}
+                  max={maxBirthDate}
+                  className="h-11 w-full max-w-full rounded-md border border-[#d9d9d9] bg-[#f1f1f1] px-3 text-sm outline-none"
+                />
+
+                <p className="mt-1 text-xs text-[#777]">
+                  O Cefet Connect é destinado a usuários com 18 anos ou mais.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-[#343434]">
                   Descrição acadêmica
                 </label>
                 <textarea
@@ -136,6 +193,47 @@ export default function MobileEditProfile({
                 <p className="mt-1 text-right text-xs text-[#777]">
                   {(profileForm.biografia || "").length}/{PROFILE_BIO_MAX}
                 </p>
+              </div>
+
+              <div className="rounded-2xl border border-[#d9d9d9] bg-[#f1f1f1] px-4 py-4">
+                <label className="flex items-start gap-3 text-sm leading-relaxed text-[#343434]">
+                  <input
+                    type="checkbox"
+                    name="aceitouTermos"
+                    checked={Boolean(profileForm.aceitouTermos)}
+                    onChange={handleLimitedProfileChange}
+                    disabled={Boolean(user?.aceitouTermos)}
+                    className="mt-1 h-4 w-4 shrink-0 accent-[#089464] disabled:opacity-60"
+                  />
+
+                  <span>
+                    Declaro que tenho 18 anos ou mais, li e aceito os{" "}
+                    <a
+                      href={TERMOS_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-[#089464] underline"
+                    >
+                      Termos de Uso
+                    </a>{" "}
+                    e concordo com a{" "}
+                    <a
+                      href={POLITICA_URL}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-[#089464] underline"
+                    >
+                      Política de Privacidade
+                    </a>
+                    .
+                  </span>
+                </label>
+
+                {user?.aceitouTermos && (
+                  <p className="mt-2 text-xs text-[#777]">
+                    Termos já aceitos anteriormente.
+                  </p>
+                )}
               </div>
             </div>
 

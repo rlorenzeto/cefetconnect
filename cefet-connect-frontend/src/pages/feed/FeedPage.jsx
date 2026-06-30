@@ -92,6 +92,24 @@ export default function FeedPage() {
     return getProfileImageUrl(user?.fotoUrl);
   }, [user?.fotoUrl]);
 
+  function normalizeRankingResponse(response) {
+    if (Array.isArray(response)) return response;
+
+    if (Array.isArray(response?.dados)) return response.dados;
+
+    if (Array.isArray(response?.dados?.dados)) return response.dados.dados;
+
+    if (Array.isArray(response?.ranking)) return response.ranking;
+
+    if (Array.isArray(response?.dados?.ranking)) return response.dados.ranking;
+
+    if (Array.isArray(response?.usuarios)) return response.usuarios;
+
+    if (Array.isArray(response?.dados?.usuarios)) return response.dados.usuarios;
+
+    return [];
+  }
+
   useEffect(() => {
     if (!idUsuario) {
       navigate("/login");
@@ -266,7 +284,8 @@ export default function FeedPage() {
       const eventsData = eventsResponse?.dados || eventsResponse;
       setEvents(Array.isArray(eventsData) ? eventsData : []);
 
-      setRankingPreview(Array.isArray(rankingResponse) ? rankingResponse : []);
+      const rankingData = normalizeRankingResponse(rankingResponse);
+      setRankingPreview(rankingData.slice(0, 3));
 
       setUser(normalizedProfile);
 
@@ -325,8 +344,10 @@ export default function FeedPage() {
       };
 
       setPosts((prev) => [postWithAuthorPhoto, ...prev]);
-      const updatedRanking = await getRankingPreview();
-      setRankingPreview(Array.isArray(updatedRanking) ? updatedRanking : []);
+        const updatedRanking = await getRankingPreview();
+        const updatedRankingData = normalizeRankingResponse(updatedRanking);
+
+        setRankingPreview(updatedRankingData.slice(0, 3));
     } catch (error) {
       setError(error.message || "Não foi possível criar o post.");
     } finally {
@@ -423,10 +444,10 @@ export default function FeedPage() {
     try {
       setIsRankingModalOpen(true);
       setIsRankingLoading(true);
+      const rankingResponse = await getRankingCompleto();
+      const rankingData = normalizeRankingResponse(rankingResponse);
 
-      const rankingData = await getRankingCompleto();
-
-      setRankingCompleto(Array.isArray(rankingData) ? rankingData : []);
+      setRankingCompleto(rankingData);
     } catch (error) {
       setRankingCompleto([]);
     } finally {
@@ -436,8 +457,10 @@ export default function FeedPage() {
 
   async function refreshRankingPreview() {
     try {
-      const rankingData = await getRankingPreview();
-      setRankingPreview(Array.isArray(rankingData) ? rankingData : []);
+      const rankingResponse = await getRankingPreview();
+      const rankingData = normalizeRankingResponse(rankingResponse);
+
+      setRankingPreview(rankingData.slice(0, 3));
     } catch {
       setRankingPreview([]);
     }
