@@ -74,7 +74,17 @@ export class ComunidadeService {
     return comunidadeCriada;
   }
 
-  async findAll(idUsuario?: number) {
+  async findAll(idUsuario?: number, page: number = 1) {
+    const limite = 10;
+    const skip = (page - 1) * limite;
+    const [totalRow]: [{ total: string }] = await this.dataSource.query(
+      `
+      SELECT COUNT(DISTINCT c.idComunidade) AS total
+      FROM comunidade c
+      `,
+    );
+
+    const total = parseInt(totalRow.total, 10);
     const comunidades = await this.dataSource.query(
       `
       SELECT 
@@ -106,6 +116,7 @@ export class ComunidadeService {
 
       LEFT JOIN post
         ON post.fk_Comunidade_idComunidade = c.idComunidade
+        AND post.deleted = 0
 
       LEFT JOIN participa minhaParticipacao
         ON minhaParticipacao.comunidadeIdComunidade = c.idComunidade
@@ -123,16 +134,27 @@ export class ComunidadeService {
         minhaParticipacao.usuarioIdUsuario
 
       ORDER BY c.nomeComunidade ASC
+      LIMIT ? OFFSET ?
       `,
-      [idUsuario || 0],
+      [idUsuario || 0, limite, skip],
     );
 
-    return comunidades.map((comunidade) => ({
+    const dados = comunidades.map((comunidade) => ({
       ...comunidade,
       isMembro: Boolean(Number(comunidade.isMembro)),
       totalMembros: Number(comunidade.totalMembros || 0),
       totalPosts: Number(comunidade.totalPosts || 0),
     }));
+
+    return {
+      dados,
+      paginacao: {
+        pagina: page,
+        limite,
+        total,
+        totalPaginas: Math.ceil(total / limite),
+      },
+    };
   }
 
   async findMinhasDisciplinas(email: string) {
@@ -186,6 +208,7 @@ export class ComunidadeService {
         ON p.comunidadeIdComunidade = c.idComunidade
       LEFT JOIN post
         ON post.fk_Comunidade_idComunidade = c.idComunidade
+        AND post.deleted = 0
       WHERE LOWER(TRIM(c.nomeComunidade)) = LOWER(TRIM(?))
       GROUP BY 
         c.idComunidade,
@@ -235,6 +258,7 @@ export class ComunidadeService {
         ON p.comunidadeIdComunidade = c.idComunidade
       LEFT JOIN post
         ON post.fk_Comunidade_idComunidade = c.idComunidade
+        AND post.deleted = 0
       LEFT JOIN participa minhaParticipacao
         ON minhaParticipacao.comunidadeIdComunidade = c.idComunidade
         AND minhaParticipacao.usuarioIdUsuario = ?
@@ -463,6 +487,7 @@ export class ComunidadeService {
 
       LEFT JOIN post
         ON post.fk_Comunidade_idComunidade = c.idComunidade
+        AND post.deleted = 0
 
       WHERE p.usuarioIdUsuario = ?
 
@@ -511,7 +536,7 @@ export class ComunidadeService {
     }
 
     const [totalRow]: [{ total: string }] = await this.dataSource.query(
-      'SELECT COUNT(DISTINCT p.idPost) AS total FROM post p WHERE p.fk_Comunidade_idComunidade = ?',
+      'SELECT COUNT(DISTINCT p.idPost) AS total FROM post p WHERE p.fk_Comunidade_idComunidade = ? AND p.deleted = 0',
       [idComunidade],
     );
     const total = parseInt(totalRow.total, 10);

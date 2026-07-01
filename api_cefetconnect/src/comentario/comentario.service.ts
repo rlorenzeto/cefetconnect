@@ -68,26 +68,95 @@ export class ComentarioService {
   }
 
   // Função responsável por retornar os comentários quando estamos vendo um post.
-  async findByPost(idPost: string) {
+  async findByPost(idPost: string, idUsuario: number, page: number = 1) {
+    const limite = 5;
+    const skip = (page - 1) * limite;
+
     const post = await this.postRepository.findOne({ where: { idPost } });
+
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
 
-    return await this.comentarioRepository
-      .createQueryBuilder('comentario')
-      .where('comentario.fk_Post_idPost = :idPost', { idPost }) // traga apenas comentários desse post específico.
-      .leftJoinAndSelect('comentario.usuario', 'usuario') // junte as informações do usuário que fez o comentário
-      .select([
-        'comentario.idComentario',
-        'comentario.texto',
-        'comentario.dataHora',
-        'usuario.idUsuario',
-        'usuario.nomeUsuario',
-        'usuario.fotoUrl',
-      ])
-      .orderBy('comentario.dataHora', 'ASC') // ordene os comentários pela data de criação, do mais antigo ao mais novo.
-      .getMany();
+    const [totalRow]: [{ total: string }] = await this.dataSource.query(
+      `
+      SELECT COUNT(*) AS total
+      FROM comentario
+      WHERE fk_Post_idPost = ?
+      `,
+      [idPost],
+    );
+
+    const total = parseInt(totalRow.total, 10);
+
+    const rows = await this.dataSource.query(
+      `
+      SELECT
+        comentario.idComentario AS idComentario,
+        comentario.texto AS texto,
+        comentario.dataHora AS dataHora,
+
+        usuario.idUsuario AS usuario_idUsuario,
+        usuario.nomeUsuario AS usuario_nomeUsuario,
+        usuario.fotoUrl AS usuario_fotoUrl,
+
+        COUNT(DISTINCT likeComentario.usuarioIdUsuario) AS totalCurtidas,
+
+        SUM(
+          CASE
+            WHEN likeComentario.usuarioIdUsuario = ?
+            THEN 1
+            ELSE 0
+          END
+        ) AS jaCurtiu
+
+      FROM comentario
+
+      INNER JOIN Usuario usuario
+        ON usuario.idUsuario = comentario.fk_Usuario_idUsuario
+
+      LEFT JOIN likeComentario
+        ON likeComentario.comentarioIdComentario = comentario.idComentario
+
+      WHERE comentario.fk_Post_idPost = ?
+
+      GROUP BY
+        comentario.idComentario,
+        comentario.texto,
+        comentario.dataHora,
+        usuario.idUsuario,
+        usuario.nomeUsuario,
+        usuario.fotoUrl
+
+      ORDER BY comentario.dataHora DESC
+
+      LIMIT ? OFFSET ?
+      `,
+      [idUsuario, idPost, limite, skip],
+    );
+
+    const dados = rows.map((row) => ({
+      idComentario: row.idComentario,
+      texto: row.texto,
+      dataHora: row.dataHora,
+      totalCurtidas: Number(row.totalCurtidas || 0),
+      jaCurtiu: Number(row.jaCurtiu || 0) > 0,
+      usuario: {
+        idUsuario: row.usuario_idUsuario,
+        nomeUsuario: row.usuario_nomeUsuario,
+        fotoUrl: row.usuario_fotoUrl,
+      },
+    }));
+
+    return {
+      dados,
+      paginacao: {
+        pagina: page,
+        limite,
+        total,
+        totalPaginas: Math.ceil(total / limite),
+      },
+    };
   }
 
   // Busca um comentário específico pelo ID dele.

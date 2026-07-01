@@ -1,9 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+  Query,
+} from '@nestjs/common';
 import { ComentarioService } from './comentario.service';
 import { CreateComentarioDto } from './dto/create-comentario.dto';
 import { UpdateComentarioDto } from './dto/update-comentario.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SuccessMessages } from '../common/constants/messages.success';
 
 @ApiTags('Comentários')
@@ -35,16 +53,39 @@ export class ComentarioController {
   @Get('post/:idPost')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiParam({ name: 'idPost', description: 'ID do post cujos comentários serão listados' })
-  @ApiOperation({ summary: 'Listar comentários do post', description: 'Retorna todos os comentários de um post ordenados por data.' })
+  @ApiParam({
+    name: 'idPost',
+    description: 'ID do post cujos comentários serão listados',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número da página de comentários (padrão: 1)',
+  })
+  @ApiOperation({
+    summary: 'Listar comentários do post',
+    description: 'Retorna comentários de um post paginados de 5 em 5.',
+  })
   @ApiResponse({ status: 200, description: '[SUSR00029] Comentários retornados com sucesso.' })
   @ApiResponse({ status: 404, description: '[EUSR00012] Post não encontrado.' })
-  async findByPost(@Param('idPost') idPost: string) {
-    const dados = await this.comentarioService.findByPost(idPost);
+  async findByPost(
+    @Param('idPost') idPost: string,
+    @Query('page') page?: string,
+    @Request() req?: any,
+  ) {
+    const pagina = page ? Math.max(1, parseInt(page, 10)) : 1;
+
+    const resultado = await this.comentarioService.findByPost(
+      idPost,
+      req.user.idUsuario,
+      pagina,
+    );
+
     return {
       codigo: 'SUSR00029',
       mensagem: SuccessMessages.SUSR00029.mensagem,
-      dados,
+      ...resultado,
     };
   }
 

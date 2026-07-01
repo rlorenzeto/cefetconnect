@@ -123,14 +123,17 @@ export class PostService {
       .leftJoinAndSelect('evento.comunidade', 'eventoComunidade')
       .leftJoinAndSelect('evento.participantes', 'eventoParticipante')
       .loadRelationCountAndMap('post.totalComentarios', 'post.comentarios')
-      .where(
+      .where('post.deleted = :deleted', { deleted: false })
+      .andWhere(
         `
-        post.fk_Comunidade_idComunidade IS NULL
-        OR EXISTS (
-          SELECT 1
-          FROM participa participaFeed
-          WHERE participaFeed.comunidadeIdComunidade = post.fk_Comunidade_idComunidade
-            AND participaFeed.usuarioIdUsuario = :idUsuario
+        (
+          post.fk_Comunidade_idComunidade IS NULL
+          OR EXISTS (
+            SELECT 1
+            FROM participa participaFeed
+            WHERE participaFeed.comunidadeIdComunidade = post.fk_Comunidade_idComunidade
+              AND participaFeed.usuarioIdUsuario = :idUsuario
+          )
         )
         `,
         { idUsuario },
@@ -214,7 +217,7 @@ export class PostService {
 
   async findOne(id: string) {
     const post = await this.postRepository.findOne({
-      where: { idPost: id },
+      where: { idPost: id, deleted: false },
       relations: [
         'usuario',
         'fotosPost',
@@ -306,6 +309,7 @@ export class PostService {
     return this.postRepository
       .createQueryBuilder('post')
       .where('post.fk_Usuario_idUsuario = :idUsuario', { idUsuario })
+      .andWhere('post.deleted = :deleted', { deleted: false })
       .leftJoinAndSelect('post.usuario', 'usuario')
       .leftJoinAndSelect('post.fotosPost', 'foto')
       .leftJoinAndSelect('post.comunidade', 'comunidade')
@@ -348,7 +352,7 @@ export class PostService {
 
   async update(id: string, idUsuario: number, updatePostDto: UpdatePostDto) {
     const post = await this.postRepository.findOne({
-      where: { idPost: id },
+      where: { idPost: id, deleted: false },
       relations: ['usuario', 'comunidade'],
       select: {
         idPost: true,
@@ -396,8 +400,8 @@ export class PostService {
   // Função para remover post
   async remove(id: string, idUsuario: number) {
     const post = await this.postRepository.findOne({
-      where: { idPost: id },
-      relations: ['usuario', 'fotosPost', 'comentarios', 'comunidade', 'comunidade.criador'], // Essa relações significam que o post vai buscar o usuário, as fotos e os comentários para deletar
+      where: { idPost: id, deleted: false },
+      relations: ['usuario', 'comunidade', 'comunidade.criador'],
     });
 
     if (!post) {
@@ -406,46 +410,25 @@ export class PostService {
 
     const isAutor = post.usuario.idUsuario === idUsuario;
     const isAdminComunidade = post.comunidade?.criador?.idUsuario === idUsuario;
+
     if (!isAutor && !isAdminComunidade) {
       throw new ForbiddenException(ErrorMessages.EUSR00013.mensagem);
     }
 
-    // Deleta os likes dos comentários antes de deletar os comentários
-    if (post.comentarios && post.comentarios.length > 0) {
-      // Coleta os IDs dos comentários
-      const commentIds = post.comentarios.map((c) => c.idComentario);
-      // Deleta os likes dos comentários fazendo uma query SQL
-      await this.dataSource.query(
-        `DELETE FROM likeComentario WHERE comentarioIdComentario IN (${commentIds.map(() => '?').join(',')})`,
-        commentIds,
-      );
-      // E, por fim, deleta os comentários para que não haja referências pendentes
-      await this.comentarioRepository.remove(post.comentarios);
-    }
+    post.deleted = true;
 
-    // Deleta os likes do post
-    await this.dataSource.query(
-      'DELETE FROM likePost WHERE postIdPost = ?',
-      [id],
-    );
+    await this.postRepository.save(post);
 
-    // Deleta as fotos do post
-    if (post.fotosPost && post.fotosPost.length > 0) {
-      await this.fotoPostRepository.remove(post.fotosPost);
-    }
-
-    // Decrementa contador do autor do post (-1 por post removido)
-    await this.interacaoService.decrementarContador(post.usuario.idUsuario, 1);
-
-    // Por fim, deleta o post
-    return await this.postRepository.remove(post);
+    return {
+      removido: true,
+      idPost: post.idPost,
+    };
   }
-
   // Fotos 
 
   async adicionarFotos(idPost: string, idUsuario: number, files: Express.Multer.File[]) {
     const post = await this.postRepository.findOne({
-      where: { idPost },
+      where: { idPost, deleted: false },
       relations: ['usuario', 'fotosPost'],
       select: {
         idPost: true,
@@ -480,7 +463,7 @@ export class PostService {
 
   async removerFotos(idPost: string, idUsuario: number, ids?: string[]) {
     const post = await this.postRepository.findOne({
-      where: { idPost },
+      where: { idPost, deleted: false },
       relations: ['usuario', 'fotosPost'],
     });
 
@@ -511,7 +494,7 @@ export class PostService {
 
   async obterFotosPost(idPost: string) {
     const post = await this.postRepository.findOne({
-      where: { idPost },
+      where: { idPost, deleted: false },
       relations: ['fotosPost'],
     });
 
@@ -526,7 +509,7 @@ export class PostService {
 
   // Entrega quantas curtidas tem o post e quais usuarios curtiram
   async obterCurtidasPost(idPost: string) {
-    const post = await this.postRepository.findOne({ where: { idPost } });
+    const post = await this.postRepository.findOne({ where: { idPost, deleted: false } });
 
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
@@ -557,7 +540,7 @@ export class PostService {
   }
 
   async curtirPost(idPost: string, idUsuario: number) {
-    const post = await this.postRepository.findOne({ where: { idPost } });
+    const post = await this.postRepository.findOne({ where: { idPost, deleted: false } });
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
@@ -586,7 +569,7 @@ export class PostService {
   }
 
   async descurtirPost(idPost: string, idUsuario: number) {
-    const post = await this.postRepository.findOne({ where: { idPost } });
+    const post = await this.postRepository.findOne({ where: { idPost, deleted: false } });
     if (!post) {
       throw new NotFoundException(ErrorMessages.EUSR00012.mensagem);
     }
@@ -636,7 +619,7 @@ export class PostService {
 
   async comentarPost(idPost: string, idUsuario: number, texto: string) {
     const [post, usuario] = await Promise.all([
-      this.postRepository.findOne({ where: { idPost } }),
+      this.postRepository.findOne({ where: { idPost, deleted: false } }),
       this.usuarioRepository.findOne({
         where: { idUsuario },
         select: {         

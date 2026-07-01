@@ -5,7 +5,7 @@ import { Evento } from './evento.entity.js';
 import { Comentario } from './comentario.entity';
 import { FotoPost } from './foto-post.entity';
 
-@Entity('Post')
+@Entity('post')
 export class Post {
   @PrimaryGeneratedColumn('uuid')
   idPost!: string;
@@ -16,6 +16,8 @@ export class Post {
   @Column({ type: 'varchar', length: 1000, nullable: true })
   conteudo?: string;
 
+  @Column({ type: 'boolean', default: false })
+  deleted!: boolean;
   // FK Comunidade -> ON DELETE SET NULL
   @ManyToOne(() => Comunidade, (comunidade) => comunidade.posts, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'fk_Comunidade_idComunidade' })

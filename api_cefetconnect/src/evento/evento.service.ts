@@ -83,33 +83,54 @@ export class EventoService {
     const limite = 10;
     const skip = (page - 1) * limite;
 
-    const [eventos, total] = await this.eventoRepository.findAndCount({
-      relations: ['usuario', 'comunidade', 'participantes'],
-      select: {
-        idEvento: true,
-        titulo: true,
-        descricaoEvento: true,
-        localEvento: true,
-        status: true,
-        dataEvento: true,
-        capaEvento: true,
-        fotoUrlEvento: true,
-        usuario: {
-          idUsuario: true,
-          nomeUsuario: true,
-          fotoUrl: true,
-        },
-        comunidade: { idComunidade: true, nomeComunidade: true },
-        participantes: {
-          idUsuario: true,
-          nomeUsuario: true,
-          fotoUrl: true,
-        },
-      },
-      order: { dataEvento: 'ASC' },
-      take: limite,
-      skip,
-    });
+    const [eventos, total] = await this.eventoRepository
+      .createQueryBuilder('evento')
+      .leftJoinAndSelect('evento.usuario', 'usuario')
+      .leftJoinAndSelect('evento.comunidade', 'comunidade')
+      .leftJoinAndSelect('evento.participantes', 'participantes')
+      .select([
+        'evento.idEvento',
+        'evento.titulo',
+        'evento.descricaoEvento',
+        'evento.localEvento',
+        'evento.status',
+        'evento.dataEvento',
+        'evento.capaEvento',
+        'evento.fotoUrlEvento',
+
+        'usuario.idUsuario',
+        'usuario.nomeUsuario',
+        'usuario.fotoUrl',
+
+        'comunidade.idComunidade',
+        'comunidade.nomeComunidade',
+
+        'participantes.idUsuario',
+        'participantes.nomeUsuario',
+        'participantes.fotoUrl',
+      ])
+      .addSelect(
+        `
+        CASE
+          WHEN evento.status = 1
+            AND evento.dataEvento >= CURRENT_TIMESTAMP
+          THEN 0
+
+          WHEN evento.status = 1
+            AND evento.dataEvento < CURRENT_TIMESTAMP
+          THEN 1
+
+          ELSE 2
+        END
+        `,
+        'ordemEvento',
+      )
+      .orderBy('ordemEvento', 'ASC')
+      .addOrderBy('evento.dataEvento', 'ASC')
+      .addOrderBy('evento.titulo', 'ASC')
+      .take(limite)
+      .skip(skip)
+      .getManyAndCount();
 
     return {
       dados: eventos,
@@ -121,7 +142,6 @@ export class EventoService {
       },
     };
   }
-
   async findOne(id: string) {
     const evento = await this.eventoRepository.findOne({
       where: { idEvento: id },

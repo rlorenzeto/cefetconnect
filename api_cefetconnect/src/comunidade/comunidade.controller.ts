@@ -59,15 +59,29 @@ export class ComunidadeController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Listar todas as comunidades', description: 'Retorna todas as comunidades. Requer autenticação.' })
+  @ApiOperation({
+    summary: 'Listar todas as comunidades',
+    description: 'Retorna comunidades paginadas. Requer autenticação.',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Número da página (padrão: 1)',
+  })
   @ApiResponse({ status: 200, description: '[SCOM00002] Comunidade retornada com sucesso.' })
   @ApiResponse({ status: 401, description: '[EAUT00003] Token inválido ou expirado.' })
-  async findAll(@Request() req: any) {
-    const dados = await this.comunidadeService.findAll(req.user.idUsuario);
+  async findAll(@Request() req: any, @Query('page') page?: string) {
+    const pagina = page ? Math.max(1, parseInt(page, 10)) : 1;
+    const resultado = await this.comunidadeService.findAll(
+      req.user.idUsuario,
+      pagina,
+    );
+
     return {
       codigo: 'SCOM00007',
       mensagem: SuccessMessages.SCOM00007.mensagem,
-      dados,
+      ...resultado,
     };
   }
 
