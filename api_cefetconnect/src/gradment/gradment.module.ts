@@ -22,4 +22,5 @@ import { JwtModule } from '@nestjs/jwt';
   providers: [GradmentService],
   exports: [GradmentService],
 })
+
 export class GradmentModule {}
