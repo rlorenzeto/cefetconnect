@@ -23,9 +23,19 @@ export default function CommentItem({
   const [texto, setTexto] = useState(comment.texto || "");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [likeTotal, setLikeTotal] = useState(0);
-  const [liked, setLiked] = useState(false);
+
+  const [likeTotal, setLikeTotal] = useState(
+    Number(comment?.totalCurtidas ?? 0)
+  );
+
+  const [liked, setLiked] = useState(
+    Boolean(comment?.jaCurtiu ?? false)
+  );
+
   const [likedUsers, setLikedUsers] = useState([]);
+  const [likesLoaded, setLikesLoaded] = useState(false);
+  const [isLoadingLikedUsers, setIsLoadingLikedUsers] = useState(false);
+
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,32 +52,17 @@ export default function CommentItem({
   }
 
   useEffect(() => {
-    async function loadLikes() {
-      try {
-        const response = await getCommentLikes(comment.idComentario);
-        const dados = response?.dados || response;
-
-        const usuarios = Array.isArray(dados?.usuarios) ? dados.usuarios : [];
-
-        setLikeTotal(Number(dados?.totalCurtidas ?? usuarios.length ?? 0));
-        setLikedUsers(usuarios);
-
-        const userLiked = usuarios.some(
-          (usuario) =>
-            String(usuario?.idUsuario || "") ===
-            String(currentUser?.idUsuario || "")
-        );
-
-        setLiked(userLiked);
-      } catch (error) {
-        console.error("Erro ao carregar curtidas do comentário:", error);
-      }
-    }
-
-    if (comment?.idComentario) {
-      loadLikes();
-    }
-  }, [comment?.idComentario, currentUser?.idUsuario]);
+    setTexto(comment?.texto || "");
+    setLikeTotal(Number(comment?.totalCurtidas ?? 0));
+    setLiked(Boolean(comment?.jaCurtiu ?? false));
+    setLikedUsers([]);
+    setLikesLoaded(false);
+  }, [
+    comment?.idComentario,
+    comment?.texto,
+    comment?.totalCurtidas,
+    comment?.jaCurtiu,
+  ]);
 
   async function handleSave() {
     if (!texto.trim()) {
@@ -112,14 +107,8 @@ export default function CommentItem({
 
         setLiked(false);
         setLikeTotal((prev) => Math.max(prev - 1, 0));
-
-        setLikedUsers((prev) =>
-          prev.filter(
-            (usuario) =>
-              String(usuario?.idUsuario || "") !==
-              String(currentUser?.idUsuario || "")
-          )
-        );
+        setLikedUsers([]);
+        setLikesLoaded(false);
 
         onRankingChanged?.();
       } else {
@@ -127,25 +116,8 @@ export default function CommentItem({
 
         setLiked(true);
         setLikeTotal((prev) => prev + 1);
-
-        setLikedUsers((prev) => {
-          const alreadyInList = prev.some(
-            (usuario) =>
-              String(usuario?.idUsuario || "") ===
-              String(currentUser?.idUsuario || "")
-          );
-
-          if (alreadyInList) return prev;
-
-          return [
-            ...prev,
-            {
-              idUsuario: currentUser?.idUsuario,
-              nomeUsuario: currentUser?.nomeUsuario,
-              fotoUrl: currentUser?.fotoUrl,
-            },
-          ];
-        });
+        setLikedUsers([]);
+        setLikesLoaded(false);
 
         onRankingChanged?.();
       }
@@ -157,6 +129,37 @@ export default function CommentItem({
       }
     } finally {
       setIsLikeLoading(false);
+    }
+  }
+
+  async function handleOpenLikesModal() {
+    setIsLikesModalOpen(true);
+
+    if (likesLoaded || isLoadingLikedUsers) return;
+
+    try {
+      setIsLoadingLikedUsers(true);
+
+      const response = await getCommentLikes(comment.idComentario);
+      const dados = response?.dados || response;
+
+      const usuarios = Array.isArray(dados?.usuarios) ? dados.usuarios : [];
+
+      setLikedUsers(usuarios);
+      setLikeTotal(Number(dados?.totalCurtidas ?? usuarios.length ?? 0));
+
+      const userLiked = usuarios.some(
+        (usuario) =>
+          String(usuario?.idUsuario || "") ===
+          String(currentUser?.idUsuario || "")
+      );
+
+      setLiked(userLiked);
+      setLikesLoaded(true);
+    } catch (error) {
+      console.error("Erro ao carregar curtidas do comentário:", error);
+    } finally {
+      setIsLoadingLikedUsers(false);
     }
   }
 
@@ -236,7 +239,7 @@ export default function CommentItem({
             total={likeTotal}
             label="Curtir"
             onClick={handleToggleLike}
-            onTotalClick={() => setIsLikesModalOpen(true)}
+            onTotalClick={handleOpenLikesModal}
             disabled={isLikeLoading}
           />
 

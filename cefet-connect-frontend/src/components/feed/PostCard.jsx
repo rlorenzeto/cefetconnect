@@ -18,7 +18,7 @@ import {
   updatePost,
 } from "../../services/postService";
 import { getProfileImageUrl } from "../../services/authService";
-import { EditIcon, TrashIcon } from "../icons/AppIcons";
+import { CommentIcon, EditIcon, TrashIcon } from "../icons/AppIcons";
 import EventPostContent from "./EventPostContent";
 import {
   deleteEvento,
@@ -106,9 +106,17 @@ export default function PostCard({
   const [commentTotal, setCommentTotal] = useState(
     Number(post?.totalComentarios ?? post?.comentarios?.length ?? 0)
   );
-  const [likeTotal, setLikeTotal] = useState(0);
-  const [liked, setLiked] = useState(false);
+  const [likeTotal, setLikeTotal] = useState(
+    Number(post?.totalCurtidas ?? post?.total ?? 0)
+  );
+
+  const [liked, setLiked] = useState(
+    Boolean(post?.jaCurtiu ?? post?.curtido ?? false)
+  );
+
   const [likedUsers, setLikedUsers] = useState([]);
+  const [likesLoaded, setLikesLoaded] = useState(false);
+  const [isLoadingLikedUsers, setIsLoadingLikedUsers] = useState(false);
   const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [isParticipatingEvent, setIsParticipatingEvent] = useState(false);
@@ -166,32 +174,21 @@ export default function PostCard({
   }, [post?.totalComentarios, post?.comentarios?.length]);
 
   useEffect(() => {
-    async function loadLikes() {
-      try {
-        const response = await getPostLikes(post.idPost);
-        const dados = response?.dados || response;
+    if (isEventPost) return;
 
-        const usuarios = Array.isArray(dados?.usuarios) ? dados.usuarios : [];
+    setLikeTotal(Number(post?.totalCurtidas ?? post?.total ?? 0));
+    setLiked(Boolean(post?.jaCurtiu ?? post?.curtido ?? false));
 
-        setLikeTotal(Number(dados?.total ?? usuarios.length ?? 0));
-        setLikedUsers(usuarios);
-
-        const userLiked = usuarios.some(
-          (usuario) =>
-            String(usuario?.idUsuario || "") ===
-            String(currentUser?.idUsuario || "")
-        );
-
-        setLiked(userLiked);
-      } catch (error) {
-        console.error("Erro ao carregar curtidas:", error);
-      }
-    }
-
-    if (post?.idPost && !isEventPost) {
-      loadLikes();
-    }
- }, [post?.idPost, currentUser?.idUsuario, isEventPost]);
+    setLikedUsers([]);
+    setLikesLoaded(false);
+  }, [
+    post?.idPost,
+    post?.totalCurtidas,
+    post?.jaCurtiu,
+    post?.total,
+    post?.curtido,
+    isEventPost,
+  ]);
 
   useEffect(() => {
     if (!isEventPost || !event) return;
@@ -286,39 +283,17 @@ export default function PostCard({
 
         setLiked(false);
         setLikeTotal((prev) => Math.max(prev - 1, 0));
-
-        setLikedUsers((prev) =>
-          prev.filter(
-            (usuario) =>
-              String(usuario?.idUsuario || "") !==
-              String(currentUser?.idUsuario || "")
-          )
-        );
+        setLikedUsers([]);
+        setLikesLoaded(false);
         onRankingChanged?.();
       } else {
         await likePost(post.idPost);
 
         setLiked(true);
         setLikeTotal((prev) => prev + 1);
+        setLikedUsers([]);
+        setLikesLoaded(false);
 
-        setLikedUsers((prev) => {
-          const alreadyInList = prev.some(
-            (usuario) =>
-              String(usuario?.idUsuario || "") ===
-              String(currentUser?.idUsuario || "")
-          );
-
-          if (alreadyInList) return prev;
-
-          return [
-            ...prev,
-            {
-              idUsuario: currentUser?.idUsuario,
-              nomeUsuario: currentUser?.nomeUsuario,
-              fotoUrl: currentUser?.fotoUrl,
-            },
-          ];
-        });
         onRankingChanged?.();
       }
     } catch (error) {
@@ -462,8 +437,8 @@ export default function PostCard({
       commentTotal === 1 ? "1 comentário" : `${commentTotal} comentários`;
 
     return showComments
-      ? `Ocultar comentários (${totalText})`
-      : `Mostrar comentários (${totalText})`;
+      ? `(${totalText})`
+      : `(${totalText})`;
   }
 
   function handleOpenPin(pin) {
@@ -476,6 +451,39 @@ export default function PostCard({
     : [];
 
   const visibleAuthorPins = authorPins.slice(0, 3);
+
+  async function handleOpenLikesModal() {
+    if (isEventPost) return;
+
+    setIsLikesModalOpen(true);
+
+    if (likesLoaded || isLoadingLikedUsers) return;
+
+    try {
+      setIsLoadingLikedUsers(true);
+
+      const response = await getPostLikes(post.idPost);
+      const dados = response?.dados || response;
+
+      const usuarios = Array.isArray(dados?.usuarios) ? dados.usuarios : [];
+
+      setLikedUsers(usuarios);
+      setLikeTotal(Number(dados?.total ?? usuarios.length ?? 0));
+
+      const userLiked = usuarios.some(
+        (usuario) =>
+          String(usuario?.idUsuario || "") ===
+          String(currentUser?.idUsuario || "")
+      );
+
+      setLiked(userLiked);
+      setLikesLoaded(true);
+    } catch (error) {
+      console.error("Erro ao carregar curtidas:", error);
+    } finally {
+      setIsLoadingLikedUsers(false);
+    }
+  }
 
   return (
     <>
@@ -623,7 +631,7 @@ export default function PostCard({
                 total={likeTotal}
                 onClick={handleToggleLike}
                 onRankingChanged={onRankingChanged}
-                onTotalClick={() => setIsLikesModalOpen(true)}
+                onTotalClick={handleOpenLikesModal}
                 disabled={isLikeLoading}
               />
             )}
@@ -631,9 +639,10 @@ export default function PostCard({
             <button
               type="button"
               onClick={() => setShowComments((prev) => !prev)}
-              className="rounded-full bg-[#f1f1f1] px-4 py-2 text-sm font-medium text-[#343434] hover:bg-[#e5e5e5]"
+              className="inline-flex items-center gap-2 rounded-full bg-[#f1f1f1] px-4 py-2 text-sm font-medium text-[#343434] transition hover:bg-[#e5e5e5]"
             >
-              {getCommentButtonLabel()}
+              <CommentIcon className="h-5 w-5" />
+              <span>{getCommentButtonLabel()}</span>
             </button>
             
           </div>
@@ -719,6 +728,7 @@ export default function PostCard({
           isOpen={isLikesModalOpen}
           onClose={() => setIsLikesModalOpen(false)}
           users={likedUsers}
+          isLoading={isLoadingLikedUsers}
         />
       )}
       <PinDetailsModal

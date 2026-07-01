@@ -10,8 +10,8 @@ export function getCommunityImageUrl(url) {
   return `${API_BASE_URL}/${url.replace(/^\/+/, "")}`;
 }
 
-export function listComunidades() {
-  return apiFetch("/comunidade");
+export function listComunidades(page = 1) {
+  return apiFetch(`/comunidade?page=${page}`);
 }
 
 export function listMinhasComunidades() {
@@ -85,8 +85,8 @@ export function sairComunidade(idComunidade) {
   });
 }
 
-export function listPostsComunidade(idComunidade) {
-  return apiFetch(`/comunidade/${idComunidade}/posts`);
+export function listPostsComunidade(idComunidade, page = 1) {
+  return apiFetch(`/comunidade/${idComunidade}/posts?page=${page}`);
 }
 
 export function listMembrosComunidade(idComunidade) {

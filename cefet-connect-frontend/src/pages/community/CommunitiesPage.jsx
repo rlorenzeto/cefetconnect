@@ -22,6 +22,9 @@ export default function CommunitiesPage() {
   const currentUser = getCurrentUser();
 
   const [communities, setCommunities] = useState([]);
+  const [communitiesPage, setCommunitiesPage] = useState(2);
+  const [hasMoreCommunities, setHasMoreCommunities] = useState(false);
+  const [isLoadingMoreCommunities, setIsLoadingMoreCommunities] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [loadingActionId, setLoadingActionId] = useState("");
@@ -47,21 +50,68 @@ export default function CommunitiesPage() {
       setIsLoading(true);
       setError("");
 
-      const response = await listComunidades();
-      const dados = response?.dados || response;
+      const response = await listComunidades(1);
+      const dados = response?.dados || [];
+      const paginacao = response?.paginacao;
 
       const communitiesWithPins = await attachPinsToCommunities(
         Array.isArray(dados) ? dados : []
       );
 
       setCommunities(communitiesWithPins);
+      setCommunitiesPage(2);
+
+      setHasMoreCommunities(
+        paginacao
+          ? Number(paginacao.pagina) < Number(paginacao.totalPaginas)
+          : false
+      );
     } catch (error) {
       setError(error.message || "Não foi possível carregar as comunidades.");
     } finally {
       setIsLoading(false);
     }
   }
+  async function handleLoadMoreCommunities() {
+    if (isLoadingMoreCommunities || !hasMoreCommunities) return;
 
+    try {
+      setIsLoadingMoreCommunities(true);
+      setError("");
+
+      const response = await listComunidades(communitiesPage);
+      const novosDados = response?.dados || [];
+      const paginacao = response?.paginacao;
+
+      const communitiesWithPins = await attachPinsToCommunities(
+        Array.isArray(novosDados) ? novosDados : []
+      );
+
+      setCommunities((prevCommunities) => {
+        const communitiesMap = new Map();
+
+        [...prevCommunities, ...communitiesWithPins].forEach((community) => {
+          if (community?.idComunidade) {
+            communitiesMap.set(community.idComunidade, community);
+          }
+        });
+
+        return Array.from(communitiesMap.values());
+      });
+
+      setCommunitiesPage((prev) => prev + 1);
+
+      setHasMoreCommunities(
+        paginacao
+          ? Number(paginacao.pagina) < Number(paginacao.totalPaginas)
+          : false
+      );
+    } catch (error) {
+      setError(error.message || "Não foi possível carregar mais comunidades.");
+    } finally {
+      setIsLoadingMoreCommunities(false);
+    }
+  }
   async function attachPinsToCommunities(communitiesList = []) {
     return Promise.all(
       communitiesList.map(async (community) => {
@@ -206,6 +256,9 @@ export default function CommunitiesPage() {
     isLoading,
     error,
     loadingActionId,
+    hasMoreCommunities,
+    isLoadingMoreCommunities,
+    onLoadMoreCommunities: handleLoadMoreCommunities,
     onOpenCreate: handleOpenCreate,
     onOpenCommunity: (idComunidade) => navigate(`/comunidades/${idComunidade}`),
     onJoin: handleJoin,

@@ -28,6 +28,9 @@ export default function DesktopFeed({
   rankingPreview = [],
   onOpenFullRanking,
   onRankingChanged,
+  hasMorePosts = false,
+  isLoadingMorePosts = false,
+  onLoadMorePosts,
 }) {
   function getEventDate(event) {
     const date = new Date(event?.dataEvento);
@@ -194,6 +197,18 @@ export default function DesktopFeed({
                       : "Nenhum post publicado ainda."}
                   </div>
                 )}
+                {!isLoading && hasMorePosts && (
+                  <div className="flex justify-center pt-2 pb-8">
+                    <button
+                      type="button"
+                      onClick={onLoadMorePosts}
+                      disabled={isLoadingMorePosts}
+                      className="rounded-full bg-white px-6 py-2.5 text-sm font-bold text-[#089464] shadow-sm transition hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isLoadingMorePosts ? "Carregando..." : "Ver mais posts"}
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -205,7 +220,7 @@ export default function DesktopFeed({
                 className="fixed right-8 top-10 z-20 w-[400px] space-y-5 will-change-transform"
               >
                   <RankingCard
-                    rankingPreview={rankingPreview}
+                    ranking={rankingPreview}
                     onOpenFullRanking={onOpenFullRanking}
                   />
               <section className="overflow-hidden rounded-2xl shadow-sm">

@@ -35,6 +35,9 @@ export default function MobileFeed({
   rankingPreview = [],
   onOpenFullRanking,
   onRankingChanged,
+  hasMorePosts = false,
+  isLoadingMorePosts = false,
+  onLoadMorePosts,
 }) {
   const [isGradmentMenuOpen, setIsGradmentMenuOpen] = useState(false);
   return (
@@ -58,21 +61,6 @@ export default function MobileFeed({
 
           {isGradmentMenuOpen && (
             <div className="absolute left-0 top-12 z-40 w-[216px] overflow-hidden rounded-b-md border border-[#d3d3d3] bg-white shadow-lg">
-              <button
-                type="button"
-                onClick={() => setIsGradmentMenuOpen(false)}
-                className="flex h-8 w-full items-center px-3 text-left text-sm font-bold text-[#202020] transition hover:bg-[#f1f1f1]"
-              >
-                Tudo no cefet
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsGradmentMenuOpen(false)}
-                className="flex h-8 w-full items-center border-t border-[#d3d3d3] px-3 text-left text-sm font-bold text-[#202020] transition hover:bg-[#f1f1f1]"
-              >
-                Comunidades seguidas
-              </button>
 
               <a
                 href={GRADMENT_URL}
@@ -203,6 +191,18 @@ export default function MobileFeed({
               {searchTerm?.trim()
                 ? "Nenhum post encontrado para essa busca."
                 : "Nenhum post publicado ainda."}
+            </div>
+          )}
+          {!isLoading && hasMorePosts && (
+            <div className="flex justify-center pt-2 pb-8">
+              <button
+                type="button"
+                onClick={onLoadMorePosts}
+                disabled={isLoadingMorePosts}
+                className="rounded-full bg-white px-6 py-2.5 text-sm font-bold text-[#089464] shadow-sm transition hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isLoadingMorePosts ? "Carregando..." : "Ver mais posts"}
+              </button>
             </div>
           )}
         </div>

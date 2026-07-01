@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DesktopFeed from "../../components/feed/DesktopFeed";
 import MobileFeed from "../../components/feed/MobileFeed";
@@ -47,6 +47,16 @@ export default function FeedPage() {
 
   const [user, setUser] = useState(savedUser);
   const [posts, setPosts] = useState([]);
+  const [postPagination, setPostPagination] = useState({
+    pagina: 1,
+    limite: 10,
+    total: 0,
+    totalPaginas: 1,
+  });
+
+  const [nextPostsPage, setNextPostsPage] = useState(2);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
   const [myCommunities, setMyCommunities] = useState([]);
   const [events, setEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,6 +74,7 @@ export default function FeedPage() {
   const [rankingCompleto, setRankingCompleto] = useState([]);
   const [isRankingModalOpen, setIsRankingModalOpen] = useState(false);
   const [isRankingLoading, setIsRankingLoading] = useState(false);
+  const pinsCacheRef = useRef({});
 
   const visibleEvents = useMemo(() => {
     return filterVisibleEvents(events, myCommunities);
@@ -108,6 +119,66 @@ export default function FeedPage() {
     if (Array.isArray(response?.dados?.usuarios)) return response.dados.usuarios;
 
     return [];
+  }
+
+  function normalizePostsResponse(response, fallbackPage = 1) {
+    return {
+      dados: Array.isArray(response?.dados)
+        ? response.dados
+        : Array.isArray(response)
+          ? response
+          : [],
+
+      paginacao: response?.paginacao || {
+        pagina: fallbackPage,
+        limite: 10,
+        total: 0,
+        totalPaginas: 1,
+      },
+    };
+  }
+
+  function formatPostsForFeed(postsData = [], normalizedProfile = user) {
+    return Array.isArray(postsData)
+      ? [...postsData]
+          .map((post) => {
+            const isCurrentUserPost =
+              String(post?.usuario?.idUsuario || "") ===
+                String(normalizedProfile?.idUsuario || "") ||
+              String(post?.usuario?.idUsuario || "") ===
+                String(savedUser?.idUsuario || "");
+
+            return {
+              ...post,
+              usuario: {
+                ...(post.usuario || {}),
+                fotoUrl:
+                  post.usuario?.fotoUrl ||
+                  (isCurrentUserPost
+                    ? user?.fotoUrl || savedUser?.fotoUrl
+                    : ""),
+              },
+            };
+          })
+          .sort(
+            (a, b) =>
+              new Date(b.dataHoraPublicacao) -
+              new Date(a.dataHoraPublicacao)
+          )
+      : [];
+  }
+
+  function mergePostsWithoutDuplicates(currentPosts, newPosts) {
+    const postsMap = new Map();
+
+    [...currentPosts, ...newPosts].forEach((post) => {
+      postsMap.set(post.idPost, post);
+    });
+
+    return Array.from(postsMap.values()).sort(
+      (a, b) =>
+        new Date(b.dataHoraPublicacao) - new Date(a.dataHoraPublicacao)
+    );
   }
 
   useEffect(() => {
@@ -222,17 +293,22 @@ export default function FeedPage() {
       ),
     ];
 
-    const pinsByUser = {};
+    const idsToFetch = authorIds.filter(
+      (idUsuario) =>
+        !Object.prototype.hasOwnProperty.call(pinsCacheRef.current, idUsuario)
+    );
 
     await Promise.all(
-      authorIds.map(async (idUsuario) => {
+      idsToFetch.map(async (idUsuario) => {
         try {
           const response = await listUserPins(idUsuario);
           const pinsData = response?.dados || response;
 
-          pinsByUser[idUsuario] = Array.isArray(pinsData) ? pinsData : [];
+          pinsCacheRef.current[idUsuario] = Array.isArray(pinsData)
+            ? pinsData
+            : [];
         } catch {
-          pinsByUser[idUsuario] = [];
+          pinsCacheRef.current[idUsuario] = [];
         }
       })
     );
@@ -244,12 +320,11 @@ export default function FeedPage() {
         ...post,
         usuario: {
           ...(post.usuario || {}),
-          pins: pinsByUser[authorId] || [],
+          pins: pinsCacheRef.current[authorId] || [],
         },
       };
     });
   }
-
   async function loadInitialData() {
     try {
       setIsLoading(true);
@@ -276,7 +351,18 @@ export default function FeedPage() {
         idUsuario: profile?.idUsuario || savedUser?.idUsuario,
         matricula: profile?.matricula || savedUser?.matricula,
       };
-      const postsData = postsResponse?.dados || postsResponse;
+      const { dados: postsData, paginacao } = normalizePostsResponse(
+        postsResponse,
+        1
+      );
+
+      setPostPagination({
+        ...paginacao,
+        pagina: 1,
+      });
+
+      setNextPostsPage(2);
+      setHasMorePosts(postsData.length > 0);
 
       const communitiesData = communitiesResponse?.dados || communitiesResponse;
       setMyCommunities(Array.isArray(communitiesData) ? communitiesData : []);
@@ -289,28 +375,7 @@ export default function FeedPage() {
 
       setUser(normalizedProfile);
 
-      const orderedPosts = Array.isArray(postsData)
-        ? [...postsData]
-            .map((post) => {
-              const isCurrentUserPost =
-                String(post?.usuario?.idUsuario || "") === String(normalizedProfile?.idUsuario || "") ||
-                String(post?.usuario?.idUsuario || "") === String(savedUser?.idUsuario || "");
-
-              return {
-                ...post,
-                usuario: {
-                  ...(post.usuario || {}),
-                  fotoUrl:
-                    post.usuario?.fotoUrl ||
-                    (isCurrentUserPost ? user?.fotoUrl || savedUser?.fotoUrl : ""),
-                },
-              };
-            })
-            .sort(
-              (a, b) =>
-                new Date(b.dataHoraPublicacao) - new Date(a.dataHoraPublicacao)
-            )
-        : [];
+      const orderedPosts = formatPostsForFeed(postsData, normalizedProfile);
 
       const postsWithPins = await attachPinsToPosts(orderedPosts);
 
@@ -466,6 +531,51 @@ export default function FeedPage() {
     }
   }
 
+  async function handleLoadMorePosts() {
+    if (isLoadingMorePosts || !hasMorePosts) return;
+
+    const pageToLoad = nextPostsPage;
+
+    try {
+      setIsLoadingMorePosts(true);
+      setError("");
+
+      const response = await listPosts(pageToLoad);
+
+      const { dados: postsData, paginacao } = normalizePostsResponse(
+        response,
+        pageToLoad
+      );
+
+      // Se a próxima página veio vazia, aí sim acabou.
+      if (!postsData.length) {
+        setHasMorePosts(false);
+        return;
+      }
+
+      const orderedPosts = formatPostsForFeed(postsData, user);
+      const postsWithPins = await attachPinsToPosts(orderedPosts);
+
+      const nextPosts = mergePostsWithoutDuplicates(posts, postsWithPins);
+
+      setPosts(nextPosts);
+
+      setPostPagination({
+        ...paginacao,
+        pagina: pageToLoad,
+      });
+
+      setNextPostsPage(pageToLoad + 1);
+
+      // Mantém o botão aparecendo enquanto a API ainda trouxer posts.
+      setHasMorePosts(true);
+    } catch (error) {
+      setError(error.message || "Não foi possível carregar mais posts.");
+    } finally {
+      setIsLoadingMorePosts(false);
+    }
+  }
+
   return (
     <>
       <DesktopFeed
@@ -486,6 +596,9 @@ export default function FeedPage() {
         rankingPreview={rankingPreview}
         onOpenFullRanking={handleOpenFullRanking}
         onRankingChanged={refreshRankingPreview}
+        hasMorePosts={hasMorePosts}
+        isLoadingMorePosts={isLoadingMorePosts}
+        onLoadMorePosts={handleLoadMorePosts}
       />
 
       <MobileFeed
@@ -508,6 +621,9 @@ export default function FeedPage() {
         rankingPreview={rankingPreview}
         onOpenFullRanking={handleOpenFullRanking}
         onRankingChanged={refreshRankingPreview}
+        hasMorePosts={hasMorePosts}
+        isLoadingMorePosts={isLoadingMorePosts}
+        onLoadMorePosts={handleLoadMorePosts}
       />
       <RankingModal
         isOpen={isRankingModalOpen}

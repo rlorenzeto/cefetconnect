@@ -1,7 +1,7 @@
 import { apiFetch } from "./api";
 
-export function listPostComments(idPost) {
-  return apiFetch(`/comentario/post/${idPost}`);
+export function listPostComments(idPost, page = 1) {
+  return apiFetch(`/comentario/post/${idPost}?page=${page}`);
 }
 
 export function createComment(idPost, texto) {

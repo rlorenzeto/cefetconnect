@@ -74,12 +74,6 @@ export default function PinDetailsModal({ pin, isOpen, onClose }) {
               <h2 className="min-w-0 flex-1 break-words text-lg font-extrabold text-[#202020] [overflow-wrap:anywhere]">
                 {details?.nomePin || pin.nomePin}
               </h2>
-
-              {pin?.origem === "gradment" && (
-                <span className="shrink-0 rounded-full bg-[#eaffdf] px-2 py-0.5 text-[10px] font-extrabold text-[#3dae21]">
-                  Validado
-                </span>
-              )}
             </div>
 
             <p className="mt-1 text-xs text-[#777]">
@@ -148,9 +142,7 @@ export default function PinDetailsModal({ pin, isOpen, onClose }) {
                           </p>
 
                           <p className="text-xs text-[#777]">
-                            {user.origem === "gradment"
-                              ? "Pin validado pelo GradMent"
-                              : "Pin manual"}
+                            Também possui esse pin
                           </p>
                         </div>
                       </button>

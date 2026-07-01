@@ -27,6 +27,9 @@ export default function CommunityPage() {
 
   const [community, setCommunity] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [postsPage, setPostsPage] = useState(2);
+  const [hasMorePosts, setHasMorePosts] = useState(false);
+  const [isLoadingMorePosts, setIsLoadingMorePosts] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [communityPins, setCommunityPins] = useState([]);
@@ -75,17 +78,64 @@ export default function CommunityPage() {
 
       if (!communityData?.isMembro) {
         setPosts([]);
+        setPostsPage(2);
+        setHasMorePosts(false);
         return;
       }
 
-      const postsResponse = await listPostsComunidade(idComunidade);
-      const postsData = postsResponse?.dados || postsResponse;
+      const postsResponse = await listPostsComunidade(idComunidade, 1);
+      const postsData = postsResponse?.dados || [];
+      const paginacao = postsResponse?.paginacao;
 
       setPosts(Array.isArray(postsData) ? postsData : []);
+      setPostsPage(2);
+
+      setHasMorePosts(
+        paginacao
+          ? Number(paginacao.pagina) < Number(paginacao.totalPaginas)
+          : false
+      );
     } catch (error) {
       setError(error.message || "Não foi possível carregar a comunidade.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleLoadMorePosts() {
+    if (isLoadingMorePosts || !hasMorePosts) return;
+
+    try {
+      setIsLoadingMorePosts(true);
+      setError("");
+
+      const response = await listPostsComunidade(idComunidade, postsPage);
+      const novosPosts = response?.dados || [];
+      const paginacao = response?.paginacao;
+
+      setPosts((prevPosts) => {
+        const postsMap = new Map();
+
+        [...prevPosts, ...novosPosts].forEach((post) => {
+          if (post?.idPost) {
+            postsMap.set(post.idPost, post);
+          }
+        });
+
+        return Array.from(postsMap.values());
+      });
+
+      setPostsPage((prev) => prev + 1);
+
+      setHasMorePosts(
+        paginacao
+          ? Number(paginacao.pagina) < Number(paginacao.totalPaginas)
+          : false
+      );
+    } catch (error) {
+      setError(error.message || "Não foi possível carregar mais posts.");
+    } finally {
+      setIsLoadingMorePosts(false);
     }
   }
 
@@ -204,6 +254,9 @@ export default function CommunityPage() {
     isLoading,
     isCreating,
     error,
+    hasMorePosts,
+    isLoadingMorePosts,
+    onLoadMorePosts: handleLoadMorePosts,
     currentCommunityAsOption,
     onBack: () => navigate("/comunidades"),
     onLeaveCommunity: handleLeaveCommunity,

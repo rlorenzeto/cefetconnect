@@ -1,11 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   addManualPin,
-  importPinsFromGradment,
   listAvailablePins,
-  suggestPinsFromGradment,
 } from "../../services/pinService";
 import PinBadge from "./PinBadge";
+
+function normalizeText(value = "") {
+  return value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 export default function PinManagerModal({
   isOpen,
@@ -13,25 +19,33 @@ export default function PinManagerModal({
   userPins = [],
   onPinAdded,
 }) {
-  const [mode, setMode] = useState("choice");
   const [availablePins, setAvailablePins] = useState([]);
   const [search, setSearch] = useState("");
-  const [selectedManualPin, setSelectedManualPin] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("disciplina");
-  const [suggestions, setSuggestions] = useState([]);
-  const [selectedSuggestions, setSelectedSuggestions] = useState([]);
-  const [duplicatedPins, setDuplicatedPins] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [savingKey, setSavingKey] = useState("");
+
   const PIN_NAME_MAX = 80;
 
   const userPinNames = useMemo(() => {
-    return new Set(userPins.map((pin) => pin.nomePin?.toLowerCase()));
+    return new Set(userPins.map((pin) => normalizeText(pin.nomePin)));
   }, [userPins]);
 
+  const normalizedSearch = normalizeText(search);
+
+  const pinAlreadyExistsInList = availablePins.some(
+    (pin) => normalizeText(pin.nomePin) === normalizedSearch
+  );
+
+  const searchAlreadyInProfile = userPinNames.has(normalizedSearch);
+
+  const canCreateFromSearch =
+    normalizedSearch && !pinAlreadyExistsInList && !searchAlreadyInProfile;
+
   useEffect(() => {
-    if (!isOpen || mode !== "manual") return;
+    if (!isOpen) return;
 
     async function loadPins() {
       try {
@@ -48,94 +62,46 @@ export default function PinManagerModal({
     }
 
     loadPins();
-  }, [isOpen, mode, search]);
+  }, [isOpen, search]);
 
   if (!isOpen) return null;
 
   function resetAndClose() {
-    setMode("choice");
     setSearch("");
-    setSelectedManualPin(null);
     setSelectedCategory("disciplina");
-    setSuggestions([]);
-    setSelectedSuggestions([]);
-    setDuplicatedPins([]);
     setMessage("");
     setError("");
+    setSavingKey("");
     onClose();
   }
 
-  async function handleAddManualPin() {
-    const nomePin = (selectedManualPin?.nomePin || search.trim()).slice(0, PIN_NAME_MAX);
+  async function handleAddPin(nomePin, categoriaPin = selectedCategory) {
+    const finalName = nomePin.trim().slice(0, PIN_NAME_MAX);
 
-    if (!nomePin) {
-      setError("Escolha ou digite um pin para adicionar.");
+    if (!finalName) {
+      setError("Digite ou escolha um pin para adicionar.");
+      return;
+    }
+
+    if (userPinNames.has(normalizeText(finalName))) {
+      setError("Esse pin já está no seu perfil.");
       return;
     }
 
     try {
-      setIsLoading(true);
+      setSavingKey(finalName);
       setError("");
       setMessage("");
 
-      await addManualPin(nomePin, selectedManualPin?.categoriaPin || selectedCategory);
+      await addManualPin(finalName, categoriaPin);
 
       setMessage("Pin adicionado ao perfil.");
-      onPinAdded?.();
+      await onPinAdded?.();
       resetAndClose();
     } catch (error) {
       setError(error.message || "Não foi possível adicionar o pin.");
     } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function handleConnectGradment() {
-    try {
-      setIsLoading(true);
-      setError("");
-      setMessage("");
-
-      const data = await suggestPinsFromGradment();
-
-      setSuggestions(Array.isArray(data?.sugestoes) ? data.sugestoes : []);
-      setDuplicatedPins(Array.isArray(data?.jaAdicionados) ? data.jaAdicionados : []);
-      setSelectedSuggestions(Array.isArray(data?.sugestoes) ? data.sugestoes : []);
-      setMode("gradment");
-    } catch (error) {
-      setError(error.message || "Não foi possível carregar sugestões do GradMent.");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  function toggleSuggestion(nomePin) {
-    setSelectedSuggestions((prev) =>
-      prev.includes(nomePin)
-        ? prev.filter((item) => item !== nomePin)
-        : [...prev, nomePin]
-    );
-  }
-
-  async function handleImportGradmentPins() {
-    if (selectedSuggestions.length === 0) {
-      setError("Selecione pelo menos um pin para importar.");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError("");
-
-      await importPinsFromGradment(selectedSuggestions);
-
-      setMessage("Pins importados do GradMent.");
-      onPinAdded?.();
-      resetAndClose();
-    } catch (error) {
-      setError(error.message || "Não foi possível importar os pins.");
-    } finally {
-      setIsLoading(false);
+      setSavingKey("");
     }
   }
 
@@ -153,7 +119,7 @@ export default function PinManagerModal({
             </h2>
 
             <p className="mt-1 text-xs text-[#777]">
-              Escolha pins acadêmicos para exibir no seu perfil.
+              Pesquise pins existentes ou crie um novo pin manual.
             </p>
           </div>
 
@@ -161,217 +127,49 @@ export default function PinManagerModal({
             type="button"
             onClick={resetAndClose}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1f1f1] text-xl font-bold text-[#555]"
+            aria-label="Fechar"
           >
             ×
           </button>
         </header>
 
         <div className="max-h-[70vh] overflow-y-auto px-5 py-5">
-          {mode === "choice" && (
-            <div className="grid gap-3">
-              <button
-                type="button"
-                onClick={handleConnectGradment}
-                disabled={isLoading}
-                className="rounded-2xl border border-[#c7eadc] bg-[#e8f7ef] px-5 py-4 text-left transition hover:bg-[#d8f0e4] disabled:opacity-60"
-              >
-                <p className="text-sm font-extrabold text-[#089464]">
-                  Conectar ao GradMent
-                </p>
+          <input
+            type="text"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value.slice(0, PIN_NAME_MAX));
+              setError("");
+              setMessage("");
+            }}
+            maxLength={PIN_NAME_MAX}
+            placeholder="Buscar pin. Ex: Cálculo I, PET, Encautech..."
+            className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm outline-none focus:border-[#089464]"
+          />
 
-                <p className="mt-1 text-xs text-[#343434]">
-                  Importar pins validados pela sua trajetória acadêmica.
-                </p>
-              </button>
+          <div className="mt-3">
+            <label className="mb-1 block text-xs font-bold text-[#343434]">
+              Tipo do pin novo
+            </label>
 
-              <button
-                type="button"
-                onClick={() => setMode("manual")}
-                className="rounded-2xl border border-[#eeeeee] bg-[#f7f7f7] px-5 py-4 text-left transition hover:bg-[#eeeeee]"
-              >
-                <p className="text-sm font-extrabold text-[#202020]">
-                  Inserir pin manualmente
-                </p>
+            <select
+              value={selectedCategory}
+              onChange={(event) => setSelectedCategory(event.target.value)}
+              className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm font-semibold text-[#343434] outline-none focus:border-[#089464]"
+            >
+              <option value="disciplina">Matéria / Disciplina</option>
+              <option value="ic">Iniciação Científica</option>
+              <option value="projeto">Projeto</option>
+              <option value="monitoria">Monitoria</option>
+              <option value="evento">Evento</option>
+              <option value="experiencia">Experiência acadêmica</option>
+              <option value="outro">Outro</option>
+            </select>
 
-                <p className="mt-1 text-xs text-[#777]">
-                  Pesquise ou digite um pin acadêmico.
-                </p>
-              </button>
-            </div>
-          )}
-
-          {mode === "manual" && (
-            <>
-              <button
-                type="button"
-                onClick={() => setMode("choice")}
-                className="mb-4 text-sm font-bold text-[#089464]"
-              >
-                ‹ Voltar
-              </button>
-
-              <input
-                type="text"
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value.slice(0, PIN_NAME_MAX));
-                  setSelectedManualPin(null);
-                  setError("");
-                }}
-                maxLength={PIN_NAME_MAX}
-                placeholder="Pesquisar pin. Ex: Cálculo I"
-                className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm outline-none focus:border-[#089464]"
-                
-              />
-
-              <div className="mt-3">
-                <label className="mb-1 block text-xs font-bold text-[#343434]">
-                  Tipo do pin
-                </label>
-
-                <select
-                  value={selectedCategory}
-                  onChange={(event) => setSelectedCategory(event.target.value)}
-                  disabled={Boolean(selectedManualPin)}
-                  className="h-11 w-full rounded-xl border border-[#d9d9d9] bg-[#f7f7f7] px-4 text-sm font-semibold text-[#343434] outline-none focus:border-[#089464] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <option value="disciplina">Matéria / Disciplina</option>
-                  <option value="ic">Iniciação Científica</option>
-                  <option value="projeto">Projeto</option>
-                  <option value="monitoria">Monitoria</option>
-                  <option value="evento">Evento</option>
-                  <option value="experiencia">Experiência acadêmica</option>
-                  <option value="outro">Outro</option>
-                </select>
-
-                {selectedManualPin && (
-                  <p className="mt-1 text-xs text-[#777]">
-                    Pins já cadastrados usam a categoria salva no sistema.
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-4 max-h-[260px] space-y-2 overflow-y-auto">
-                {isLoading ? (
-                  <p className="rounded-2xl bg-[#f1f1f1] px-4 py-3 text-sm text-[#777]">
-                    Carregando pins...
-                  </p>
-                ) : availablePins.length > 0 ? (
-                  availablePins.map((pin) => {
-                    const alreadyAdded = userPinNames.has(pin.nomePin?.toLowerCase());
-                    const isSelected = selectedManualPin?.idPin === pin.idPin;
-
-                    return (
-                      <button
-                        key={pin.idPin}
-                        type="button"
-                        disabled={alreadyAdded}
-                        onClick={() => setSelectedManualPin(pin)}
-                        className={`flex min-w-0 w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-55 ${
-                          isSelected
-                            ? "border-[#089464] bg-[#e8f7ef]"
-                            : "border-[#eeeeee] bg-white hover:bg-[#f7f7f7]"
-                        }`}
-                      >
-                      <span className="min-w-0 flex-1 break-words text-sm font-bold text-[#202020] [overflow-wrap:anywhere]">
-                        {pin.nomePin}
-                      </span>
-
-                        {alreadyAdded && (
-                          <span className="shrink-0 text-xs font-bold text-[#777]">
-                            Já adicionado
-                          </span>
-                        )}
-
-                        {isSelected && (
-                          <span className="shrink-0 text-sm font-bold text-[#089464]">
-                            ✓
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <p className="rounded-2xl bg-[#f1f1f1] px-4 py-3 text-sm text-[#777]">
-                    Nenhum pin encontrado. Você pode adicionar usando o texto digitado.
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleAddManualPin}
-                disabled={isLoading}
-                className="mt-5 h-11 w-full rounded-full bg-[#089464] text-sm font-bold text-white disabled:opacity-60"
-              >
-                {isLoading ? "Adicionando..." : "Adicionar pin"}
-              </button>
-            </>
-          )}
-
-          {mode === "gradment" && (
-            <>
-              <button
-                type="button"
-                onClick={() => setMode("choice")}
-                className="mb-4 text-sm font-bold text-[#089464]"
-              >
-                ‹ Voltar
-              </button>
-
-              <div className="rounded-2xl bg-[#e8f7ef] px-4 py-3">
-                <p className="text-sm font-extrabold text-[#089464]">
-                  Sugestões do GradMent
-                </p>
-
-                <p className="mt-1 text-xs text-[#343434]">
-                  Selecione os pins que deseja exibir no seu perfil.
-                </p>
-              </div>
-
-              {duplicatedPins.length > 0 && (
-                <p className="mt-3 rounded-2xl bg-[#f1f1f1] px-4 py-3 text-xs text-[#777] break-words [overflow-wrap:anywhere]">
-                  Já estavam no seu perfil: {duplicatedPins.join(", ")}.
-                </p>
-              )}
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {suggestions.length > 0 ? (
-                  suggestions.map((nomePin) => {
-                    const checked = selectedSuggestions.includes(nomePin);
-
-                    return (
-                      <button
-                        key={nomePin}
-                        type="button"
-                        onClick={() => toggleSuggestion(nomePin)}
-                        className={`max-w-full whitespace-normal break-words rounded-full border px-3 py-1 text-left text-xs font-extrabold transition [overflow-wrap:anywhere] ${
-                          checked
-                            ? "border-[#8bd85f] bg-[#eaffdf] text-[#3dae21]"
-                            : "border-[#d9d9d9] bg-[#f1f1f1] text-[#555]"
-                        }`}
-                      >
-                        {nomePin} {checked ? "✓" : ""}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <p className="rounded-2xl bg-[#f1f1f1] px-4 py-3 text-sm text-[#777]">
-                    Nenhuma nova sugestão encontrada.
-                  </p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleImportGradmentPins}
-                disabled={isLoading || selectedSuggestions.length === 0}
-                className="mt-5 h-11 w-full rounded-full bg-[#089464] text-sm font-bold text-white disabled:opacity-60"
-              >
-                {isLoading ? "Importando..." : "Importar pins selecionados"}
-              </button>
-            </>
-          )}
+            <p className="mt-1 text-xs text-[#777]">
+              Esse tipo só será usado quando você criar um pin novo.
+            </p>
+          </div>
 
           {error && (
             <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-500 break-words [overflow-wrap:anywhere]">
@@ -384,6 +182,76 @@ export default function PinManagerModal({
               {message}
             </p>
           )}
+
+          {canCreateFromSearch && (
+            <button
+              type="button"
+              onClick={() => handleAddPin(search, selectedCategory)}
+              disabled={savingKey === search.trim()}
+              className="mt-4 flex w-full min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#c7eadc] bg-[#e8f7ef] px-4 py-3 text-left transition hover:bg-[#d8f0e4] disabled:opacity-60"
+            >
+              <div className="min-w-0">
+                <p className="break-words text-sm font-extrabold text-[#089464] [overflow-wrap:anywhere]">
+                  Criar “{search.trim()}”
+                </p>
+
+                <p className="mt-1 text-xs text-[#343434]">
+                  Esse pin ainda não existe. Ele será criado manualmente.
+                </p>
+              </div>
+
+              <span className="shrink-0 rounded-full bg-[#089464] px-3 py-1 text-xs font-bold text-white">
+                Criar
+              </span>
+            </button>
+          )}
+
+          <div className="mt-5">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#777]">
+              Pins encontrados
+            </p>
+
+            <div className="max-h-[280px] space-y-2 overflow-y-auto">
+              {isLoading ? (
+                <p className="rounded-2xl bg-[#f1f1f1] px-4 py-3 text-sm text-[#777]">
+                  Carregando pins...
+                </p>
+              ) : availablePins.length > 0 ? (
+                availablePins.map((pin) => {
+                  const alreadyAdded = userPinNames.has(normalizeText(pin.nomePin));
+                  const isSaving = savingKey === pin.nomePin;
+
+                  return (
+                    <div
+                      key={pin.idPin}
+                      className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-[#eeeeee] bg-white px-4 py-3"
+                    >
+                      <PinBadge pin={pin} />
+
+                      {alreadyAdded ? (
+                        <span className="shrink-0 rounded-full bg-[#f1f1f1] px-3 py-1 text-xs font-bold text-[#777]">
+                          Já adicionado
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleAddPin(pin.nomePin, pin.categoriaPin)}
+                          disabled={isSaving}
+                          className="shrink-0 rounded-full bg-[#089464] px-4 py-2 text-xs font-bold text-white disabled:opacity-60"
+                        >
+                          {isSaving ? "Adicionando..." : "Adicionar"}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="rounded-2xl bg-[#f1f1f1] px-4 py-3 text-sm text-[#777]">
+                  Nenhum pin encontrado. Digite o nome acima para criar um novo.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

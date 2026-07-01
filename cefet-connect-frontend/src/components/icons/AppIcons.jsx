@@ -302,3 +302,28 @@ export function UserCircleIcon({ active = false, className = "h-6 w-6" }) {
     </svg>
   );
 }
+
+export function CommentIcon({ className = "h-5 w-5" }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      aria-hidden="true"
+    >
+      <path
+        d="M7 5.25h10A2.75 2.75 0 0 1 19.75 8v5.7A2.75 2.75 0 0 1 17 16.45h-4.45l-4.12 3.13c-.58.44-1.43.03-1.43-.7v-2.43A2.75 2.75 0 0 1 4.25 13.7V8A2.75 2.75 0 0 1 7 5.25Z"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.25 9h7.5M8.25 12h5.25"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

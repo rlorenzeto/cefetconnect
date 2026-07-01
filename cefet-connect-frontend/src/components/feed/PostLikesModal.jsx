@@ -8,6 +8,7 @@ export default function PostLikesModal({
   users = [],
   title = "Pessoas que curtiram",
   emptyMessage = "Ninguém curtiu ainda.",
+  isLoading = false,
 }) {
   const navigate = useNavigate();
 
@@ -43,7 +44,11 @@ export default function PostLikesModal({
         </div>
 
         <div className="mt-5 max-h-[360px] space-y-2 overflow-y-auto">
-          {users.length === 0 ? (
+          {isLoading ? (
+            <p className="text-sm text-[#777]">
+              Carregando curtidas...
+            </p>
+          ) : users.length === 0 ? (
             <p className="text-sm text-[#777]">
               {emptyMessage}
             </p>

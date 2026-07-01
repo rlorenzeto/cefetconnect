@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { TrophyIcon } from "../icons/AppIcons";
 import { getProfileImageUrl } from "../../services/authService";
@@ -23,26 +24,97 @@ export default function RankingCard({
   variant = "preview",
   onOpenFullRanking,
 }) {
+  const [showRules, setShowRules] = useState(false);
+
   const isFull = variant === "full";
   const visibleRanking = isFull ? ranking.slice(0, 10) : ranking.slice(0, 3);
 
   return (
     <section className="overflow-hidden rounded-[8px] bg-white shadow-sm">
-      <header className="flex items-start gap-3 border-b border-[#d9d9d9] px-3 py-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-[#089464] text-white">
-          <TrophyIcon className="h-4 w-4" />
+      <header className="flex items-start justify-between gap-3 border-b border-[#d9d9d9] px-3 py-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-[#089464] text-white">
+            <TrophyIcon className="h-4 w-4" />
+          </div>
+
+          <div className="min-w-0">
+            <h2 className="text-[20px] font-bold leading-tight text-[#202020]">
+              Ranking
+            </h2>
+
+            <p className="text-[13px] font-normal leading-tight text-[#343434]">
+              membros mais ativos
+            </p>
+          </div>
         </div>
 
-        <div className="min-w-0">
-          <h2 className="text-[20px] font-bold leading-tight text-[#202020]">
-            Ranking
-          </h2>
-
-          <p className="text-[13px] font-normal leading-tight text-[#343434]">
-            membros mais ativos
-          </p>
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowRules((prev) => !prev)}
+          className="shrink-0 rounded-full border border-[#089464]/20 bg-[#e8f7ef] px-3 py-1 text-[12px] font-extrabold text-[#089464] transition hover:bg-[#d7f0e3]"
+          aria-expanded={showRules}
+        >
+          Como subir?
+        </button>
       </header>
+
+      {showRules && (
+        <div className="border-b border-[#d9d9d9] bg-[#f8fffb] px-4 py-4">
+          <div className="rounded-[14px] border border-[#ccebdd] bg-white p-4 shadow-sm">
+            <p className="text-[14px] font-extrabold text-[#202020]">
+              Como ganhar pontos?
+            </p>
+
+            <div className="mt-3 grid gap-2 text-[13px] text-[#343434]">
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#089464] text-[11px] font-bold text-white">
+                  +1
+                </span>
+                <p>
+                  Criar uma publicação no feed ou em uma comunidade.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#089464] text-[11px] font-bold text-white">
+                  +1
+                </span>
+                <p>
+                  Curtir uma publicação.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#089464] text-[11px] font-bold text-white">
+                  +1
+                </span>
+                <p>
+                  Comentar em uma publicação. Conta apenas o primeiro comentário seu naquele post.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#089464] text-[11px] font-bold text-white">
+                  +1
+                </span>
+                <p>
+                  Curtir um comentário.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 space-y-2">
+              <div className="rounded-[10px] bg-[#fff7df] px-3 py-2 text-[12px] font-bold text-[#7a5a00]">
+                Lembrete: para manter o feed organizado, cada usuário pode criar até 5 posts por hora.
+              </div>
+
+              <div className="rounded-[10px] bg-[#f1f1f1] px-3 py-2 text-[12px] font-medium text-[#666]">
+                Dica: se você descurtir ou apagar uma ação que pontuou, sua pontuação pode diminuir.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div>
         {visibleRanking.map((user, index) => {

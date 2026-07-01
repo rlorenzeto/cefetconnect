@@ -11,6 +11,9 @@ export default function MobileEvents({
   isLoading,
   error,
   loadingActionId,
+  hasMoreEvents,
+  isLoadingMoreEvents,
+  onLoadMoreEvents,
   onOpenCreate,
   onOpenDetails,
   onEdit,
@@ -76,6 +79,18 @@ export default function MobileEvents({
         ) : (
           <div className="rounded-[28px] bg-white p-6 text-sm text-[#777] shadow-sm">
             Nenhum evento criado ainda.
+          </div>
+        )}
+        {!isLoading && hasMoreEvents && (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={onLoadMoreEvents}
+              disabled={isLoadingMoreEvents}
+              className="rounded-full border border-[#d9e2ef] bg-white px-5 py-2 text-sm font-bold text-[#1f4f82] shadow-sm transition hover:bg-[#f3f7fb] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isLoadingMoreEvents ? "Carregando..." : "Ver mais eventos"}
+            </button>
           </div>
         )}
       </main>

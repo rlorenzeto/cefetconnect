@@ -33,6 +33,9 @@ export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [myEvents, setMyEvents] = useState([]);
   const [communities, setCommunities] = useState([]);
+  const [eventsPage, setEventsPage] = useState(2);
+  const [hasMoreEvents, setHasMoreEvents] = useState(false);
+  const [isLoadingMoreEvents, setIsLoadingMoreEvents] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
 
@@ -57,11 +60,19 @@ export default function EventsPage() {
   }, [events, communities]);
 
   const normalizedEvents = useMemo(() => {
-    const normalized = visibleEvents.map((event) => ({
-      ...event,
-      isFinalizado: isEventFinished(event),
-      isParticipando: myEventIds.has(String(event.idEvento)),
-    }));
+    const normalized = visibleEvents.map((event) => {
+      const isCancelado =
+        event?.status === false ||
+        event?.status === 0 ||
+        event?.status === "0";
+
+      return {
+        ...event,
+        isCancelado,
+        isFinalizado: isCancelado || isEventFinished(event),
+        isParticipando: myEventIds.has(String(event.idEvento)),
+      };
+    });
 
     return sortEventsWithFinishedLast(normalized);
   }, [visibleEvents, myEventIds]);
@@ -133,22 +144,69 @@ export default function EventsPage() {
 
       const [eventsResponse, myEventsResponse, communitiesResponse] =
         await Promise.all([
-          listEventos(),
+          listEventos(1),
           listMeusEventos(),
           listMinhasComunidades(),
         ]);
 
-      const eventsData = eventsResponse?.dados || eventsResponse;
+      const eventsData = eventsResponse?.dados || [];
       const myEventsData = myEventsResponse?.dados || myEventsResponse;
       const communitiesData = communitiesResponse?.dados || communitiesResponse;
+      const paginacao = eventsResponse?.paginacao;
 
       setEvents(Array.isArray(eventsData) ? eventsData : []);
       setMyEvents(Array.isArray(myEventsData) ? myEventsData : []);
       setCommunities(Array.isArray(communitiesData) ? communitiesData : []);
+
+      setEventsPage(2);
+
+      setHasMoreEvents(
+        paginacao
+          ? Number(paginacao.pagina) < Number(paginacao.totalPaginas)
+          : Array.isArray(eventsData) && eventsData.length > 0
+      );
     } catch (error) {
       setError(error.message || "Não foi possível carregar os eventos.");
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function handleLoadMoreEvents() {
+    if (isLoadingMoreEvents || !hasMoreEvents) return;
+
+    try {
+      setIsLoadingMoreEvents(true);
+      setError("");
+
+      const response = await listEventos(eventsPage);
+
+      const novosEventos = response?.dados || [];
+      const paginacao = response?.paginacao;
+
+      setEvents((prevEvents) => {
+        const eventsMap = new Map();
+
+        [...prevEvents, ...novosEventos].forEach((event) => {
+          if (event?.idEvento) {
+            eventsMap.set(event.idEvento, event);
+          }
+        });
+
+        return Array.from(eventsMap.values());
+      });
+
+      setEventsPage((prev) => prev + 1);
+
+      setHasMoreEvents(
+        paginacao
+          ? Number(paginacao.pagina) < Number(paginacao.totalPaginas)
+          : Array.isArray(novosEventos) && novosEventos.length > 0
+      );
+    } catch (error) {
+      setError(error.message || "Não foi possível carregar mais eventos.");
+    } finally {
+      setIsLoadingMoreEvents(false);
     }
   }
 
@@ -293,6 +351,9 @@ export default function EventsPage() {
     isLoading,
     error,
     loadingActionId,
+    hasMoreEvents,
+    isLoadingMoreEvents,
+    onLoadMoreEvents: handleLoadMoreEvents,
     onOpenCreate: handleOpenCreate,
     onOpenDetails: handleOpenDetails,
     onEdit: handleOpenEdit,
